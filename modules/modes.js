@@ -31,15 +31,33 @@ export const DEFAULT_MODES = [
  */
 export async function getModes() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(['customModes'], (result) => {
-      if (result.customModes) {
-        resolve(result.customModes);
-      } else {
-        // Initialize with defaults if empty
-        chrome.storage.local.set({ customModes: DEFAULT_MODES });
-        resolve(DEFAULT_MODES);
-      }
-    });
+    try {
+      chrome.storage.local.get(['customModes'], (result) => {
+        if (chrome.runtime.lastError) {
+          console.warn("[Axiom Modes] Error reading local storage:", chrome.runtime.lastError.message);
+          resolve(DEFAULT_MODES);
+          return;
+        }
+        if (result && result.customModes) {
+          resolve(result.customModes);
+        } else {
+          // Initialize with defaults if empty
+          try {
+            chrome.storage.local.set({ customModes: DEFAULT_MODES }, () => {
+              if (chrome.runtime.lastError) {
+                console.warn("[Axiom Modes] Error saving default modes:", chrome.runtime.lastError.message);
+              }
+            });
+          } catch (innerErr) {
+            console.warn("[Axiom Modes] Exception saving default modes:", innerErr.message);
+          }
+          resolve(DEFAULT_MODES);
+        }
+      });
+    } catch (err) {
+      console.warn("[Axiom Modes] Storage get exception:", err.message);
+      resolve(DEFAULT_MODES);
+    }
   });
 }
 
@@ -73,8 +91,18 @@ export async function saveModes(jsonString) {
     }
     
     // Save to storage
-    await new Promise((resolve) => {
-      chrome.storage.local.set({ customModes: parsed }, resolve);
+    await new Promise((resolve, reject) => {
+      try {
+        chrome.storage.local.set({ customModes: parsed }, () => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve();
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
     });
     
     return { success: true, modes: parsed };
@@ -87,8 +115,22 @@ export async function saveModes(jsonString) {
  * Resets storage back to default modes.
  */
 export async function resetModes() {
-  await new Promise((resolve) => {
-    chrome.storage.local.set({ customModes: DEFAULT_MODES }, resolve);
-  });
+  try {
+    await new Promise((resolve, reject) => {
+      try {
+        chrome.storage.local.set({ customModes: DEFAULT_MODES }, () => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve();
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  } catch (err) {
+    console.warn("[Axiom Modes] Reset modes failed:", err.message);
+  }
   return DEFAULT_MODES;
 }
