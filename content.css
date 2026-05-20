@@ -1,0 +1,148 @@
+/* Axiom Inline Prompt Optimizer Button Styles */
+
+.axiom-floating-container {
+  position: fixed !important;
+  z-index: 2147483647 !important; /* Float on top of everything, including dialogs */
+  user-select: none !important;
+  cursor: grab !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(10, 10, 12, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px 4px 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 15px rgba(255, 255, 255, 0.05) !important;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease !important;
+  pointer-events: auto !important;
+}
+
+.axiom-floating-container:hover {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 25px rgba(255, 255, 255, 0.08) !important;
+}
+
+.axiom-floating-container:active {
+  cursor: grabbing !important;
+}
+
+.axiom-drag-handle {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 14px !important;
+  cursor: grab !important;
+  padding: 0 4px 0 2px !important;
+  letter-spacing: -1px !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+}
+
+.axiom-drag-handle:active {
+  cursor: grabbing !important;
+}
+
+/* Premium Outfitted Capsule Button */
+.axiom-optimize-btn {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 2px 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+  height: auto !important;
+  width: auto !important;
+  outline: none !important;
+  white-space: nowrap !important;
+}
+
+/* Text and Sparkle Styles */
+.axiom-optimize-btn span {
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+}
+
+.axiom-sparkle {
+  font-size: 14px !important;
+  transition: transform 0.3s ease !important;
+}
+
+/* Hover & Interactive States */
+.axiom-optimize-btn:hover .axiom-sparkle {
+  transform: scale(1.15) rotate(5deg) !important;
+}
+
+.axiom-optimize-btn:active {
+  transform: scale(0.97) !important;
+}
+
+.axiom-optimize-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.8 !important;
+}
+
+/* ==========================================
+   Premium SOTA Loading State & Keyframes
+   ========================================== */
+
+/* Shimmer sweep movement across the dark matte button */
+@keyframes axiom-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Pulsing text opacity for a subtle breathing loader feel */
+@keyframes axiom-pulse-text {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* Sparkle floating scale and rotation animation */
+@keyframes axiom-sparkle-float {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.3) translateY(-1.5px) rotate(12deg);
+  }
+}
+
+.axiom-floating-container.loading {
+  cursor: wait !important;
+  background: linear-gradient(270deg, rgba(10, 10, 12, 0.9), rgba(43, 46, 64, 0.85), rgba(10, 10, 12, 0.9)) !important;
+  background-size: 200% 200% !important;
+  animation: axiom-shimmer 1.8s ease infinite !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.axiom-floating-container.loading .axiom-btn-text {
+  animation: axiom-pulse-text 1.4s ease-in-out infinite !important;
+}
+
+.axiom-floating-container.loading .axiom-sparkle {
+  animation: axiom-sparkle-float 1.2s ease-in-out infinite !important;
+  display: inline-block !important;
+}
