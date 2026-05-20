@@ -1,0 +1,655 @@
+/* Google Fonts - Inter & JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Matte Obsidian Slate Color Tokens */
+  --bg-dark: #050507;          /* Ultra dark base environment background */
+  --bg-console: #0c0d12;       /* Premium slate console floating card */
+  --bg-panel: #050507;         /* Deep matte card elements */
+  
+  --border-subtle: #1c1e26;    /* Soft hairline borders */
+  --border-active: #2f3344;    /* Interactive boundary accents */
+  --border-focus: #3e445b;     /* Crisp slate outline for active focus */
+  
+  --text-primary: #ffffff;     /* Pristine high-contrast text */
+  --text-secondary: #a1a1aa;   /* Understated slate secondary text */
+  --text-muted: #4b4f63;       /* Muted slate text */
+  
+  --transition-tactile: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reset and Core Layout */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 380px;
+  height: auto;                /* Dynamic height: fits content perfectly */
+  min-height: 290px;
+  max-height: 600px;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Floating Card Shell - Completely breaks the perfect square visual block */
+.app-container {
+  margin: 12px;
+  height: auto;                /* Let height expand with content */
+  min-height: 266px;
+  background-color: var(--bg-console);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.85),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Paper-Thin Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* --- Header & Tab segment control --- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-console);
+  z-index: 10;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logo-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ffffff; /* Subtle indicator glow */
+}
+
+.logo-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--text-primary);
+}
+
+/* Premium Rounded Segmented Tab Control */
+.segmented-control {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 2px;
+  width: auto;
+}
+
+.segment-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  text-align: center;
+  outline: none;
+}
+
+.segment-btn:hover {
+  color: var(--text-primary);
+}
+
+.segment-btn.active {
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Main Panels & Containers --- */
+main {
+  height: auto;
+  overflow: visible;           /* Let children expand naturally */
+  background: var(--bg-console);
+}
+
+.tab-panel {
+  display: none;
+  padding: 16px 18px 18px 18px;
+}
+
+.tab-panel.active {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* --- Zen-Minimalist Prompt Editor (Borderless transparent canvas) --- */
+.editor-workspace-card {
+  background: transparent;     /* Completely transparent to remove box-in-box clutter */
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: var(--transition-tactile);
+}
+
+.editor-workspace-card:hover {
+  border-color: var(--border-active);
+}
+
+.editor-workspace-card:focus-within {
+  border-color: var(--text-muted);
+}
+
+.input-prompt {
+  width: 100%;
+  height: 110px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 14px 14px 4px 14px;
+  resize: none;
+  line-height: 1.55;
+}
+
+.input-prompt::placeholder {
+  color: var(--text-muted);
+}
+
+.editor-footer {
+  padding: 4px 14px 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.label-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+/* Prompt Length Segmented Selector inside Editor Footer */
+.length-selector {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 2px;
+  width: auto;
+}
+
+.length-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  text-align: center;
+  outline: none;
+}
+
+.length-btn:hover {
+  color: var(--text-primary);
+}
+
+.length-btn.active {
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.length-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Horizontal Split Action Row --- */
+.action-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.select-wrapper {
+  flex: 1.15;
+  position: relative;
+}
+
+/* Elegant Borderless Selector Dropdown */
+.select-wrapper select {
+  cursor: pointer;
+  appearance: none;
+  background-color: transparent; /* Flat borderless look */
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8.5px 30px 8.5px 14px;
+  outline: none;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2352525b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  transition: var(--transition-tactile);
+}
+
+.select-wrapper select:focus, .select-wrapper select:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+/* Core Primary Button (Dynamic active state based on prompt content) */
+.btn-primary {
+  flex: 0.85;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8.5px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: var(--transition-tactile);
+  white-space: nowrap;
+  outline: none;
+  opacity: 0.65;
+}
+
+/* Light up to premium solid white button when raw input prompt has text */
+.tab-panel:has(.input-prompt:not(:placeholder-shown)) .btn-primary {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-dark);
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+}
+
+.tab-panel:has(.input-prompt:not(:placeholder-shown)) .btn-primary:hover {
+  background: #e4e4e7;
+  border-color: #e4e4e7;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Settings Form elements */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+/* Minimal Matte Inputs */
+input[type="text"], input[type="password"] {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8.5px 12px;
+  outline: none;
+  transition: var(--transition-tactile);
+}
+
+input[type="text"]:hover, input[type="password"]:hover {
+  border-color: var(--border-active);
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  border-color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-tactile);
+}
+
+.password-toggle:hover {
+  color: var(--text-primary);
+}
+
+/* Modes Custom JSON Textarea */
+.json-textarea {
+  height: 110px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8.5px 12px;
+  outline: none;
+  resize: none;
+  transition: var(--transition-tactile);
+}
+
+.json-textarea:hover {
+  border-color: var(--border-active);
+}
+
+.json-textarea:focus {
+  border-color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.json-status {
+  font-size: 11px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.json-status.error {
+  color: #fca5a5;
+}
+
+.json-status.success {
+  color: #a7f3d0;
+}
+
+/* Settings Actions alignment */
+.settings-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 11.5px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  outline: none;
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btn-primary-small {
+  background: var(--text-primary);
+  border: none;
+  border-radius: 18px;
+  color: var(--bg-dark);
+  font-weight: 600;
+  font-size: 11px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  outline: none;
+}
+
+.btn-primary-small:hover {
+  background: #e4e4e7;
+}
+
+.btn-primary-small:active {
+  transform: scale(0.97);
+}
+
+/* --- Outputs & Code Workspace Panels --- */
+.output-card {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.output-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.action-icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  color: var(--text-secondary);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  outline: none;
+}
+
+.action-icon-btn:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.action-icon-btn.copied {
+  background: var(--text-primary);
+  color: var(--bg-dark);
+  border-color: var(--text-primary);
+}
+
+.output-text-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.output-text {
+  min-height: 95px;
+  max-height: 145px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10.5px 13px;
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary);
+  user-select: text;
+}
+
+.output-text.placeholder-text {
+  color: var(--text-muted);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Understated Desaturated Warnings --- */
+.banner-alert {
+  background: rgba(239, 68, 68, 0.02);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: var(--transition-tactile);
+  margin-bottom: 4px;
+}
+
+.banner-alert:hover {
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.banner-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #fca5a5;
+  font-weight: 500;
+}
+
+.banner-alert-action {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(239, 68, 68, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Spinner Loader */
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Pill-Shaped Toast Notification --- */
+.toast-notification {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bg-console);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.toast-notification.show {
+  transform: translateX(-50%) translateY(0);
+}
