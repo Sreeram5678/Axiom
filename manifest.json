@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "A personal prompt optimizer using the Gemini API. Perfect your prompts instantly using customized system instructions.",
   "permissions": [
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*"
@@ -21,6 +22,7 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "options_page": "options/options.html",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
