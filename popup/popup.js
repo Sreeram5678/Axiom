@@ -17,9 +17,9 @@ const outputSection = document.getElementById('output-section');
 const optimizedPromptOutput = document.getElementById('optimized-prompt-output');
 const copyBtn = document.getElementById('copy-btn');
 const copyToast = document.getElementById('copy-toast');
+const openOptionsBtn = document.getElementById('open-options-btn');
 
-const apiKeyInput = document.getElementById('api-key-input');
-const togglePasswordBtn = document.getElementById('toggle-password-btn');
+
 const modelSelect = document.getElementById('model-select');
 const defaultLengthSelect = document.getElementById('default-length-select');
 const jsonModesEditor = document.getElementById('json-modes-editor');
@@ -46,57 +46,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // UI Initialization
 async function initializeUI() {
-  // Load API Key, Model settings, prompt length & last selected Mode
-  const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength']);
-  
-  apiKeyInput.value = apiKey;
-  modelSelect.value = selectedModel;
-  defaultLengthSelect.value = defaultLength;
-  rawPromptInput.value = savedInput;
-  updateCharCounter(savedInput);
-  
-  // Set selected prompt length and update UI (falls back to defaultLength if no active selection is saved)
-  const activeLength = selectedLength || defaultLength;
-  updateSelectedLengthUI(activeLength);
+  try {
+    // Load API Key, Model settings, prompt length & last selected Mode
+    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength']);
+    
+    modelSelect.value = selectedModel;
+    defaultLengthSelect.value = defaultLength;
+    rawPromptInput.value = savedInput;
+    updateCharCounter(savedInput);
+    
+    // Set selected prompt length and update UI (falls back to defaultLength if no active selection is saved)
+    const activeLength = selectedLength || defaultLength;
+    updateSelectedLengthUI(activeLength);
 
-  // Toggle API alert banner based on API key availability
-  toggleApiAlertBanner(apiKey);
+    // Toggle API alert banner based on API key availability
+    toggleApiAlertBanner(apiKey);
 
-  // Render optimization modes select and settings JSON editor
-  await renderModes();
+    // Render optimization modes select and settings JSON editor
+    await renderModes();
+  } catch (err) {
+    console.warn("[Axiom Popup] Context invalidated or error during UI initialization:", err.message);
+  }
 }
 
 // Render Select Dropdown and JSON editor
 async function renderModes() {
-  currentModes = await getModes();
-  
-  // Populate the Dropdown
-  modeSelect.innerHTML = '';
-  currentModes.forEach(mode => {
-    const option = document.createElement('option');
-    option.value = mode.id;
-    option.textContent = `${mode.name} — ${mode.description}`;
-    modeSelect.appendChild(option);
-  });
+  try {
+    currentModes = await getModes();
+    
+    // Populate the Dropdown
+    modeSelect.innerHTML = '';
+    currentModes.forEach(mode => {
+      const option = document.createElement('option');
+      option.value = mode.id;
+      option.textContent = `${mode.name} — ${mode.description}`;
+      modeSelect.appendChild(option);
+    });
 
-  // Set selected dropdown value to last active mode
-  const { lastActiveModeId = 'analyst' } = await chrome.storage.local.get(['lastActiveModeId']);
-  if (currentModes.some(m => m.id === lastActiveModeId)) {
-    modeSelect.value = lastActiveModeId;
+    // Set selected dropdown value to last active mode
+    const { lastActiveModeId = 'analyst' } = await chrome.storage.local.get(['lastActiveModeId']);
+    if (currentModes.some(m => m.id === lastActiveModeId)) {
+      modeSelect.value = lastActiveModeId;
+    }
+
+    // Populate raw JSON editor in Settings
+    jsonModesEditor.value = JSON.stringify(currentModes, null, 2);
+  } catch (err) {
+    console.warn("[Axiom Popup] Context invalidated or error during renderModes:", err.message);
   }
-
-  // Populate raw JSON editor in Settings
-  jsonModesEditor.value = JSON.stringify(currentModes, null, 2);
 }
 
 // Check if background service worker is currently running an optimization
 async function checkSessionState() {
   if (!chrome.storage.session) return;
   
-  const sessionData = await chrome.storage.session.get(['status', 'rawPrompt', 'selectedModeId', 'selectedLength', 'optimizedPrompt', 'error']);
-  
-  if (sessionData.status) {
-    handleBackgroundState(sessionData);
+  try {
+    const sessionData = await chrome.storage.session.get(['status', 'rawPrompt', 'selectedModeId', 'selectedLength', 'optimizedPrompt', 'error']);
+    
+    if (sessionData.status) {
+      handleBackgroundState(sessionData);
+    }
+  } catch (err) {
+    console.warn("[Axiom Popup] Context invalidated or error checking session state:", err.message);
   }
 }
 
@@ -127,25 +138,41 @@ function handleBackgroundState(state) {
 }
 
 // Listen to storage session updates (polling-free reactivity)
-if (chrome.storage.onChanged) {
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'session') {
-      const sessionUpdate = {};
-      let hasUpdate = false;
-      
-      for (const [key, { newValue }] of Object.entries(changes)) {
-        sessionUpdate[key] = newValue;
-        hasUpdate = true;
+try {
+  if (chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      try {
+        if (area === 'session') {
+          const sessionUpdate = {};
+          let hasUpdate = false;
+          
+          for (const [key, { newValue }] of Object.entries(changes)) {
+            sessionUpdate[key] = newValue;
+            hasUpdate = true;
+          }
+          
+          if (hasUpdate) {
+            // Fetch complete session state to keep variables aligned
+            chrome.storage.session.get(null, (fullSession) => {
+              try {
+                if (chrome.runtime.lastError) {
+                  console.warn("[Axiom Popup] Session storage read error during change event:", chrome.runtime.lastError.message);
+                  return;
+                }
+                handleBackgroundState(fullSession);
+              } catch (innerErr) {
+                console.warn("[Axiom Popup] Error inside session get callback:", innerErr.message);
+              }
+            });
+          }
+        }
+      } catch (listenerErr) {
+        console.warn("[Axiom Popup] Error in onChanged listener callback:", listenerErr.message);
       }
-      
-      if (hasUpdate) {
-        // Fetch complete session state to keep variables aligned
-        chrome.storage.session.get(null, (fullSession) => {
-          handleBackgroundState(fullSession);
-        });
-      }
-    }
-  });
+    });
+  }
+} catch (err) {
+  console.warn("[Axiom Popup] Failed to initialize onChanged storage listener:", err.message);
 }
 
 // Setup switching tabs
@@ -182,162 +209,188 @@ function setupTabSwitching() {
 function setupEventListeners() {
   // 1. Raw prompt character counter & text saver
   rawPromptInput.addEventListener('input', (e) => {
-    const text = e.target.value;
-    updateCharCounter(text);
-    // Persist input to local storage (un-interrupted save)
-    chrome.storage.local.set({ savedInput: text });
+    try {
+      const text = e.target.value;
+      updateCharCounter(text);
+      // Persist input to local storage (un-interrupted save)
+      chrome.storage.local.set({ savedInput: text });
+    } catch (err) {
+      console.warn("[Axiom Popup] Storage set savedInput failed:", err.message);
+    }
   });
 
   // 1b. Mode selection persistence
   modeSelect.addEventListener('change', (e) => {
-    chrome.storage.local.set({ lastActiveModeId: e.target.value });
+    try {
+      chrome.storage.local.set({ lastActiveModeId: e.target.value });
+    } catch (err) {
+      console.warn("[Axiom Popup] Storage set lastActiveModeId failed:", err.message);
+    }
   });
 
   // 1c. Prompt length selection persistence
   lengthBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const lengthVal = e.currentTarget.getAttribute('data-length');
-      updateSelectedLengthUI(lengthVal);
-      chrome.storage.local.set({ selectedLength: lengthVal });
+      try {
+        const lengthVal = e.currentTarget.getAttribute('data-length');
+        updateSelectedLengthUI(lengthVal);
+        chrome.storage.local.set({ selectedLength: lengthVal });
+      } catch (err) {
+        console.warn("[Axiom Popup] Storage set selectedLength failed:", err.message);
+      }
     });
   });
 
   // 2. Quick fix banner click
   apiAlertBanner.addEventListener('click', () => {
-    tabSettingsBtn.click();
-    apiKeyInput.focus();
-    // Add brief animation glow
-    apiKeyInput.classList.add('focus-glow');
-    setTimeout(() => apiKeyInput.classList.remove('focus-glow'), 1000);
-  });
-
-  // 3. Show/hide password key toggle
-  togglePasswordBtn.addEventListener('click', () => {
-    const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    apiKeyInput.setAttribute('type', type);
-    
-    // Switch SVGs
-    if (type === 'text') {
-      togglePasswordBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-    } else {
-      togglePasswordBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    try {
+      chrome.runtime.openOptionsPage();
+    } catch (err) {
+      console.warn("[Axiom Popup] openOptionsPage failed:", err.message);
     }
   });
 
+  // 2b. Open options button in Settings tab
+  if (openOptionsBtn) {
+    openOptionsBtn.addEventListener('click', () => {
+      try {
+        chrome.runtime.openOptionsPage();
+      } catch (err) {
+        console.warn("[Axiom Popup] openOptionsPage failed:", err.message);
+      }
+    });
+  }
+
+
+
   // 4. Reset settings back to defaults
   resetDefaultsBtn.addEventListener('click', async () => {
-    if (confirm("Are you sure you want to reset all prompt engineering modes to defaults? This will erase custom additions.")) {
-      const defaultModes = await resetModes();
-      jsonModesEditor.value = JSON.stringify(defaultModes, null, 2);
-      
-      jsonErrorStatus.textContent = "Modes reset to defaults successfully.";
-      jsonErrorStatus.className = "json-status success";
-      
-      // Repopulate select
-      await renderModes();
+    try {
+      if (confirm("Are you sure you want to reset all prompt engineering modes to defaults? This will erase custom additions.")) {
+        const defaultModes = await resetModes();
+        jsonModesEditor.value = JSON.stringify(defaultModes, null, 2);
+        
+        jsonErrorStatus.textContent = "Modes reset to defaults successfully.";
+        jsonErrorStatus.className = "json-status success";
+        
+        // Repopulate select
+        await renderModes();
+      }
+    } catch (err) {
+      console.warn("[Axiom Popup] resetDefaultsBtn failed:", err.message);
     }
   });
 
   // 5. Save settings configurations
   saveSettingsBtn.addEventListener('click', async () => {
-    const rawApiKey = apiKeyInput.value.trim();
-    const rawModel = modelSelect.value;
-    const rawDefaultLength = defaultLengthSelect.value;
-    const jsonString = jsonModesEditor.value;
+    try {
+      const rawModel = modelSelect.value;
+      const rawDefaultLength = defaultLengthSelect.value;
+      const jsonString = jsonModesEditor.value;
 
-    // Save configurations
-    saveSettingsBtn.disabled = true;
-    saveSettingsBtn.innerHTML = `<div class="spinner"></div><span>Saving...</span>`;
+      // Save configurations
+      saveSettingsBtn.disabled = true;
+      saveSettingsBtn.innerHTML = `<div class="spinner"></div><span>Saving...</span>`;
 
-    // Validate and save Modes JSON
-    const modeValidation = await saveModes(jsonString);
-    
-    if (!modeValidation.success) {
-      jsonErrorStatus.textContent = `JSON Error: ${modeValidation.error}`;
-      jsonErrorStatus.className = "json-status error";
+      // Validate and save Modes JSON
+      const modeValidation = await saveModes(jsonString);
+      
+      if (!modeValidation.success) {
+        jsonErrorStatus.textContent = `JSON Error: ${modeValidation.error}`;
+        jsonErrorStatus.className = "json-status error";
+        revertSaveButtonState();
+        return;
+      }
+
+      // Save API key, model & default length to storage
+      await chrome.storage.local.set({
+        selectedModel: rawModel,
+        defaultLength: rawDefaultLength
+      });
+
+      // Automatically synchronize the active prompt length selector state
+      updateSelectedLengthUI(rawDefaultLength);
+      await chrome.storage.local.set({ selectedLength: rawDefaultLength });
+
+      // Success response
+      jsonErrorStatus.textContent = "Settings saved successfully!";
+      jsonErrorStatus.className = "json-status success";
+      
+      await renderModes();
+      
+      setTimeout(() => {
+        revertSaveButtonState();
+      }, 1000);
+    } catch (err) {
+      console.warn("[Axiom Popup] saveSettingsBtn failed:", err.message);
       revertSaveButtonState();
-      return;
     }
-
-    // Save API key, model & default length to storage
-    await chrome.storage.local.set({
-      apiKey: rawApiKey,
-      selectedModel: rawModel,
-      defaultLength: rawDefaultLength
-    });
-
-    // Automatically synchronize the active prompt length selector state
-    updateSelectedLengthUI(rawDefaultLength);
-    await chrome.storage.local.set({ selectedLength: rawDefaultLength });
-
-    // Success response
-    jsonErrorStatus.textContent = "Settings saved successfully!";
-    jsonErrorStatus.className = "json-status success";
-    
-    toggleApiAlertBanner(rawApiKey);
-    await renderModes();
-    
-    setTimeout(() => {
-      revertSaveButtonState();
-    }, 1000);
   });
 
   // 6. Optimize CTA click
   optimizeCtaBtn.addEventListener('click', async () => {
-    const rawPrompt = rawPromptInput.value.trim();
-    const selectedModeId = modeSelect.value;
+    try {
+      const rawPrompt = rawPromptInput.value.trim();
+      const selectedModeId = modeSelect.value;
 
-    if (rawPrompt === "") {
-      alert("Please enter a raw prompt to optimize.");
-      return;
-    }
-
-    // Double check if API Key exists
-    const { apiKey = '' } = await chrome.storage.local.get(['apiKey']);
-    if (!apiKey) {
-      alert("API Key is missing. Please configure it in the Settings tab.");
-      tabSettingsBtn.click();
-      apiKeyInput.focus();
-      return;
-    }
-
-    // Set loading UI
-    setLoadingState(true);
-    outputSection.style.display = 'block';
-    optimizedPromptOutput.textContent = '';
-    optimizedPromptOutput.classList.remove('placeholder-text');
-    optimizedPromptOutput.style.color = '#ffffff';
-
-    // Establish a long-lived stream port connection to the background script
-    const port = chrome.runtime.connect({ name: 'axiom-stream-port' });
-    
-    port.postMessage({
-      type: 'OPTIMIZE_PROMPT_STREAM',
-      rawPrompt,
-      selectedModeId,
-      selectedLength
-    });
-
-    let accumulatedText = '';
-
-    port.onMessage.addListener((response) => {
-      if (response.type === 'CHUNK') {
-        accumulatedText += response.text;
-        showOutput(accumulatedText);
-      } else if (response.type === 'SUCCESS') {
-        setLoadingState(false);
-        showOutput(response.state.optimizedPrompt);
-        port.disconnect();
-      } else if (response.type === 'ERROR') {
-        setLoadingState(false);
-        showError(response.state.error);
-        port.disconnect();
+      if (rawPrompt === "") {
+        alert("Please enter a raw prompt to optimize.");
+        return;
       }
-    });
 
-    port.onDisconnect.addListener(() => {
-      console.log("[Axiom Popup] Port stream disconnected.");
-    });
+      // Double check if API Key exists
+      const { apiKey = '' } = await chrome.storage.local.get(['apiKey']);
+      if (!apiKey) {
+        alert("API Key is missing. Please configure it in the Options page.");
+        chrome.runtime.openOptionsPage();
+        return;
+      }
+
+      // Set loading UI
+      setLoadingState(true);
+      outputSection.style.display = 'block';
+      optimizedPromptOutput.textContent = '';
+      optimizedPromptOutput.classList.remove('placeholder-text');
+      optimizedPromptOutput.style.color = '#ffffff';
+
+      // Establish a long-lived stream port connection to the background script
+      const port = chrome.runtime.connect({ name: 'axiom-stream-port' });
+      
+      port.postMessage({
+        type: 'OPTIMIZE_PROMPT_STREAM',
+        rawPrompt,
+        selectedModeId,
+        selectedLength
+      });
+
+      let accumulatedText = '';
+
+      port.onMessage.addListener((response) => {
+        try {
+          if (response.type === 'CHUNK') {
+            accumulatedText += response.text;
+            showOutput(accumulatedText);
+          } else if (response.type === 'SUCCESS') {
+            setLoadingState(false);
+            showOutput(response.state.optimizedPrompt);
+            port.disconnect();
+          } else if (response.type === 'ERROR') {
+            setLoadingState(false);
+            showError(response.state.error);
+            port.disconnect();
+          }
+        } catch (innerErr) {
+          console.warn("[Axiom Popup] Error processing port message chunk:", innerErr.message);
+        }
+      });
+
+      port.onDisconnect.addListener(() => {
+        console.log("[Axiom Popup] Port stream disconnected.");
+      });
+    } catch (err) {
+      console.warn("[Axiom Popup] Optimization trigger pipeline failed:", err.message);
+      setLoadingState(false);
+    }
   });
 
   // 7. Copy to clipboard button
