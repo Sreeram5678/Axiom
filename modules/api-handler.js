@@ -104,6 +104,11 @@ export async function optimizePrompt({
       }
     }
 
+    // Verify response body is readable
+    if (!response.body) {
+      throw new Error("Unable to read streaming response body from Gemini API.");
+    }
+
     // Set up stream reader
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
