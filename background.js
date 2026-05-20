@@ -49,6 +49,22 @@ async function runOptimization(params, onChunk) {
 // 1. Connection-oriented Port streaming listener
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name === 'axiom-stream-port') {
+    let isPortConnected = true;
+    port.onDisconnect.addListener(() => {
+      isPortConnected = false;
+      console.log("[Axiom Background] Port disconnected.");
+    });
+
+    const safePostMessage = (data) => {
+      if (isPortConnected) {
+        try {
+          port.postMessage(data);
+        } catch (e) {
+          console.warn("[Axiom Background] Failed to post message to port:", e.message);
+        }
+      }
+    };
+
     port.onMessage.addListener(async (message) => {
       if (message.type === 'OPTIMIZE_PROMPT_STREAM') {
         const { rawPrompt, selectedModeId, selectedLength } = message;
@@ -79,7 +95,7 @@ chrome.runtime.onConnect.addListener((port) => {
             for (const word of words) {
               if (word) {
                 accumulated += word;
-                port.postMessage({ type: 'CHUNK', text: word });
+                safePostMessage({ type: 'CHUNK', text: word });
                 // Update session state incrementally to support active popup re-open transitions
                 await chrome.storage.session.set({ optimizedPrompt: accumulated });
                 await new Promise(r => setTimeout(r, 4));
@@ -95,7 +111,7 @@ chrome.runtime.onConnect.addListener((port) => {
               error: null
             };
             await chrome.storage.session.set(successState);
-            port.postMessage({ type: 'SUCCESS', state: successState });
+            safePostMessage({ type: 'SUCCESS', state: successState });
             return;
           }
         } catch (e) {
@@ -120,7 +136,7 @@ chrome.runtime.onConnect.addListener((port) => {
             selectedLength: length
           }, async (chunk) => {
             accumulated += chunk;
-            port.postMessage({ type: 'CHUNK', text: chunk });
+            safePostMessage({ type: 'CHUNK', text: chunk });
             
             // Push incremental tokens to session state so UI can recover mid-generation
             await chrome.storage.session.set({
@@ -149,7 +165,7 @@ chrome.runtime.onConnect.addListener((port) => {
             error: null
           };
           await chrome.storage.session.set(successState);
-          port.postMessage({ type: 'SUCCESS', state: successState });
+          safePostMessage({ type: 'SUCCESS', state: successState });
 
         } catch (err) {
           console.error("Optimization failed in streaming:", err);
@@ -162,7 +178,7 @@ chrome.runtime.onConnect.addListener((port) => {
             error: err.message
           };
           await chrome.storage.session.set(errorState);
-          port.postMessage({ type: 'ERROR', state: errorState });
+          safePostMessage({ type: 'ERROR', state: errorState });
         }
       }
     });
@@ -243,3 +259,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep message channel open for asynchronous response
   }
 });
+
