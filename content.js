@@ -17,6 +17,70 @@ const GENERIC_SELECTORS = [
 ];
 
 
+// Global State Declarations
+let floatingWidget = null;
+let lastActiveInputEl = null;
+let observer = null;
+let axiomIntervalId = null;
+let isCleanedUp = false;
+let dragSignalController = null;
+
+// Check if the extension context is still valid (detects reload/update)
+function isContextValid() {
+  try {
+    if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.getURL) {
+      return false;
+    }
+    chrome.runtime.getURL("");
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Gracefully clean up all extension side-effects when context is invalidated
+function destroyAxiom() {
+  if (isCleanedUp) return;
+  isCleanedUp = true;
+  
+  console.log("[Axiom] Extension context invalidated. Cleaning up listeners, timers, and UI.");
+  
+  // 1. Disconnect MutationObserver safely
+  try {
+    if (observer) {
+      observer.disconnect();
+    }
+  } catch (e) {}
+  
+  // 2. Clear failsafe interval
+  try {
+    if (axiomIntervalId) {
+      clearInterval(axiomIntervalId);
+    }
+  } catch (e) {}
+  
+  // 3. Remove floating widget from DOM
+  try {
+    if (floatingWidget) {
+      floatingWidget.remove();
+      floatingWidget = null;
+    }
+  } catch (e) {}
+  
+  // 4. Clean up focusin listener
+  try {
+    document.removeEventListener('focusin', handleFocusIn);
+  } catch (e) {}
+
+  // 5. Clean up document-level drag listeners using AbortController
+  try {
+    if (dragSignalController) {
+      dragSignalController.abort();
+      dragSignalController = null;
+    }
+  } catch (e) {}
+}
+
 // Helper to check if an element is inside a specific tag, crossing shadow boundaries safely
 function isInsideElement(el, tagName) {
   try {
@@ -212,16 +276,18 @@ function setCursorToEnd(el) {
   }
 }
 
-let floatingWidget = null;
-let lastActiveInputEl = null;
-
-// Track the last focused input field
-document.addEventListener('focusin', (e) => {
+// Track the last focused input field safely
+function handleFocusIn(e) {
+  if (!isContextValid()) {
+    destroyAxiom();
+    return;
+  }
   const target = e.target;
   if (target && isValidPromptInput(target)) {
     lastActiveInputEl = target;
   }
-});
+}
+document.addEventListener('focusin', handleFocusIn);
 
 // Helper to find the target input for optimization
 function getTargetInput() {
@@ -248,19 +314,44 @@ function makeDraggable(container) {
   let initialLeft, initialTop;
   let hasMoved = false;
 
-  // Restore saved coordinates
-  chrome.storage.local.get(['widgetLeft', 'widgetTop'], (data) => {
-    if (data.widgetLeft && data.widgetTop) {
-      container.style.left = data.widgetLeft;
-      container.style.top = data.widgetTop;
-      container.style.bottom = 'auto';
-      container.style.right = 'auto';
-    } else {
-      // Default initial position floating on the bottom right
-      container.style.bottom = '120px';
-      container.style.right = '32px';
-    }
-  });
+  if (!isContextValid()) {
+    destroyAxiom();
+    return;
+  }
+
+  // Setup AbortController for mousemove/mouseup and touchmove/touchend listeners
+  if (dragSignalController) {
+    try {
+      dragSignalController.abort();
+    } catch (e) {}
+  }
+  dragSignalController = new AbortController();
+
+  // Restore saved coordinates safely
+  try {
+    chrome.storage.local.get(['widgetLeft', 'widgetTop'], (data) => {
+      if (!isContextValid()) {
+        destroyAxiom();
+        return;
+      }
+      if (chrome.runtime.lastError) {
+        console.warn("[Axiom] Error restoring coordinates:", chrome.runtime.lastError.message);
+        return;
+      }
+      if (data && data.widgetLeft && data.widgetTop) {
+        container.style.left = data.widgetLeft;
+        container.style.top = data.widgetTop;
+        container.style.bottom = 'auto';
+        container.style.right = 'auto';
+      } else {
+        // Default initial position floating on the bottom right
+        container.style.bottom = '120px';
+        container.style.right = '32px';
+      }
+    });
+  } catch (e) {
+    destroyAxiom();
+  }
 
   const onStart = (clientX, clientY) => {
     isDragging = true;
@@ -309,11 +400,23 @@ function makeDraggable(container) {
     isDragging = false;
     
     if (hasMoved) {
-      // Save final coordinates to persistence
-      chrome.storage.local.set({
-        widgetLeft: container.style.left,
-        widgetTop: container.style.top
-      });
+      if (!isContextValid()) {
+        destroyAxiom();
+        return;
+      }
+      try {
+        // Save final coordinates to persistence safely
+        chrome.storage.local.set({
+          widgetLeft: container.style.left,
+          widgetTop: container.style.top
+        }, () => {
+          if (chrome.runtime.lastError) {
+            console.warn("[Axiom] Error saving coordinates:", chrome.runtime.lastError.message);
+          }
+        });
+      } catch (e) {
+        destroyAxiom();
+      }
     }
   };
 
@@ -327,11 +430,11 @@ function makeDraggable(container) {
 
   document.addEventListener('mousemove', (e) => {
     onMove(e.clientX, e.clientY);
-  });
+  }, { signal: dragSignalController.signal });
 
   document.addEventListener('mouseup', () => {
     onEnd();
-  });
+  }, { signal: dragSignalController.signal });
 
   // Touch events for mobile/tablet screens
   container.addEventListener('touchstart', (e) => {
@@ -344,11 +447,133 @@ function makeDraggable(container) {
     if (!isDragging) return;
     const touch = e.touches[0];
     onMove(touch.clientX, touch.clientY);
-  }, { passive: true });
+  }, { passive: true, signal: dragSignalController.signal });
 
   document.addEventListener('touchend', () => {
     onEnd();
-  });
+  }, { signal: dragSignalController.signal });
+}
+
+// Unified function to handle streaming prompt optimization
+async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
+  if (!inputEl) return;
+
+  if (!isContextValid()) {
+    destroyAxiom();
+    alert("Axiom: The extension has been updated or reloaded. Please refresh the page to continue using Axiom.");
+    return;
+  }
+
+  const textVal = inputEl.tagName === 'TEXTAREA' || inputEl.tagName === 'INPUT'
+    ? inputEl.value.trim()
+    : (inputEl.innerText || inputEl.textContent).trim();
+    
+  if (!textVal) {
+    alert("Axiom: Please enter a prompt to optimize first!");
+    return;
+  }
+  
+  // Read local credentials and configuration safely
+  let storageData = {};
+  try {
+    storageData = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['apiKey', 'lastActiveModeId', 'selectedLength', 'defaultLength'], (data) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  } catch (e) {
+    destroyAxiom();
+    alert("Axiom: The extension has been updated or reloaded. Please refresh the page to continue using Axiom.");
+    return;
+  }
+
+  const { apiKey = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium' } = storageData;
+  const activeLength = selectedLength || defaultLength;
+  
+  if (!apiKey) {
+    alert("Axiom: Please configure your Gemini API Key in the extension popup settings first!");
+    return;
+  }
+  
+  // Set active loader visual states (class-based premium transitions)
+  if (buttonEl) buttonEl.disabled = true;
+  if (containerEl) containerEl.classList.add('loading');
+  if (buttonEl) {
+    const btnText = buttonEl.querySelector('.axiom-btn-text');
+    if (btnText) btnText.textContent = 'Optimizing...';
+  }
+  
+  let accumulatedText = '';
+  
+  // Establish port connection to background streaming worker safely
+  let port;
+  try {
+    port = chrome.runtime.connect({ name: 'axiom-stream-port' });
+  } catch (e) {
+    destroyAxiom();
+    alert("Axiom: The extension has been updated or reloaded. Please refresh the page to continue using Axiom.");
+    return;
+  }
+  
+  let isCleanedUpPort = false;
+  const cleanup = () => {
+    if (isCleanedUpPort) return;
+    isCleanedUpPort = true;
+    
+    if (buttonEl) buttonEl.disabled = false;
+    if (containerEl) containerEl.classList.remove('loading');
+    if (buttonEl) {
+      const btnText = buttonEl.querySelector('.axiom-btn-text');
+      if (btnText) btnText.textContent = 'Optimize Prompt';
+    }
+    try {
+      port.disconnect();
+    } catch (e) {}
+  };
+  
+  try {
+    port.postMessage({
+      type: 'OPTIMIZE_PROMPT_STREAM',
+      rawPrompt: textVal,
+      selectedModeId: lastActiveModeId,
+      selectedLength: activeLength
+    });
+    
+    port.onMessage.addListener((response) => {
+      if (!isContextValid()) {
+        cleanup();
+        destroyAxiom();
+        return;
+      }
+      if (response.type === 'CHUNK') {
+        accumulatedText += response.text;
+        
+        // Rewrite active input field incrementally in real time
+        replaceInputValue(inputEl, accumulatedText);
+        setCursorToEnd(inputEl);
+      } else if (response.type === 'SUCCESS') {
+        // Final commits and cursor relocation
+        replaceInputValue(inputEl, response.state.optimizedPrompt);
+        setCursorToEnd(inputEl);
+        cleanup();
+      } else if (response.type === 'ERROR') {
+        const errorMsg = response.state?.error || 'Unknown error occurred during optimization.';
+        alert(`Axiom Optimization Error: ${errorMsg}`);
+        cleanup();
+      }
+    });
+    
+    port.onDisconnect.addListener(() => {
+      console.log("[Axiom Inline Widget] Port stream disconnected.");
+      cleanup();
+    });
+  } catch (e) {
+    cleanup();
+  }
 }
 
 // Sets up button event listener and optimization API pipeline trigger
@@ -363,71 +588,7 @@ function setupButtonListener(button, container) {
       return;
     }
     
-    const textVal = inputEl.tagName === 'TEXTAREA' || inputEl.tagName === 'INPUT'
-      ? inputEl.value.trim()
-      : (inputEl.innerText || inputEl.textContent).trim();
-      
-    if (!textVal) {
-      alert("Axiom: Please enter a prompt to optimize first!");
-      return;
-    }
-    
-    // Read local credentials and configuration
-    const { apiKey = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium' } = await chrome.storage.local.get(['apiKey', 'lastActiveModeId', 'selectedLength', 'defaultLength']);
-    const activeLength = selectedLength || defaultLength;
-    
-    if (!apiKey) {
-      alert("Axiom: Please configure your Gemini API Key in the extension popup settings first!");
-      return;
-    }
-    
-    // Set active loader visual states (class-based premium transitions)
-    button.disabled = true;
-    container.classList.add('loading');
-    button.querySelector('.axiom-btn-text').textContent = 'Optimizing...';
-    
-    let accumulatedText = '';
-    
-    // Establish port connection to background streaming worker
-    const port = chrome.runtime.connect({ name: 'axiom-stream-port' });
-    
-    port.postMessage({
-      type: 'OPTIMIZE_PROMPT_STREAM',
-      rawPrompt: textVal,
-      selectedModeId: lastActiveModeId,
-      selectedLength: activeLength
-    });
-    
-    port.onMessage.addListener((response) => {
-      if (response.type === 'CHUNK') {
-        accumulatedText += response.text;
-        
-        // Rewrite active input field incrementally in real time
-        replaceInputValue(inputEl, accumulatedText);
-        setCursorToEnd(inputEl);
-      } else if (response.type === 'SUCCESS') {
-        button.disabled = false;
-        container.classList.remove('loading');
-        button.querySelector('.axiom-btn-text').textContent = 'Optimize Prompt';
-        
-        // Final commits and cursor relocation
-        replaceInputValue(inputEl, response.state.optimizedPrompt);
-        setCursorToEnd(inputEl);
-        port.disconnect();
-      } else if (response.type === 'ERROR') {
-        button.disabled = false;
-        container.classList.remove('loading');
-        button.querySelector('.axiom-btn-text').textContent = 'Optimize Prompt';
-        
-        const errorMsg = response.state?.error || 'Unknown error occurred during optimization.';
-        alert(`Axiom Optimization Error: ${errorMsg}`);
-        port.disconnect();
-      }
-    });
-    
-    port.onDisconnect.addListener(() => {
-      console.log("[Axiom Inline Widget] Port stream disconnected.");
-    });
+    handlePromptOptimization(inputEl, button, container);
   });
 }
 
@@ -466,6 +627,11 @@ function createFloatingWidget() {
 
 // Scans page and makes sure the floating widget is displayed only when chat inputs exist
 function scanAndInject() {
+  if (!isContextValid()) {
+    destroyAxiom();
+    return;
+  }
+  
   const inputs = findInputs();
   if (inputs.length > 0) {
     if (!floatingWidget) {
@@ -481,7 +647,7 @@ function scanAndInject() {
 }
 
 // 1. Setup live DOM tree MutationObserver safely
-const observer = new MutationObserver((mutations) => {
+observer = new MutationObserver((mutations) => {
   scanAndInject();
 });
 
@@ -494,9 +660,10 @@ if (document.body) {
 }
 
 // 2. Failsafe Interval scanner
-setInterval(scanAndInject, 1500);
+axiomIntervalId = setInterval(scanAndInject, 1500);
 
 // 3. Initial document scanner call
 scanAndInject();
 
 console.log("[Axiom] Extension Content Script successfully loaded and scanning started!");
+
