@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axiom — Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="logo-section">
+        <span class="logo-dot"></span>
+        <div class="logo-text">axiom</div>
+      </div>
+      <div class="header-title">Configuration</div>
+    </header>
+
+    <main>
+      <div class="options-card">
+        <h2 class="card-title">Gemini API Key</h2>
+        <p class="card-description">
+          Axiom requires a Google Gemini API key to function. Your key is stored securely in your browser's local storage and is never shared.
+        </p>
+        
+        <div class="form-group" id="api-key-container">
+          <label for="api-key-input" class="form-label">Enter API Key</label>
+          <div class="input-wrapper">
+            <input type="password" id="api-key-input" class="text-input" placeholder="AIzaSy...">
+            <button id="save-key-btn" class="btn-primary">Save Key</button>
+          </div>
+        </div>
+
+        <!-- Secure State (shown when key exists) -->
+        <div class="secure-state" id="secure-state" style="display: none;">
+          <div class="secure-banner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="success-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>API Key securely saved.</span>
+          </div>
+          <button id="update-key-btn" class="btn-secondary">Update Key</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="options.js" type="module"></script>
+</body>
+</html>
