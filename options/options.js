@@ -4,18 +4,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const apiKeyInput = document.getElementById('api-key-input');
   const saveKeyBtn = document.getElementById('save-key-btn');
   const updateKeyBtn = document.getElementById('update-key-btn');
+  
+  // Floating widget settings elements
+  const showAlwaysCheckbox = document.getElementById('show-always-checkbox');
+  const resetPositionBtn = document.getElementById('reset-position-btn');
 
   try {
-    // Check if key already exists
-    const { apiKey = '' } = await chrome.storage.local.get(['apiKey']);
+    // Check if key already exists, and retrieve showWidgetAlways setting
+    const { apiKey = '', showWidgetAlways = false } = await chrome.storage.local.get(['apiKey', 'showWidgetAlways']);
     
     if (apiKey) {
       showSecureState();
     } else {
       showInputState();
     }
+    
+    // Set initial checkbox state
+    if (showAlwaysCheckbox) {
+      showAlwaysCheckbox.checked = showWidgetAlways;
+    }
   } catch (err) {
-    console.warn("[Axiom Options] Failed to retrieve API key:", err.message);
+    console.warn("[Axiom Options] Failed to retrieve settings:", err.message);
     showInputState();
   }
 
@@ -40,6 +49,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     showInputState();
     apiKeyInput.focus();
   });
+
+  // Save "showWidgetAlways" toggle value dynamically on change
+  if (showAlwaysCheckbox) {
+    showAlwaysCheckbox.addEventListener('change', async (e) => {
+      try {
+        await chrome.storage.local.set({ showWidgetAlways: e.target.checked });
+      } catch (err) {
+        console.warn("[Axiom Options] Failed to save showWidgetAlways toggle:", err.message);
+      }
+    });
+  }
+
+  // Reset floating button's position coordinates in storage
+  if (resetPositionBtn) {
+    resetPositionBtn.addEventListener('click', async () => {
+      try {
+        await chrome.storage.local.remove(['widgetLeft', 'widgetTop']);
+        
+        // Visual confirmation feedback
+        const originalText = resetPositionBtn.textContent;
+        resetPositionBtn.textContent = 'Position Reset Successfully!';
+        resetPositionBtn.style.borderColor = 'var(--success-color)';
+        resetPositionBtn.style.color = 'var(--success-color)';
+        
+        setTimeout(() => {
+          resetPositionBtn.textContent = originalText;
+          resetPositionBtn.style.borderColor = '';
+          resetPositionBtn.style.color = '';
+        }, 2000);
+      } catch (err) {
+        console.warn("[Axiom Options] Failed to reset widget position:", err.message);
+        alert("Failed to reset position: " + err.message);
+      }
+    });
+  }
 
   function showSecureState() {
     apiKeyContainer.style.display = 'none';

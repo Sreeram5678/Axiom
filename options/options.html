@@ -40,6 +40,33 @@
           <button id="update-key-btn" class="btn-secondary">Update Key</button>
         </div>
       </div>
+
+      <div class="options-card" style="margin-top: 25px;">
+        <h2 class="card-title">Floating Widget Settings</h2>
+        <p class="card-description">
+          Customize the behavior and appearance of the in-page prompt optimizer button.
+        </p>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="show-always-checkbox">
+            <label for="show-always-checkbox" class="form-label checkbox-label">
+              Show Optimize button always on supported chat websites
+            </label>
+          </div>
+          <span class="label-hint-muted">
+            By default, the button is only shown when Axiom detects an active chat text input field. Enable this option if the button is not showing up automatically on ChatGPT, Gemini, Claude, or DeepSeek.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Position Troubleshoot</label>
+          <button id="reset-position-btn" class="btn-secondary" style="width: auto; align-self: flex-start;">Reset Button Position</button>
+          <span class="label-hint-muted" style="margin-top: 5px;">
+            If you dragged the Optimize button off-screen or cannot locate it, click here to return it to the default bottom-right position.
+          </span>
+        </div>
+      </div>
     </main>
   </div>
   <script src="options.js" type="module"></script>

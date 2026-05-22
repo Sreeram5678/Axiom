@@ -184,3 +184,31 @@ header {
 .success-icon {
   color: var(--success-color);
 }
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffffff;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 0;
+}
+
+.label-hint-muted {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+

@@ -339,14 +339,29 @@ function makeDraggable(container) {
         return;
       }
       if (data && data.widgetLeft && data.widgetTop) {
-        container.style.left = data.widgetLeft;
-        container.style.top = data.widgetTop;
-        container.style.bottom = 'auto';
-        container.style.right = 'auto';
+        const left = parseFloat(data.widgetLeft);
+        const top = parseFloat(data.widgetTop);
+        const margin = 10;
+        
+        // Bounds checking to make sure it's within the current screen viewport bounds
+        if (isNaN(left) || left < 0 || left > window.innerWidth - margin ||
+            isNaN(top) || top < 0 || top > window.innerHeight - margin) {
+          container.style.bottom = '120px';
+          container.style.right = '32px';
+          container.style.left = 'auto';
+          container.style.top = 'auto';
+        } else {
+          container.style.left = data.widgetLeft;
+          container.style.top = data.widgetTop;
+          container.style.bottom = 'auto';
+          container.style.right = 'auto';
+        }
       } else {
         // Default initial position floating on the bottom right
         container.style.bottom = '120px';
         container.style.right = '32px';
+        container.style.left = 'auto';
+        container.style.top = 'auto';
       }
     });
   } catch (e) {
@@ -626,23 +641,37 @@ function createFloatingWidget() {
 }
 
 // Scans page and makes sure the floating widget is displayed only when chat inputs exist
+// Scans page and makes sure the floating widget is displayed when chat inputs exist or when forced by settings
 function scanAndInject() {
   if (!isContextValid()) {
     destroyAxiom();
     return;
   }
   
-  const inputs = findInputs();
-  if (inputs.length > 0) {
-    if (!floatingWidget) {
-      createFloatingWidget();
-    } else {
-      floatingWidget.style.display = 'flex';
-    }
-  } else {
-    if (floatingWidget) {
-      floatingWidget.style.display = 'none';
-    }
+  try {
+    chrome.storage.local.get(['showWidgetAlways'], (data) => {
+      if (!isContextValid()) {
+        destroyAxiom();
+        return;
+      }
+      
+      const showAlways = data && data.showWidgetAlways === true;
+      const inputs = findInputs();
+      
+      if (showAlways || inputs.length > 0) {
+        if (!floatingWidget) {
+          createFloatingWidget();
+        } else {
+          floatingWidget.style.display = 'flex';
+        }
+      } else {
+        if (floatingWidget) {
+          floatingWidget.style.display = 'none';
+        }
+      }
+    });
+  } catch (e) {
+    destroyAxiom();
   }
 }
 
@@ -664,6 +693,35 @@ axiomIntervalId = setInterval(scanAndInject, 1500);
 
 // 3. Initial document scanner call
 scanAndInject();
+
+// 4. Reactive storage listener for configuration & position synchronization
+try {
+  if (chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local') {
+        if (!isContextValid()) {
+          destroyAxiom();
+          return;
+        }
+        
+        // Handle widget position reset
+        if (changes.widgetLeft && !changes.widgetLeft.newValue && floatingWidget) {
+          floatingWidget.style.bottom = '120px';
+          floatingWidget.style.right = '32px';
+          floatingWidget.style.left = 'auto';
+          floatingWidget.style.top = 'auto';
+        }
+        
+        // Handle visibility toggles
+        if (changes.showWidgetAlways) {
+          scanAndInject();
+        }
+      }
+    });
+  }
+} catch (e) {
+  console.warn("[Axiom] Failed to initialize dynamic storage change listener:", e);
+}
 
 console.log("[Axiom] Extension Content Script successfully loaded and scanning started!");
 
