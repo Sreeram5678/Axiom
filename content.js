@@ -469,7 +469,134 @@ function makeDraggable(container) {
   }, { signal: dragSignalController.signal });
 }
 
-// Unified function to handle streaming prompt optimization
+const CHAT_BUBBLE_SELECTORS = [
+  'div[data-testid*="conversation-turn"]',
+  '.message',
+  '.query-text',
+  '.model-response',
+  'g-right-bubble',
+  'g-left-bubble',
+  '.message-content',
+  '.font-claude-message',
+  '.chat-message',
+  'div[data-testid*="message"]',
+  '.ds-chat-bubble',
+  '.ds-markdown',
+  '.chat-bubble',
+  '.msg-content',
+  '.chat-msg',
+  '.im-message'
+];
+
+// Compile context synthesis by searching all adjacent chat bubbles across Shadow DOMs recursively
+function capturePageContext() {
+  const bubbles = [];
+  
+  function scan(root) {
+    if (!root) return;
+    CHAT_BUBBLE_SELECTORS.forEach(selector => {
+      try {
+        const elements = root.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (!bubbles.includes(el)) {
+            bubbles.push(el);
+          }
+        });
+      } catch (e) {}
+    });
+    
+    try {
+      const children = root.querySelectorAll('*');
+      children.forEach(child => {
+        if (child.shadowRoot) {
+          scan(child.shadowRoot);
+        }
+      });
+    } catch (e) {}
+  }
+  
+  scan(document);
+  
+  // Sort elements by vertical placement to preserve logical conversation flow
+  bubbles.sort((a, b) => {
+    const posA = a.getBoundingClientRect().top;
+    const posB = b.getBoundingClientRect().top;
+    return posA - posB;
+  });
+  
+  const contextItems = [];
+  // Grab the last 4 messages to balance prompt accuracy with context window limitations
+  bubbles.slice(-4).forEach(el => {
+    const text = el.innerText || el.textContent || "";
+    const cleaned = text.trim().replace(/\s+/g, ' ');
+    if (cleaned.length > 5 && cleaned.length < 1500) {
+      let speaker = "Participant";
+      const html = el.outerHTML.toLowerCase();
+      if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
+        speaker = "User";
+      } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
+        speaker = "Assistant";
+      }
+      contextItems.push(`${speaker}: ${cleaned}`);
+    }
+  });
+  
+  if (contextItems.length > 0) {
+    return `Conversation history context:\n${contextItems.join('\n')}`;
+  }
+  return "";
+}
+
+// Runs prompt optimization locally using Chrome's built-in window.ai.languageModel API
+async function runOnDeviceOptimizationStream(rawPrompt, systemInstruction, length, onChunk) {
+  if (typeof window.ai === 'undefined' || typeof window.ai.languageModel === 'undefined') {
+    throw new Error("window.ai language model API is not available.");
+  }
+  
+  const capabilities = await window.ai.languageModel.capabilities();
+  if (capabilities.available === "no") {
+    throw new Error("On-device Gemini Nano is not available or downloading.");
+  }
+
+  // RAM Guard warning and resource containment
+  if (navigator.deviceMemory && navigator.deviceMemory <= 8) {
+    console.log("[Axiom Local AI] Conservative allocation enforced (8GB or less system memory detected).");
+  }
+
+  let lengthDirective = "";
+  if (length === "short") {
+    lengthDirective = "The optimized prompt MUST be short, extremely concise, direct, and focused only on the absolute essentials.";
+  } else if (length === "detailed") {
+    lengthDirective = "The optimized prompt MUST be highly detailed, comprehensive, and thorough.";
+  } else {
+    lengthDirective = "The optimized prompt MUST be of medium length, balancing clear context, structural clarity, and efficient detail.";
+  }
+
+  const fullInstruction = `You are a master Prompt Engineer. Your task is to rewrite, refine, and optimize the user's prompt to achieve the highest quality response. Incorporate the following persona guidelines:\n\n${systemInstruction}\n\n${lengthDirective}\n\nCRITICAL: Return ONLY the raw optimized prompt string. Do not wrap the output in markdown code blocks, do not add conversational preamble.`;
+
+  const session = await window.ai.languageModel.create({
+    systemPrompt: fullInstruction,
+    temperature: 0.3
+  });
+
+  try {
+    const stream = session.promptStreaming(rawPrompt);
+    let previousLength = 0;
+    for await (const chunk of stream) {
+      const delta = chunk.substring(previousLength);
+      previousLength = chunk.length;
+      if (delta) {
+        onChunk(delta);
+      }
+    }
+  } finally {
+    try {
+      await session.destroy();
+    } catch (e) {}
+  }
+}
+
+// Unified function to handle streaming prompt optimization (Hybrid Routing + Local AI support)
 async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
   if (!inputEl) return;
 
@@ -487,12 +614,12 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
     alert("Axiom: Please enter a prompt to optimize first!");
     return;
   }
-  
-  // Read local credentials and configuration safely
+
+  // Read local credentials and configurations safely
   let storageData = {};
   try {
     storageData = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['apiKey', 'lastActiveModeId', 'selectedLength', 'defaultLength'], (data) => {
+      chrome.storage.local.get(['apiKey', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'customModes'], (data) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
         } else {
@@ -506,10 +633,10 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
     return;
   }
 
-  const { apiKey = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium' } = storageData;
+  const { apiKey = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', customModes = [] } = storageData;
   const activeLength = selectedLength || defaultLength;
   
-  if (!apiKey) {
+  if (!apiKey && aiRoutingMode !== 'local-only') {
     alert("Axiom: Please configure your Gemini API Key in the extension popup settings first!");
     return;
   }
@@ -522,6 +649,132 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
     if (btnText) btnText.textContent = 'Optimizing...';
   }
   
+  // Determine context synthetics
+  const pageContext = capturePageContext();
+  
+  // Route to local AI if conditions match
+  let runLocal = false;
+  if (aiRoutingMode === 'local-only') {
+    runLocal = true;
+  } else if (aiRoutingMode === 'hybrid') {
+    if (typeof window.ai !== 'undefined' && typeof window.ai.languageModel !== 'undefined') {
+      try {
+        const capabilities = await window.ai.languageModel.capabilities();
+        if (capabilities.available === 'readily') {
+          runLocal = true;
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (runLocal) {
+    if (buttonEl) {
+      const btnText = buttonEl.querySelector('.axiom-btn-text');
+      if (btnText) btnText.textContent = 'Optimizing (Local)...';
+    }
+
+    let accumulatedText = '';
+    try {
+      const promptToOptimize = pageContext 
+        ? `${pageContext}\n\nUser request to optimize:\n"${textVal}"`
+        : textVal;
+
+      // Extract mode instruction locally
+      const defaultModesList = [
+        {
+          "id": "analyst",
+          "systemInstruction": "Optimize the prompt to request structured data, clear logical assumptions, key performance indicators, comparative frameworks, and detailed analytical breakdowns."
+        },
+        {
+          "id": "engineer",
+          "systemInstruction": "Optimize the prompt to request high-quality, production-grade technical code or architecture designs. The prompt should explicitly seek edge-case handling, robust error management, code efficiency/complexity analysis (Big O), modular design patterns, security considerations, and comprehensive comments or documentation."
+        },
+        {
+          "id": "first-principles",
+          "systemInstruction": "Optimize the prompt to demand first-principles thinking. It must deconstruct the query into its most fundamental truths."
+        },
+        {
+          "id": "exec-summary",
+          "systemInstruction": "Optimize the prompt to demand a high-level strategic executive summary consisting of a 2-sentence overarching synthesis and 3-5 bulleted takeaways."
+        }
+      ];
+      
+      const allModes = [...customModes, ...defaultModesList];
+      const activeMode = allModes.find(m => m.id === lastActiveModeId) || allModes[0];
+      const systemInstruction = activeMode ? activeMode.systemInstruction : '';
+
+      await runOnDeviceOptimizationStream(
+        promptToOptimize,
+        systemInstruction,
+        activeLength,
+        (chunk) => {
+          accumulatedText += chunk;
+          replaceInputValue(inputEl, accumulatedText);
+          setCursorToEnd(inputEl);
+        }
+      );
+
+      // Final cleanups and format check
+      let optimizedText = accumulatedText.trim();
+      if (optimizedText.startsWith("```")) {
+        optimizedText = optimizedText.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+      }
+      replaceInputValue(inputEl, optimizedText);
+      setCursorToEnd(inputEl);
+
+      // Save local state to session storage to sync the popup UI
+      const successState = {
+        status: 'success',
+        rawPrompt: textVal,
+        selectedModeId: lastActiveModeId,
+        selectedLength: activeLength,
+        optimizedPrompt: optimizedText,
+        error: null
+      };
+
+      if (chrome.storage.session) {
+        await chrome.storage.session.set(successState);
+      }
+
+      // Notify service worker to log local success in history
+      try {
+        chrome.runtime.sendMessage({
+          type: 'SAVE_TO_HISTORY',
+          rawPrompt: textVal,
+          optimizedPrompt: optimizedText,
+          modeId: lastActiveModeId,
+          length: activeLength
+        });
+      } catch (e) {}
+
+      // Tear down visual loaders
+      if (buttonEl) buttonEl.disabled = false;
+      if (containerEl) containerEl.classList.remove('loading');
+      if (buttonEl) {
+        const btnText = buttonEl.querySelector('.axiom-btn-text');
+        if (btnText) btnText.textContent = 'Optimize Prompt';
+      }
+      return; // Handled locally!
+    } catch (err) {
+      console.warn("[Axiom Hybrid Router] Local Gemini Nano failed. Cascading to cloud fallback.", err);
+      if (aiRoutingMode === 'local-only') {
+        alert(`Axiom Local Error: ${err.message}. Adjust settings or enable window.ai flags.`);
+        if (buttonEl) buttonEl.disabled = false;
+        if (containerEl) containerEl.classList.remove('loading');
+        if (buttonEl) {
+          const btnText = buttonEl.querySelector('.axiom-btn-text');
+          if (btnText) btnText.textContent = 'Optimize Prompt';
+        }
+        return;
+      }
+      // Fall through to remote cloud optimization
+      if (buttonEl) {
+        const btnText = buttonEl.querySelector('.axiom-btn-text');
+        if (btnText) btnText.textContent = 'Optimizing (Cloud)...';
+      }
+    }
+  }
+
   let accumulatedText = '';
   
   // Establish port connection to background streaming worker safely
@@ -554,6 +807,7 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
     port.postMessage({
       type: 'OPTIMIZE_PROMPT_STREAM',
       rawPrompt: textVal,
+      contextPrompt: pageContext, // Scraped context passed to cloud prompt engineer
       selectedModeId: lastActiveModeId,
       selectedLength: activeLength
     });
@@ -566,12 +820,9 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
       }
       if (response.type === 'CHUNK') {
         accumulatedText += response.text;
-        
-        // Rewrite active input field incrementally in real time
         replaceInputValue(inputEl, accumulatedText);
         setCursorToEnd(inputEl);
       } else if (response.type === 'SUCCESS') {
-        // Final commits and cursor relocation
         replaceInputValue(inputEl, response.state.optimizedPrompt);
         setCursorToEnd(inputEl);
         cleanup();
@@ -626,10 +877,12 @@ function createFloatingWidget() {
   button.className = 'axiom-optimize-btn';
   button.setAttribute('type', 'button');
   button.innerHTML = `
-    <span class="axiom-sparkle">✨</span>
+    <svg class="axiom-sparkle-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9"></polygon></svg>
     <span class="axiom-btn-text">Optimize Prompt</span>
   `;
   container.appendChild(button);
+
+
   
   // Append directly to body to completely bypass nested layout clipping
   document.body.appendChild(container);
@@ -638,7 +891,13 @@ function createFloatingWidget() {
   // Set up dragging and click action
   makeDraggable(container);
   setupButtonListener(button, container);
+
+
 }
+
+
+
+
 
 // Scans page and makes sure the floating widget is displayed only when chat inputs exist
 // Scans page and makes sure the floating widget is displayed when chat inputs exist or when forced by settings
@@ -724,4 +983,23 @@ try {
 }
 
 console.log("[Axiom] Extension Content Script successfully loaded and scanning started!");
+
+// 5. Global focused input keyboard shortcut listener (Alt+Shift+O / Option+Shift+O)
+document.addEventListener('keydown', async (e) => {
+  if (!isContextValid()) {
+    destroyAxiom();
+    return;
+  }
+  
+  // Option+Shift+O or Alt+Shift+O
+  if (e.altKey && e.shiftKey && e.code === 'KeyO') {
+    const inputEl = getTargetInput();
+    if (inputEl) {
+      e.preventDefault();
+      
+      const buttonEl = floatingWidget ? floatingWidget.querySelector('.axiom-optimize-btn') : null;
+      handlePromptOptimization(inputEl, buttonEl, floatingWidget);
+    }
+  }
+});
 

@@ -1,5 +1,6 @@
 import { optimizePrompt } from './modules/api-handler.js';
 import { getModes } from './modules/modes.js';
+import { decrypt } from './modules/crypto-helper.js';
 
 // Initialize extension defaults on install
 chrome.runtime.onInstalled.addListener(async () => {
@@ -36,14 +37,51 @@ async function runOptimization(params, onChunk) {
     throw new Error(`Selected mode '${params.selectedModeId}' is invalid or not configured.`);
   }
 
+  // Inject page context synthesis if available
+  const promptToOptimize = params.contextPrompt
+    ? `${params.contextPrompt}\n\nUser request to optimize:\n"${params.rawPrompt}"`
+    : params.rawPrompt;
+
   return await optimizePrompt({
-    rawPrompt: params.rawPrompt,
+    rawPrompt: promptToOptimize,
     systemInstruction: mode.systemInstruction,
     apiKey,
     model: selectedModel,
     length: params.selectedLength,
     onChunk
   });
+}
+
+// Helper to record successful optimizations in history (max 15 items)
+async function saveToHistory(rawPrompt, optimizedPrompt, modeId, length) {
+  try {
+    const modes = await getModes();
+    const mode = modes.find(m => m.id === modeId);
+    const modeName = mode ? mode.name : modeId;
+
+    const historyItem = {
+      id: 'hist_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now(),
+      rawPrompt,
+      optimizedPrompt,
+      modeId,
+      modeName,
+      length
+    };
+
+    const { promptHistory = [] } = await chrome.storage.local.get(['promptHistory']);
+    
+    // Add to beginning of array
+    promptHistory.unshift(historyItem);
+    
+    // Cap at 15 items
+    const cappedHistory = promptHistory.slice(0, 15);
+    
+    await chrome.storage.local.set({ promptHistory: cappedHistory });
+    console.log("[Axiom History] Logged new prompt optimization item:", historyItem.id);
+  } catch (e) {
+    console.error("[Axiom History] Failed to log prompt optimization history:", e);
+  }
 }
 
 // 1. Connection-oriented Port streaming listener
@@ -67,7 +105,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
     port.onMessage.addListener(async (message) => {
       if (message.type === 'OPTIMIZE_PROMPT_STREAM') {
-        const { rawPrompt, selectedModeId, selectedLength } = message;
+        const { rawPrompt, contextPrompt, selectedModeId, selectedLength } = message;
         const { defaultLength = 'medium', selectedModel = 'gemini-3.1-flash-lite' } = await chrome.storage.local.get(['defaultLength', 'selectedModel']);
         const length = selectedLength || defaultLength;
 
@@ -111,6 +149,7 @@ chrome.runtime.onConnect.addListener((port) => {
               error: null
             };
             await chrome.storage.session.set(successState);
+            await saveToHistory(rawPrompt, cachedText, selectedModeId, length);
             safePostMessage({ type: 'SUCCESS', state: successState });
             return;
           }
@@ -132,6 +171,7 @@ chrome.runtime.onConnect.addListener((port) => {
           let accumulated = '';
           const optimized = await runOptimization({
             rawPrompt,
+            contextPrompt,
             selectedModeId,
             selectedLength: length
           }, async (chunk) => {
@@ -165,6 +205,7 @@ chrome.runtime.onConnect.addListener((port) => {
             error: null
           };
           await chrome.storage.session.set(successState);
+          await saveToHistory(rawPrompt, optimized, selectedModeId, length);
           safePostMessage({ type: 'SUCCESS', state: successState });
 
         } catch (err) {
@@ -206,6 +247,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             error: null
           };
           await chrome.storage.session.set(successState);
+          await saveToHistory(message.rawPrompt, cacheData[cacheKey], message.selectedModeId, length);
           sendResponse(successState);
           return;
         }
@@ -238,6 +280,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           error: null
         };
         await chrome.storage.session.set(successState);
+        await saveToHistory(message.rawPrompt, optimized, message.selectedModeId, length);
         sendResponse(successState);
 
       } catch (err) {
@@ -258,5 +301,52 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })();
     return true; // Keep message channel open for asynchronous response
   }
+
+  if (message.type === 'SAVE_TO_HISTORY') {
+    (async () => {
+      try {
+        await saveToHistory(message.rawPrompt, message.optimizedPrompt, message.modeId, message.length);
+        sendResponse({ success: true });
+      } catch (err) {
+        console.error("Failed to save to history via background message:", err);
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true; // Keep message channel open for asynchronous response
+  }
 });
+
+// 3. Zero-Knowledge Sync Event Listener (On onChanged in 'sync' area)
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName === 'sync') {
+    if (changes.encryptedSyncBlob) {
+      const { syncPassphrase } = await chrome.storage.local.get(['syncPassphrase']);
+      if (syncPassphrase && changes.encryptedSyncBlob.newValue) {
+        try {
+          console.log("[Axiom Sync] Received new encrypted sync blob. Decrypting...");
+          const decryptedString = await decrypt(changes.encryptedSyncBlob.newValue, syncPassphrase);
+          const decryptedData = JSON.parse(decryptedString);
+          
+          const toSet = {};
+          if (decryptedData.apiKey) {
+            toSet.apiKey = decryptedData.apiKey;
+          }
+          if (decryptedData.customModes) {
+            toSet.customModes = decryptedData.customModes;
+          }
+          
+          if (Object.keys(toSet).length > 0) {
+            await chrome.storage.local.set(toSet);
+            console.log("[Axiom Sync] Decrypted synced profile and updated local settings.");
+          }
+        } catch (err) {
+          console.error("[Axiom Sync] Decryption failed or payload is invalid:", err.message);
+        }
+      } else if (changes.encryptedSyncBlob.newValue) {
+        console.log("[Axiom Sync] New encrypted profile found in sync storage, but passphrase is not set locally.");
+      }
+    }
+  }
+});
+
 
