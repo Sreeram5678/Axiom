@@ -74,13 +74,17 @@
   display: inline-block !important;
 }
 
-.axiom-sparkle {
-  font-size: 14px !important;
+.axiom-sparkle-svg {
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+  color: #c084fc !important;
   transition: transform 0.3s ease !important;
 }
 
+
 /* Hover & Interactive States */
-.axiom-optimize-btn:hover .axiom-sparkle {
+.axiom-optimize-btn:hover .axiom-sparkle-svg {
   transform: scale(1.15) rotate(5deg) !important;
 }
 
@@ -142,7 +146,10 @@
   animation: axiom-pulse-text 1.4s ease-in-out infinite !important;
 }
 
-.axiom-floating-container.loading .axiom-sparkle {
+.axiom-floating-container.loading .axiom-sparkle-svg {
   animation: axiom-sparkle-float 1.2s ease-in-out infinite !important;
   display: inline-block !important;
 }
+
+
+

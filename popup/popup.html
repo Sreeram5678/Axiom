@@ -18,6 +18,7 @@
       <!-- Premium Segmented Tab Control -->
       <div class="tabs-nav segmented-control">
         <button id="tab-optimize-btn" class="tab-btn segment-btn active" data-target="optimize-panel">Optimize</button>
+        <button id="tab-history-btn" class="tab-btn segment-btn" data-target="history-panel">History</button>
         <button id="tab-settings-btn" class="tab-btn segment-btn" data-target="settings-panel">Settings</button>
       </div>
     </header>
@@ -48,16 +49,19 @@
           </div>
         </div>
 
-        <!-- Unified Horizontal Split Action Row: Selector & Optimize CTA -->
-        <div class="action-row">
-          <div class="select-wrapper">
-            <select id="mode-select">
-              <!-- Populated dynamically via JS -->
-            </select>
+        <!-- Premium Modes Grid Selector -->
+        <div class="modes-selector-section">
+          <label class="section-label-small">Optimize Mode</label>
+          <div id="modes-grid-container" class="modes-grid">
+            <!-- Loaded dynamically -->
           </div>
-          <button id="optimize-cta-btn" class="btn-primary">
+        </div>
+
+        <!-- CTA Action Button -->
+        <div class="cta-row">
+          <button id="optimize-cta-btn" class="btn-primary full-width">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-            <span>Optimize</span>
+            <span>Optimize Prompt</span>
           </button>
         </div>
 
@@ -78,7 +82,18 @@
         </div>
       </div>
 
-      <!-- Tab Panel 2: Settings -->
+      <!-- Tab Panel 2: History -->
+      <div id="history-panel" class="tab-panel">
+        <div class="panel-header-small">
+          <span class="panel-title-small">Optimization History</span>
+          <button id="clear-history-btn" class="btn-text-action" type="button">Clear All</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab Panel 3: Settings -->
       <div id="settings-panel" class="tab-panel">
         <!-- API Key Configuration Card -->
         <div class="form-group">
@@ -110,14 +125,83 @@
           </div>
         </div>
 
-        <!-- System Modes Customization Card -->
+        <!-- AI Routing Mode Selector -->
         <div class="form-group">
-          <label for="json-modes-editor" class="form-label json-editor-label">
-            Edit Modes Configuration (JSON)
-          </label>
-          <textarea id="json-modes-editor" class="json-textarea"></textarea>
-          <div id="json-error-status" class="json-status"></div>
+          <label for="ai-routing-select" class="form-label">AI Routing Mode</label>
+          <div class="select-wrapper">
+            <select id="ai-routing-select">
+              <option value="hybrid">Hybrid (Auto)</option>
+              <option value="cloud-only">Cloud Only</option>
+              <option value="local-only">On-Device Only (Gemini Nano)</option>
+            </select>
+          </div>
+          <span id="ram-tip" class="label-hint" style="display: none; margin-top: 4px; color: var(--text-secondary);"></span>
         </div>
+
+        <!-- Zero-Knowledge Sync Card -->
+        <div class="form-group" style="margin-top: 5px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+          <label class="form-label">Zero-Knowledge Sync</label>
+          <div id="sync-status-badge" class="sync-badge" style="display: none; margin-bottom: 8px;"></div>
+          <div id="sync-passphrase-wrapper" class="form-sub-group" style="margin-bottom: 8px;">
+            <input type="password" id="sync-passphrase-input" class="form-input" placeholder="Enter Sync Passphrase" style="width: 100%;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="enable-sync-btn" class="btn-secondary" style="font-size: 11px; padding: 6px 12px; flex: 1;" type="button">Enable Sync</button>
+            <button id="disable-sync-btn" class="btn-secondary" style="font-size: 11px; padding: 6px 12px; flex: 1; display: none; border-color: rgba(239, 68, 68, 0.2); color: #f87171;" type="button">Disable Sync</button>
+          </div>
+        </div>
+
+
+        <!-- System Modes Customization (Visual Mode Manager) -->
+        <div class="form-group mode-manager-group">
+          <div class="mode-manager-header">
+            <label class="form-label">Visual Modes Manager</label>
+            <button id="add-mode-toggle-btn" class="btn-text-action" type="button">+ Add Mode</button>
+          </div>
+          
+          <!-- Mode Creator Form -->
+          <div id="mode-creator-form" class="mode-creator-form-panel" style="display: none;">
+            <div class="form-sub-group">
+              <input type="text" id="new-mode-name" class="form-input" placeholder="Mode Name (e.g. Creative Writer)">
+            </div>
+            <div class="form-sub-group">
+              <input type="text" id="new-mode-desc" class="form-input" placeholder="Short description (e.g. Craft engaging copy)">
+            </div>
+            <div class="form-sub-group">
+              <textarea id="new-mode-instruction" class="form-textarea" placeholder="System instructions for Gemini..."></textarea>
+            </div>
+            <div class="form-sub-group inline-row">
+              <div class="icon-selector-wrapper">
+                <label class="field-label-small">Accent Color</label>
+                <select id="new-mode-icon" class="icon-select">
+                  <option value="blue">Analytical Blue</option>
+                  <option value="green">Technical Green</option>
+                  <option value="purple">First-Principles Purple</option>
+                  <option value="yellow">Exec-Summary Amber</option>
+                  <option value="red">Hot Coral</option>
+                  <option value="pink">Magenta Rose</option>
+                  <option value="grey">Cool Slate</option>
+                </select>
+              </div>
+              <button id="save-new-mode-btn" class="btn-primary-small" type="button">Add Mode</button>
+            </div>
+            <div id="mode-creator-error" class="form-error-msg"></div>
+          </div>
+
+          <!-- Visual Modes List -->
+          <div id="visual-modes-list" class="visual-modes-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Advanced JSON Configuration -->
+        <details class="advanced-json-details">
+          <summary class="advanced-json-summary">Advanced JSON View</summary>
+          <div class="form-group json-editor-wrapper">
+            <textarea id="json-modes-editor" class="json-textarea"></textarea>
+            <div id="json-error-status" class="json-status"></div>
+          </div>
+        </details>
 
         <!-- Action Buttons for Settings -->
         <div class="settings-actions">
