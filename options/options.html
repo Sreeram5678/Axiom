@@ -42,6 +42,43 @@
       </div>
 
       <div class="options-card" style="margin-top: 25px;">
+        <h2 class="card-title">AI Routing & On-Device Mode</h2>
+        <p class="card-description">
+          Configure how optimizations are processed: dynamically routing through local on-device models (Gemini Nano) or Google's secure cloud endpoints.
+        </p>
+        
+        <div class="form-group">
+          <label for="ai-routing-select" class="form-label">AI Routing Mode</label>
+          <div class="select-wrapper">
+            <select id="ai-routing-select">
+              <option value="hybrid">Hybrid (Auto-Routing)</option>
+              <option value="cloud-only">Cloud Only</option>
+              <option value="local-only">On-Device Only (Gemini Nano)</option>
+            </select>
+          </div>
+          <span id="ram-tip" class="ram-tip" style="display: none;"></span>
+        </div>
+      </div>
+
+      <div class="options-card" style="margin-top: 25px;">
+        <h2 class="card-title">Zero-Knowledge Encrypted Sync</h2>
+        <p class="card-description">
+          Securely backup and synchronize your customized configurations, system modes, and API keys across multiple devices using robust local end-to-end encryption.
+        </p>
+        
+        <div class="form-group">
+          <div id="sync-status-badge" class="sync-badge" style="display: none; margin-bottom: 8px;"></div>
+          <div id="sync-passphrase-wrapper" class="form-sub-group" style="margin-bottom: 8px;">
+            <input type="password" id="sync-passphrase-input" class="text-input" placeholder="Enter Sync Passphrase" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="enable-sync-btn" class="btn-primary" style="flex: 1; padding: 10px 0;">Enable Sync</button>
+            <button id="disable-sync-btn" class="btn-secondary" style="flex: 1; display: none; border-color: rgba(239, 68, 68, 0.2); color: #f87171;">Disable Sync</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="options-card" style="margin-top: 25px;">
         <h2 class="card-title">Floating Widget Settings</h2>
         <p class="card-description">
           Customize the behavior and appearance of the in-page prompt optimizer button.

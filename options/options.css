@@ -212,3 +212,81 @@ header {
   line-height: 1.4;
 }
 
+/* Premium Select Fields */
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select-wrapper select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select-wrapper select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-muted);
+  pointer-events: none;
+}
+
+/* Secure Sync Badges */
+.sync-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  line-height: 1.4;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sync-badge.active {
+  border-color: rgba(74, 222, 128, 0.2);
+  background: rgba(74, 222, 128, 0.05);
+  color: #4ade80;
+}
+
+.sync-badge.pending {
+  border-color: rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.05);
+  color: #fbbf24;
+}
+
+.sync-badge.error {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  color: #f87171;
+}
+
+.form-sub-group {
+  margin-top: 10px;
+}
+
+.ram-tip {
+  font-size: 0.8rem;
+  color: #fbbf24;
+  margin-top: 5px;
+}
+
