@@ -66,6 +66,9 @@ struct HUDView: View {
                 self.triggerAction(actionId)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ResetHUDState"))) { _ in
+            self.state = .idle
+        }
     }
     
     // MARK: - Header

@@ -116,6 +116,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func showHUD(immediateActionId: String? = nil) {
         guard let panel = hudPanel else { return }
         
+        // Post a notification to reset the SwiftUI state of HUDView back to idle
+        NotificationCenter.default.post(name: Notification.Name("ResetHUDState"), object: nil)
+        
         // Position panel relative to active mouse cursor pointer
         panel.positionNearMouseCursor()
         
