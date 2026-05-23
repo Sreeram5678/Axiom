@@ -153,6 +153,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: - Hotkey Configurations
     
+    func executeSilentAction(actionId: String) {
+        Task {
+            print("[AxiomOS] Initiating silent direct action: \(actionId)...")
+            
+            // 1. Capture selection immediately from the active application (since it still has focus!)
+            guard let selection = await TextInterception.shared.getSelection(),
+                  !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                print("[AxiomOS] Silent direct action cancelled: empty text selection.")
+                DispatchQueue.main.async {
+                    NSSound(named: "Basso")?.play() // Auditory error alert
+                }
+                return
+            }
+            
+            do {
+                // 2. Query the Gemini API in the background (silent accumulation)
+                let result = try await GeminiClient.shared.optimizePrompt(
+                    rawPrompt: selection,
+                    modeId: actionId,
+                    length: ConfigManager.shared.defaultLength,
+                    onChunk: { _ in } // Silently accumulate
+                )
+                
+                // 3. Write optimized selection back directly to active editor
+                await TextInterception.shared.replaceSelection(with: result)
+                print("[AxiomOS] Silent direct action \(actionId) completed successfully.")
+                
+                // 4. Play premium native macOS Glass tick sound as non-intrusive feedback
+                DispatchQueue.main.async {
+                    NSSound(named: "Glass")?.play()
+                }
+            } catch {
+                print("[AxiomOS] Silent direct action \(actionId) error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    NSSound(named: "Basso")?.play() // Auditory warning alert
+                }
+            }
+        }
+    }
+    
     private func setupHotKeys() {
         let manager = HotKeyManager.shared
         
@@ -168,58 +208,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         manager.onTriggerDirectOptimize = { [weak self] in
-            Task {
-                print("[AxiomOS Trigger] Direct Control+Shift+O pressed. Capturing selection...")
-                let selection = await TextInterception.shared.getSelection() ?? ""
-                DispatchQueue.main.async {
-                    AxiomSession.shared.capturedText = selection
-                    self?.showHUD(immediateActionId: "analyst")
-                }
-            }
+            self?.executeSilentAction(actionId: "analyst")
         }
         
         manager.onTriggerDirectProofread = { [weak self] in
-            Task {
-                print("[AxiomOS Trigger] Direct Control+Shift+P pressed. Capturing selection...")
-                let selection = await TextInterception.shared.getSelection() ?? ""
-                DispatchQueue.main.async {
-                    AxiomSession.shared.capturedText = selection
-                    self?.showHUD(immediateActionId: "proofread")
-                }
-            }
+            self?.executeSilentAction(actionId: "proofread")
         }
         
         manager.onTriggerDirectRewrite = { [weak self] in
-            Task {
-                print("[AxiomOS Trigger] Direct Control+Shift+R pressed. Capturing selection...")
-                let selection = await TextInterception.shared.getSelection() ?? ""
-                DispatchQueue.main.async {
-                    AxiomSession.shared.capturedText = selection
-                    self?.showHUD(immediateActionId: "rewrite")
-                }
-            }
+            self?.executeSilentAction(actionId: "rewrite")
         }
         
         manager.onTriggerDirectEngineer = { [weak self] in
-            Task {
-                print("[AxiomOS Trigger] Direct Control+Shift+E pressed. Capturing selection...")
-                let selection = await TextInterception.shared.getSelection() ?? ""
-                DispatchQueue.main.async {
-                    AxiomSession.shared.capturedText = selection
-                    self?.showHUD(immediateActionId: "exec-summary")
-                }
-            }
+            self?.executeSilentAction(actionId: "exec-summary")
         }
         
         manager.onTriggerDirectSummarize = { [weak self] in
-            Task {
-                print("[AxiomOS Trigger] Direct Control+Shift+S pressed. Capturing selection...")
-                let selection = await TextInterception.shared.getSelection() ?? ""
-                DispatchQueue.main.async {
-                    AxiomSession.shared.capturedText = selection
-                    self?.showHUD(immediateActionId: "summarize")
-                }
-            }
+            self?.executeSilentAction(actionId: "summarize")
         }
         
         manager.startListening()
