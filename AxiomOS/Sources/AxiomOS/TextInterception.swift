@@ -4,6 +4,8 @@ import ApplicationServices
 class TextInterception {
     static let shared = TextInterception()
     
+    private var previouslyActiveApp: NSRunningApplication?
+    
     private init() {}
     
     func checkAccessibilityAccess(prompt: Bool = false) -> Bool {
@@ -42,6 +44,10 @@ class TextInterception {
     
     // Core Entry: Gets text selection using hybrid mechanics
     func getSelection() async -> String? {
+        // Save the active application before capturing or losing focus
+        previouslyActiveApp = NSWorkspace.shared.frontmostApplication
+        print("[AxiomOS Intercept] Captured active application: \(previouslyActiveApp?.localizedName ?? "Unknown")")
+        
         // 1. Accessibility Attempt
         if let focusedElement = getFocusedElement() {
             if let selectedText = getAccessibilitySelectedText(from: focusedElement), !selectedText.isEmpty {
@@ -57,6 +63,14 @@ class TextInterception {
     
     // Core Entry: Replaces selection using hybrid mechanics
     func replaceSelection(with newValue: String) async {
+        // Explicitly re-activate previously active app
+        if let app = previouslyActiveApp {
+            print("[AxiomOS Intercept] Restoring focus to: \(app.localizedName ?? "Unknown")")
+            app.activate(options: [.activateIgnoringOtherApps])
+            // Wait 150ms for the OS context switch to complete fully
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        
         // 1. Accessibility Attempt
         if let focusedElement = getFocusedElement() {
             if setAccessibilitySelectedText(on: focusedElement, to: newValue) {

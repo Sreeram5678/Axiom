@@ -67,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         menu.addItem(NSMenuItem.separator())
         
-        menu.addItem(withTitle: "Open HUD Panel (⌥⇧Space)", action: #selector(menuOpenHUD), keyEquivalent: "")
+        menu.addItem(withTitle: "Open HUD Panel (⌃⇧Space)", action: #selector(menuOpenHUD), keyEquivalent: "")
         menu.addItem(withTitle: "Edit Config File (~/.axiom_config.json)", action: #selector(menuEditConfig), keyEquivalent: "")
         menu.addItem(withTitle: "Request Accessibility Access...", action: #selector(menuRequestAccessibility), keyEquivalent: "")
         
@@ -138,29 +138,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hudPanel?.orderOut(nil)
     }
     
+    func performReplacement(with text: String) {
+        hideHUD()
+        // Wait 150ms for target window focus restoration before writing selection back
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            Task {
+                await TextInterception.shared.replaceSelection(with: text)
+            }
+        }
+    }
+    
     // MARK: - Hotkey Configurations
     
     private func setupHotKeys() {
         let manager = HotKeyManager.shared
         
         manager.onTriggerHUD = { [weak self] in
-            print("[AxiomOS Trigger] Option+Shift+Space pressed. Summoning HUD...")
-            self?.showHUD()
+            Task {
+                print("[AxiomOS Trigger] Control+Shift+Space pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD()
+                }
+            }
         }
         
         manager.onTriggerDirectOptimize = { [weak self] in
-            print("[AxiomOS Trigger] Direct Option+Shift+O pressed. Optimizing...")
-            self?.showHUD(immediateActionId: "analyst")
+            Task {
+                print("[AxiomOS Trigger] Direct Control+Shift+O pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD(immediateActionId: "analyst")
+                }
+            }
         }
         
         manager.onTriggerDirectProofread = { [weak self] in
-            print("[AxiomOS Trigger] Direct Option+Shift+P pressed. Proofreading...")
-            self?.showHUD(immediateActionId: "proofread")
+            Task {
+                print("[AxiomOS Trigger] Direct Control+Shift+P pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD(immediateActionId: "proofread")
+                }
+            }
         }
         
         manager.onTriggerDirectRewrite = { [weak self] in
-            print("[AxiomOS Trigger] Direct Option+Shift+R pressed. Rewriting...")
-            self?.showHUD(immediateActionId: "rewrite")
+            Task {
+                print("[AxiomOS Trigger] Direct Control+Shift+R pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD(immediateActionId: "rewrite")
+                }
+            }
         }
         
         manager.startListening()
@@ -193,4 +227,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func menuQuit() {
         NSApplication.shared.terminate(nil)
     }
+}
+
+class AxiomSession: ObservableObject {
+    static let shared = AxiomSession()
+    @Published var capturedText: String = ""
+    private init() {}
 }

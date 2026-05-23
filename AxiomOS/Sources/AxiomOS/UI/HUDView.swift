@@ -285,8 +285,9 @@ struct HUDView: View {
         state = .processing(actionId)
         
         Task {
-            // Retrieve selection
-            guard let selection = await TextInterception.shared.getSelection(), !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            // Retrieve selection from the pre-captured shared session context
+            let selection = AxiomSession.shared.capturedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !selection.isEmpty else {
                 state = .error("Highlight some text or type inside a field before triggering.")
                 return
             }
@@ -307,8 +308,12 @@ struct HUDView: View {
                     }
                 )
                 
-                // Set text replacement
-                await TextInterception.shared.replaceSelection(with: result)
+                // Set text replacement via AppDelegate to release key window and restore focus
+                DispatchQueue.main.async {
+                    if let delegate = NSApplication.shared.delegate as? AppDelegate {
+                        delegate.performReplacement(with: result)
+                    }
+                }
                 state = .success
             } catch {
                 state = .error(error.localizedDescription)

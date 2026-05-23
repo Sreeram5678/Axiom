@@ -46,19 +46,19 @@ class HotKeyManager {
         
         InstallEventHandler(GetApplicationEventTarget(), handlerProc, 1, &eventType, nil, nil)
         
-        // Modifiers: Option = 0x0800, Shift = 0x0200 -> Combined = 0x0A00 (2560)
-        let modifiers = UInt32(optionKey | shiftKey)
+        // Modifiers: Control = 0x1000, Shift = 0x0200 -> Combined = 0x1200 (4608)
+        let modifiers = UInt32(controlKey | shiftKey)
         
-        // 1. Option+Shift+Space (Space bar virtual key code: 49)
+        // 1. Control+Shift+Space (Space bar virtual key code: 49)
         registerHotKey(id: 1, keyCode: 49, modifiers: modifiers)
         
-        // 2. Option+Shift+O (O key virtual key code: 31)
+        // 2. Control+Shift+O (O key virtual key code: 31)
         registerHotKey(id: 2, keyCode: 31, modifiers: modifiers)
         
-        // 3. Option+Shift+P (P key virtual key code: 35)
+        // 3. Control+Shift+P (P key virtual key code: 35)
         registerHotKey(id: 3, keyCode: 35, modifiers: modifiers)
         
-        // 4. Option+Shift+R (R key virtual key code: 15)
+        // 4. Control+Shift+R (R key virtual key code: 15)
         registerHotKey(id: 4, keyCode: 15, modifiers: modifiers)
         
         print("[AxiomOS HotKey] Native Carbon global hotkey hooks established successfully!")
