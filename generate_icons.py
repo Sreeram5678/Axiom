@@ -57,34 +57,40 @@ for size in [16, 48, 128]:
     # Paste gradient using the rounded mask
     img.paste(gradient_img, (0, 0), mask=mask)
     
-    # Redraw canvas for text drawing
-    draw = ImageDraw.Draw(img)
+    # Draw a premium, stylized set of white sparkles (matching the desktop app's aesthetic)
+    def draw_sparkle(draw, cx, cy, ro, ri, fill):
+        # 8-point polygon representing a smooth curved four-point star/sparkle
+        points = [
+            (cx, cy - ro),        # Top
+            (cx + ri, cy - ri),   # Top-Right
+            (cx + ro, cy),        # Right
+            (cx + ri, cy + ri),   # Bottom-Right
+            (cx, cy + ro),        # Bottom
+            (cx - ri, cy + ri),   # Bottom-Left
+            (cx - ro, cy),        # Left
+            (cx - ri, cy - ri)    # Top-Left
+        ]
+        draw.polygon(points, fill=fill)
+
+    # Calculate sizes and draw three overlapping/adjacent white sparkles (SF Symbols style)
+    # Sparkle 1 (Large main sparkle)
+    cx1, cy1 = size * 0.44, size * 0.56
+    ro1 = size * 0.28
+    ri1 = ro1 * 0.22
+    draw_sparkle(draw, cx1, cy1, ro1, ri1, (255, 255, 255, 255))
     
-    # Add a bold, elegant letter 'A'
-    font_size = int(size * 0.55)
+    # Sparkle 2 (Medium upper-right sparkle)
+    cx2, cy2 = size * 0.72, size * 0.32
+    ro2 = size * 0.16
+    ri2 = ro2 * 0.22
+    draw_sparkle(draw, cx2, cy2, ro2, ri2, (255, 255, 255, 255))
     
-    try:
-        # Try to use standard sans-serif font
-        font = ImageFont.truetype("Arial Bold.ttf", font_size)
-    except IOError:
-        try:
-            # Try macOS standard Helvetica
-            font = ImageFont.truetype("Helvetica-Bold.ttf", font_size)
-        except IOError:
-            try:
-                # Try generic font
-                font = ImageFont.load_default()
-            except:
-                font = None
+    # Sparkle 3 (Small lower-left sparkle)
+    cx3, cy3 = size * 0.25, size * 0.28
+    ro3 = size * 0.10
+    ri3 = ro3 * 0.22
+    draw_sparkle(draw, cx3, cy3, ro3, ri3, (255, 255, 255, 255))
     
-    # Calculate text position
-    if font:
-        # Draw clean letter 'A'
-        draw.text((size // 2, size // 2), 'A', fill='white', anchor='mm', font=font)
-    else:
-        # Fallback text draw
-        draw.text((size // 2, size // 2), 'A', fill='white', anchor='mm')
-        
     img.save(f'icons/icon-{size}.png')
     print(f"Successfully generated icons/icon-{size}.png ({size}x{size} px)")
 
