@@ -27,6 +27,7 @@ const modelSelect = document.getElementById('model-select');
 const defaultLengthSelect = document.getElementById('default-length-select');
 const aiRoutingSelect = document.getElementById('ai-routing-select');
 const ramTip = document.getElementById('ram-tip');
+const floatingWidgetSelect = document.getElementById('floating-widget-select');
 
 const syncStatusBadge = document.getElementById('sync-status-badge');
 const syncPassphraseInput = document.getElementById('sync-passphrase-input');
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function initializeUI() {
   try {
     // Load API Key, Model settings, prompt length & last selected Mode
-    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode']);
+    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', hideWidgetEntirely = false } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'hideWidgetEntirely']);
     
     modelSelect.value = selectedModel;
     defaultLengthSelect.value = defaultLength;
@@ -89,6 +90,11 @@ async function initializeUI() {
     // Set AI Routing Mode select value
     if (aiRoutingSelect) {
       aiRoutingSelect.value = aiRoutingMode;
+    }
+
+    // Set floating widget visibility value
+    if (floatingWidgetSelect) {
+      floatingWidgetSelect.value = hideWidgetEntirely ? 'hide' : 'show';
     }
     
     // 8GB RAM tip detection
@@ -606,6 +612,7 @@ function setupEventListeners() {
       const rawDefaultLength = defaultLengthSelect.value;
       const jsonString = jsonModesEditor.value;
       const aiRoutingMode = aiRoutingSelect ? aiRoutingSelect.value : 'hybrid';
+      const hideWidgetEntirely = floatingWidgetSelect ? (floatingWidgetSelect.value === 'hide') : false;
 
       // Save configurations
       saveSettingsBtn.disabled = true;
@@ -625,7 +632,8 @@ function setupEventListeners() {
       await chrome.storage.local.set({
         selectedModel: rawModel,
         defaultLength: rawDefaultLength,
-        aiRoutingMode: aiRoutingMode
+        aiRoutingMode: aiRoutingMode,
+        hideWidgetEntirely: hideWidgetEntirely
       });
 
       // Automatically synchronize the active prompt length selector state

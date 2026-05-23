@@ -908,9 +908,17 @@ function scanAndInject() {
   }
   
   try {
-    chrome.storage.local.get(['showWidgetAlways'], (data) => {
+    chrome.storage.local.get(['showWidgetAlways', 'hideWidgetEntirely'], (data) => {
       if (!isContextValid()) {
         destroyAxiom();
+        return;
+      }
+      
+      const hideEntirely = data && data.hideWidgetEntirely === true;
+      if (hideEntirely) {
+        if (floatingWidget) {
+          floatingWidget.style.display = 'none';
+        }
         return;
       }
       
@@ -972,7 +980,7 @@ try {
         }
         
         // Handle visibility toggles
-        if (changes.showWidgetAlways) {
+        if (changes.showWidgetAlways || changes.hideWidgetEntirely) {
           scanAndInject();
         }
       }
