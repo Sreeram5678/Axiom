@@ -20,8 +20,22 @@ class ConfigManager {
     private let configFileName = ".axiom_config.json"
     private var configModel: ConfigModel = .default
     
-    var apiKey: String { configModel.apiKey }
-    var defaultLength: String { configModel.defaultLength }
+    var apiKey: String {
+        // Read directly from secure Keychain if available and valid
+        if let secureKey = KeychainHelper.shared.read(), secureKey != "STORED_SECURELY_IN_KEYCHAIN" && secureKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !secureKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return secureKey
+        }
+        return configModel.apiKey
+    }
+    
+    var defaultLength: String {
+        get { configModel.defaultLength }
+        set {
+            configModel.defaultLength = newValue
+            saveConfig()
+        }
+    }
+    
     var selectedModeId: String {
         get { configModel.selectedModeId }
         set {
@@ -43,8 +57,26 @@ class ConfigManager {
         if FileManager.default.fileExists(atPath: url.path) {
             do {
                 let data = try Data(contentsOf: url)
-                let decoded = try JSONDecoder().decode(ConfigModel.self, from: data)
-                self.configModel = decoded
+                var decoded = try JSONDecoder().decode(ConfigModel.self, from: data)
+                
+                // --- Keychain Migration & Redaction ---
+                let localKey = decoded.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                if localKey != "STORED_SECURELY_IN_KEYCHAIN" && localKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !localKey.isEmpty {
+                    // Safe copy plain-text API key from JSON dotfile into Secure Keychain
+                    let success = KeychainHelper.shared.save(password: localKey)
+                    if success {
+                        print("[AxiomOS Keychain] Successfully migrated API key to secure Keychain.")
+                        // Redact API key from plain text configuration model
+                        decoded.apiKey = "STORED_SECURELY_IN_KEYCHAIN"
+                        self.configModel = decoded
+                        saveConfig()
+                    } else {
+                        print("[AxiomOS Keychain] Failed to save key to secure Keychain. Falling back to plain text model.")
+                        self.configModel = decoded
+                    }
+                } else {
+                    self.configModel = decoded
+                }
                 print("[AxiomOS Config] Successfully loaded config from ~/.axiom_config.json")
             } catch {
                 print("[AxiomOS Config] Error loading config, reverting to default: \(error)")
@@ -59,9 +91,18 @@ class ConfigManager {
     func saveConfig() {
         let url = configFileURL
         do {
+            var modelToSave = configModel
+            
+            // Check if the current model in memory contains a raw plain-text API key to protect
+            let localKey = modelToSave.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            if localKey != "STORED_SECURELY_IN_KEYCHAIN" && localKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !localKey.isEmpty {
+                KeychainHelper.shared.save(password: localKey)
+                modelToSave.apiKey = "STORED_SECURELY_IN_KEYCHAIN"
+            }
+            
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(configModel)
+            let data = try encoder.encode(modelToSave)
             try data.write(to: url, options: .atomic)
             print("[AxiomOS Config] Successfully saved config to ~/.axiom_config.json")
         } catch {
