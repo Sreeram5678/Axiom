@@ -53,10 +53,39 @@ class GeminiClient {
         
         let systemInstruction = ConfigManager.shared.systemInstruction(for: modeId)
         
-        // Setup payload structure
-        let systemPromptText = "You are a master Prompt Engineer. Your task is to rewrite, refine, and optimize the user's prompt to achieve the highest quality response. Incorporate the following persona and guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble (e.g., 'Here is your optimized prompt:'), no conversational filler, no markdown code blocks surrounding the prompt (i.e. do not wrap the output in ``` or ```text). Return it directly as clean plain text."
+        // Setup payload structure conditionally with 6 distinct, specialized templates
+        let systemPromptText: String
+        let userPromptText: String
         
-        let userPromptText = "Please optimize the following raw prompt. Make it highly professional, effective, and detailed according to your persona rules. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+        switch modeId {
+        case "analyst":
+            systemPromptText = "You are a master Prompt Engineer specializing in business analysis, comparative frameworks, and structured metrics. Your task is to rewrite, refine, and optimize the user's prompt to achieve the highest quality analytical response. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks surrounding the prompt. Return it directly as clean plain text."
+            userPromptText = "Please optimize the following raw prompt to request structured data, KPIs, assumptions, and analytical deconstructions. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+            
+        case "engineer":
+            systemPromptText = "You are a master Prompt Engineer specializing in software architecture, system design, and production-grade software development. Your task is to rewrite, refine, and optimize the user's prompt to demand highly robust, secure, and clean technical solutions. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks surrounding the prompt. Return it directly as clean plain text."
+            userPromptText = "Please optimize the following raw prompt to request production-grade technical code, Big O analysis, edge-case coverage, and detailed comments. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+            
+        case "first-principles":
+            systemPromptText = "You are a master Prompt Engineer specializing in first-principles reasoning and logical deconstruction. Your task is to rewrite, refine, and optimize the user's prompt to demand deconstructing the query down to its absolute, fundamental, and undeniable truths. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks surrounding the prompt. Return it directly as clean plain text."
+            userPromptText = "Please optimize the following raw prompt to demand first-principles analysis. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+            
+        case "exec-summary":
+            systemPromptText = "You are a master Prompt Engineer specializing in executive summary generation and high-level strategic takeaways. Your task is to rewrite, refine, and optimize the user's prompt to demand a high-level strategic brief consisting of a 2-sentence synthesis and 3-5 bulleted takeaways. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks surrounding the prompt. Return it directly as clean plain text."
+            userPromptText = "Please optimize the following raw prompt to request a high-level strategic executive summary brief. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+            
+        case "proofread":
+            systemPromptText = "\(systemInstruction)\n\nCRITICAL: Do NOT perform prompt engineering, do NOT convert this text into an optimized prompt, and do NOT add conversational preambles. Output ONLY the polished, grammatically corrected text. No markdown code blocks (i.e. do not wrap the output in ```)."
+            userPromptText = "Please proofread the following text for spelling, grammar, syntax, and flow. Provide only the polished result and nothing else.\n\nText:\n\"\(trimmedPrompt)\""
+            
+        case "rewrite":
+            systemPromptText = "\(systemInstruction)\n\nCRITICAL: Do NOT perform prompt engineering, do NOT convert this text into an optimized prompt, and do NOT add conversational preambles. Output ONLY the beautifully rewritten and polished text. No markdown code blocks (i.e. do not wrap the output in ```)."
+            userPromptText = "Please rewrite the following text to elevate its vocabulary, professional tone, and style while preserving all facts. Provide only the polished result and nothing else.\n\nText:\n\"\(trimmedPrompt)\""
+            
+        default:
+            systemPromptText = "You are a master Prompt Engineer. Your task is to rewrite, refine, and optimize the user's prompt to achieve the highest quality response. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks. Return it directly as clean plain text."
+            userPromptText = "Please optimize the following raw prompt. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
+        }
         
         // Payload dictionary to serialize
         let payload: [String: Any] = [
