@@ -200,6 +200,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         
+        manager.onTriggerDirectEngineer = { [weak self] in
+            Task {
+                print("[AxiomOS Trigger] Direct Control+Shift+E pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD(immediateActionId: "exec-summary")
+                }
+            }
+        }
+        
+        manager.onTriggerDirectSummarize = { [weak self] in
+            Task {
+                print("[AxiomOS Trigger] Direct Control+Shift+S pressed. Capturing selection...")
+                let selection = await TextInterception.shared.getSelection() ?? ""
+                DispatchQueue.main.async {
+                    AxiomSession.shared.capturedText = selection
+                    self?.showHUD(immediateActionId: "summarize")
+                }
+            }
+        }
+        
         manager.startListening()
     }
     

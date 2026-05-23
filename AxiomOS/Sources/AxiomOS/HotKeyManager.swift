@@ -11,6 +11,8 @@ class HotKeyManager {
     var onTriggerDirectOptimize: (() -> Void)?
     var onTriggerDirectProofread: (() -> Void)?
     var onTriggerDirectRewrite: (() -> Void)?
+    var onTriggerDirectEngineer: (() -> Void)?
+    var onTriggerDirectSummarize: (() -> Void)?
     
     private init() {}
     
@@ -61,6 +63,12 @@ class HotKeyManager {
         // 4. Control+Shift+R (R key virtual key code: 15)
         registerHotKey(id: 4, keyCode: 15, modifiers: modifiers)
         
+        // 5. Control+Shift+E (E key virtual key code: 14)
+        registerHotKey(id: 5, keyCode: 14, modifiers: modifiers)
+        
+        // 6. Control+Shift+S (S key virtual key code: 1)
+        registerHotKey(id: 6, keyCode: 1, modifiers: modifiers)
+        
         print("[AxiomOS HotKey] Native Carbon global hotkey hooks established successfully!")
     }
     
@@ -95,6 +103,10 @@ class HotKeyManager {
             onTriggerDirectProofread?()
         case 4:
             onTriggerDirectRewrite?()
+        case 5:
+            onTriggerDirectEngineer?()
+        case 6:
+            onTriggerDirectSummarize?()
         default:
             break
         }

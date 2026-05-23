@@ -83,6 +83,8 @@ class ConfigManager {
             return "You are an expert editor. Proofread the user's provided text. Fix all spelling mistakes, grammar errors, punctuation, and syntax issues. Improve sentence flow and readability without changing the core factual information or style of writing. Output ONLY the final polished text. Do NOT add markdown code blocks, introductory text, conversational preambles, or formatting unless requested."
         case "rewrite":
             return "You are a master of style and communication. Rewrite and polish the user's text to make it extremely clear, professional, elegant, and persuasive. Elevate the tone and vocabulary while fully preserving the technical details and core arguments. Output ONLY the rewritten text. Do NOT add markdown code blocks, introductory text, conversational preambles, or formatting unless requested."
+        case "summarize":
+            return "You are an expert summarizer. Condense the user's provided text to its absolute core essence, removing fluff while fully preserving all critical facts, data points, and context. Output ONLY the clean, summarized plain text."
         default:
             return "Optimize the user's prompt to achieve the highest quality response. Make it structured, clear, and contextually rich."
         }
