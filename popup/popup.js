@@ -27,7 +27,7 @@ const modelSelect = document.getElementById('model-select');
 const defaultLengthSelect = document.getElementById('default-length-select');
 const aiRoutingSelect = document.getElementById('ai-routing-select');
 const ramTip = document.getElementById('ram-tip');
-const floatingWidgetSelect = document.getElementById('floating-widget-select');
+const widgetToggleCheckbox = document.getElementById('widget-toggle-checkbox');
 
 const syncStatusBadge = document.getElementById('sync-status-badge');
 const syncPassphraseInput = document.getElementById('sync-passphrase-input');
@@ -93,8 +93,8 @@ async function initializeUI() {
     }
 
     // Set floating widget visibility value
-    if (floatingWidgetSelect) {
-      floatingWidgetSelect.value = hideWidgetEntirely ? 'hide' : 'show';
+    if (widgetToggleCheckbox) {
+      widgetToggleCheckbox.checked = !hideWidgetEntirely;
     }
     
     // 8GB RAM tip detection
@@ -528,6 +528,18 @@ function setupTabSwitching() {
 
 // Core Event Listeners
 function setupEventListeners() {
+  // Instant Auto-save for In-Page Floating Widget Toggle (snappy reactivity)
+  if (widgetToggleCheckbox) {
+    widgetToggleCheckbox.addEventListener('change', async (e) => {
+      try {
+        const isChecked = e.target.checked;
+        await chrome.storage.local.set({ hideWidgetEntirely: !isChecked });
+      } catch (err) {
+        console.warn("[Axiom Popup] Instant toggle save failed:", err.message);
+      }
+    });
+  }
+
   // 1. Raw prompt character counter & text saver
   rawPromptInput.addEventListener('input', (e) => {
     try {
@@ -612,7 +624,7 @@ function setupEventListeners() {
       const rawDefaultLength = defaultLengthSelect.value;
       const jsonString = jsonModesEditor.value;
       const aiRoutingMode = aiRoutingSelect ? aiRoutingSelect.value : 'hybrid';
-      const hideWidgetEntirely = floatingWidgetSelect ? (floatingWidgetSelect.value === 'hide') : false;
+      const hideWidgetEntirely = widgetToggleCheckbox ? !widgetToggleCheckbox.checked : false;
 
       // Save configurations
       saveSettingsBtn.disabled = true;
