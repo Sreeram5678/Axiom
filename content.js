@@ -917,7 +917,7 @@ function scanAndInject() {
       const hideEntirely = data && data.hideWidgetEntirely === true;
       if (hideEntirely) {
         if (floatingWidget) {
-          floatingWidget.style.display = 'none';
+          floatingWidget.style.setProperty('display', 'none', 'important');
         }
         return;
       }
@@ -929,11 +929,11 @@ function scanAndInject() {
         if (!floatingWidget) {
           createFloatingWidget();
         } else {
-          floatingWidget.style.display = 'flex';
+          floatingWidget.style.setProperty('display', 'flex', 'important');
         }
       } else {
         if (floatingWidget) {
-          floatingWidget.style.display = 'none';
+          floatingWidget.style.setProperty('display', 'none', 'important');
         }
       }
     });
