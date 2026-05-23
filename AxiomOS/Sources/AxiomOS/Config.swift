@@ -45,7 +45,10 @@ class ConfigManager {
     }
     
     private var configFileURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(configFileName)
+        if let customDir = ProcessInfo.processInfo.environment["AXIOM_CONFIG_DIR"] {
+            return URL(fileURLWithPath: customDir).appendingPathComponent(configFileName)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(configFileName)
     }
     
     private init() {

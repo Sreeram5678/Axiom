@@ -20,6 +20,11 @@ let package = Package(
                 .linkedFramework("Cocoa"),
                 .linkedFramework("ApplicationServices")
             ]
+        ),
+        .testTarget(
+            name: "AxiomOSTests",
+            dependencies: [],
+            path: "Tests/AxiomOSTests"
         )
     ]
 )

@@ -4,8 +4,8 @@ import Security
 class KeychainHelper {
     static let shared = KeychainHelper()
     
-    private let service = "com.axiom.axiomos"
-    private let account = "GeminiAPIKey"
+    var service = "com.axiom.axiomos"
+    var account = "GeminiAPIKey"
     
     private init() {}
     
