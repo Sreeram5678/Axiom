@@ -26,9 +26,10 @@ struct HUDView: View {
     
     private let actions = [
         HUDAction(id: "analyst", name: "Optimize Prompt", description: "Inject context structure & edge cases", keyChar: "O", color: Color(red: 0.1, green: 0.5, blue: 0.9)),
+        HUDAction(id: "engineer", name: "Engineer Mode", description: "Optimize for robust code & edge cases", keyChar: "E", color: Color(red: 0.15, green: 0.35, blue: 0.85)),
         HUDAction(id: "proofread", name: "Proofread Text", description: "Fix typing grammar & sentence flow", keyChar: "P", color: Color(red: 0.1, green: 0.7, blue: 0.4)),
         HUDAction(id: "rewrite", name: "Rewrite & Elevate", description: "Enhance vocabulary & style elegantly", keyChar: "R", color: Color(red: 0.6, green: 0.3, blue: 0.9)),
-        HUDAction(id: "exec-summary", name: "Executive Summary", description: "Deconstruct into bulleted takeaways", keyChar: "E", color: Color(red: 0.9, green: 0.6, blue: 0.1)),
+        HUDAction(id: "exec-summary", name: "Executive Summary", description: "Deconstruct into bulleted takeaways", keyChar: "X", color: Color(red: 0.9, green: 0.6, blue: 0.1)),
         HUDAction(id: "first-principles", name: "First Principles", description: "Deconstruct query to core truths", keyChar: "F", color: Color(red: 0.85, green: 0.2, blue: 0.4)),
         HUDAction(id: "summarize", name: "Summarize Text", description: "Condense text to its core essence", keyChar: "S", color: Color(red: 0.2, green: 0.6, blue: 0.85))
     ]

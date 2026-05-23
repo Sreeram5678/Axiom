@@ -80,19 +80,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc private func changeLength(_ sender: NSMenuItem) {
         guard let lengthVal = sender.representedObject as? String else { return }
-        // Set new default length in model configuration
-        // In this simple architecture we write config data directly
-        let model = ConfigModel(
-            apiKey: ConfigManager.shared.apiKey,
-            defaultLength: lengthVal,
-            selectedModeId: ConfigManager.shared.selectedModeId
-        )
-        // Re-save config
-        let configFileURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".axiom_config.json")
-        if let data = try? JSONEncoder().encode(model) {
-            try? data.write(to: configFileURL)
-        }
-        ConfigManager.shared.loadConfig() // Reload
+        ConfigManager.shared.defaultLength = lengthVal
         
         // Update states in dropdown menu
         if let submenu = sender.menu {
@@ -220,7 +208,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         manager.onTriggerDirectEngineer = { [weak self] in
-            self?.executeSilentAction(actionId: "exec-summary")
+            self?.executeSilentAction(actionId: "engineer")
         }
         
         manager.onTriggerDirectSummarize = { [weak self] in
