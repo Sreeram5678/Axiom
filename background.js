@@ -134,11 +134,12 @@ chrome.runtime.onConnect.addListener((port) => {
               if (word) {
                 accumulated += word;
                 safePostMessage({ type: 'CHUNK', text: word });
-                // Update session state incrementally to support active popup re-open transitions
-                await chrome.storage.session.set({ optimizedPrompt: accumulated });
                 await new Promise(r => setTimeout(r, 4));
               }
             }
+            
+            // Update session state once stream completes to avoid blocking IPC
+            await chrome.storage.session.set({ optimizedPrompt: accumulated });
 
             const successState = {
               status: 'success',
@@ -177,16 +178,16 @@ chrome.runtime.onConnect.addListener((port) => {
           }, async (chunk) => {
             accumulated += chunk;
             safePostMessage({ type: 'CHUNK', text: chunk });
-            
-            // Push incremental tokens to session state so UI can recover mid-generation
-            await chrome.storage.session.set({
-              status: 'thinking',
-              rawPrompt,
-              selectedModeId,
-              selectedLength: length,
-              optimizedPrompt: accumulated,
-              error: null
-            });
+          });
+
+          // Push final token state to session state so UI can recover
+          await chrome.storage.session.set({
+            status: 'thinking',
+            rawPrompt,
+            selectedModeId,
+            selectedLength: length,
+            optimizedPrompt: accumulated,
+            error: null
           });
 
           // Save final result to session cache

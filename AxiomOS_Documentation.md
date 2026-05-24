@@ -33,8 +33,9 @@ To have AxiomOS start automatically whenever you turn on or restart your Mac:
 ### Method 3: Command Line Manual Startup
 Run the compiled binary directly from your terminal:
 ```bash
-/Users/sreeramlagisetty/Desktop/Axiom/AxiomOS/.build/release/axiomos &
+/Users/sreeramlagisetty/Desktop/Axiom/bin/axiomos &
 ```
+
 
 ---
 

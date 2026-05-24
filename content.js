@@ -175,7 +175,8 @@ function findInputs() {
     
     // Find all elements that might have shadow roots in this root
     try {
-      const elements = root.querySelectorAll('*');
+      // Optimize: Target likely containers rather than every single element to improve speed
+      const elements = root.querySelectorAll('div, main, section, article, custom-element, [class*="chat"], [class*="message"], [id*="chat"]');
       elements.forEach(el => {
         if (el.shadowRoot) {
           scan(el.shadowRoot);
@@ -489,7 +490,7 @@ const CHAT_BUBBLE_SELECTORS = [
 ];
 
 // Compile context synthesis by searching all adjacent chat bubbles across Shadow DOMs recursively
-function capturePageContext() {
+function capturePageContext(rawPrompt) {
   const bubbles = [];
   
   function scan(root) {
@@ -517,34 +518,147 @@ function capturePageContext() {
   
   scan(document);
   
-  // Sort elements by vertical placement to preserve logical conversation flow
+  // Sort elements by vertical placement to preserve logical chronological order
   bubbles.sort((a, b) => {
     const posA = a.getBoundingClientRect().top;
     const posB = b.getBoundingClientRect().top;
     return posA - posB;
   });
-  
-  const contextItems = [];
-  // Grab the last 4 messages to balance prompt accuracy with context window limitations
-  bubbles.slice(-4).forEach(el => {
-    const text = el.innerText || el.textContent || "";
-    const cleaned = text.trim().replace(/\s+/g, ' ');
-    if (cleaned.length > 5 && cleaned.length < 1500) {
-      let speaker = "Participant";
-      const html = el.outerHTML.toLowerCase();
-      if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-        speaker = "User";
-      } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-        speaker = "Assistant";
+
+  if (bubbles.length === 0) return "";
+
+  // If no raw prompt is provided, fall back to simple last-4 bubbles to avoid breaking
+  if (!rawPrompt || rawPrompt.trim() === "") {
+    const contextItems = [];
+    bubbles.slice(-4).forEach(el => {
+      const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
+      if (text.length > 5 && text.length < 1500) {
+        let speaker = "Participant";
+        const html = el.outerHTML.toLowerCase();
+        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
+          speaker = "User";
+        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
+          speaker = "Assistant";
+        }
+        contextItems.push(`${speaker}: ${text}`);
       }
-      contextItems.push(`${speaker}: ${cleaned}`);
-    }
-  });
-  
-  if (contextItems.length > 0) {
-    return `Conversation history context:\n${contextItems.join('\n')}`;
+    });
+    return contextItems.length > 0 ? `Conversation history context:\n${contextItems.join('\n')}` : "";
   }
-  return "";
+
+  // --- Dynamic Keyword / Proximity Deterministic RAG ---
+  const stopWords = new Set(["the", "a", "an", "is", "to", "for", "in", "on", "it", "that", "of", "and", "this", "my", "your", "with", "as", "by", "at", "from"]);
+  const keywords = rawPrompt.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.has(w));
+  
+  const keywordSet = new Set(keywords);
+
+  if (keywordSet.size === 0) {
+    // If no unique keywords are found, fall back to last-4 bubbles
+    const contextItems = [];
+    bubbles.slice(-4).forEach(el => {
+      const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
+      if (text.length > 5 && text.length < 1500) {
+        let speaker = "Participant";
+        const html = el.outerHTML.toLowerCase();
+        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
+          speaker = "User";
+        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
+          speaker = "Assistant";
+        }
+        contextItems.push(`${speaker}: ${text}`);
+      }
+    });
+    return contextItems.length > 0 ? `Conversation history context:\n${contextItems.join('\n')}` : "";
+  }
+
+  // Score each bubble
+  const scoredBubbles = bubbles.map(el => {
+    const rawText = el.innerText || el.textContent || "";
+    const text = rawText.trim().replace(/\s+/g, ' ');
+    const textLower = text.toLowerCase();
+    
+    let score = 0;
+    
+    // 1. Keyword density check
+    keywordSet.forEach(word => {
+      const regex = new RegExp("\\b" + word + "\\b", "g");
+      const matches = textLower.match(regex);
+      if (matches) {
+        score += 15; // 15 points per unique keyword hit
+        score += (matches.length - 1) * 2; // 2 points per extra occurrence
+      }
+    });
+
+    // 2. Keyword proximity scoring (bonus if keywords appear close together)
+    const words = textLower.split(/\s+/);
+    const matchedIndices = [];
+    words.forEach((word, idx) => {
+      const cleanWord = word.replace(/[^\w]/g, '');
+      if (keywordSet.has(cleanWord)) {
+        matchedIndices.push(idx);
+      }
+    });
+    for (let i = 0; i < matchedIndices.length - 1; i++) {
+      const dist = matchedIndices[i+1] - matchedIndices[i];
+      if (dist <= 10) {
+        score += (10 - dist + 1) * 3; // Closer matches get a higher bonus
+      }
+    }
+
+    // 3. Code Block priority boost (strongly prefer developer code segments)
+    const html = el.outerHTML.toLowerCase();
+    if (html.includes("pre") || html.includes("code") || text.includes("```")) {
+      score += 35; // 35 point substantial boost
+    }
+
+    return { el, text, score };
+  });
+
+  // Filter out completely irrelevant bubbles (score < 15) and pick top 5
+  const relevantBubbles = scoredBubbles
+    .filter(b => b.score >= 15 && b.text.length > 5 && b.text.length < 1500)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  // If no bubbles scored high enough, fall back to last-2 bubbles as safe context
+  if (relevantBubbles.length === 0) {
+    const contextItems = [];
+    bubbles.slice(-2).forEach(el => {
+      const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
+      if (text.length > 5 && text.length < 1500) {
+        let speaker = "Participant";
+        const html = el.outerHTML.toLowerCase();
+        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
+          speaker = "User";
+        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
+          speaker = "Assistant";
+        }
+        contextItems.push(`${speaker}: ${text}`);
+      }
+    });
+    return contextItems.length > 0 ? `Conversation history context:\n${contextItems.join('\n')}` : "";
+  }
+
+  // Sort back to their original vertical DOM order to preserve conversation flow
+  relevantBubbles.sort((a, b) => {
+    return bubbles.indexOf(a.el) - bubbles.indexOf(b.el);
+  });
+
+  const contextItems = relevantBubbles.map(b => {
+    let speaker = "Participant";
+    const html = b.el.outerHTML.toLowerCase();
+    if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
+      speaker = "User";
+    } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
+      speaker = "Assistant";
+    }
+    return `${speaker}: ${b.text}`;
+  });
+
+  return `Conversation history context:\n${contextItems.join('\n')}`;
 }
 
 // Runs prompt optimization locally using Chrome's built-in window.ai.languageModel API
@@ -650,7 +764,7 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
   }
   
   // Determine context synthetics
-  const pageContext = capturePageContext();
+  const pageContext = capturePageContext(textVal);
   
   // Route to local AI if conditions match
   let runLocal = false;
@@ -943,8 +1057,13 @@ function scanAndInject() {
 }
 
 // 1. Setup live DOM tree MutationObserver safely
+let scanTimeout = null;
 observer = new MutationObserver((mutations) => {
-  scanAndInject();
+  if (scanTimeout) return;
+  scanTimeout = setTimeout(() => {
+    scanAndInject();
+    scanTimeout = null;
+  }, 300);
 });
 
 if (document.body) {

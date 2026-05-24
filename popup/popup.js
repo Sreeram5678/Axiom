@@ -26,6 +26,7 @@ const openOptionsBtn = document.getElementById('open-options-btn');
 const modelSelect = document.getElementById('model-select');
 const defaultLengthSelect = document.getElementById('default-length-select');
 const aiRoutingSelect = document.getElementById('ai-routing-select');
+const currencySelect = document.getElementById('currency-select');
 const ramTip = document.getElementById('ram-tip');
 const widgetToggleCheckbox = document.getElementById('widget-toggle-checkbox');
 
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function initializeUI() {
   try {
     // Load API Key, Model settings, prompt length & last selected Mode
-    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', hideWidgetEntirely = false } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'hideWidgetEntirely']);
+    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', hideWidgetEntirely = false, currencyPreference = 'USD' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'hideWidgetEntirely', 'currencyPreference']);
     
     modelSelect.value = selectedModel;
     defaultLengthSelect.value = defaultLength;
@@ -90,6 +91,11 @@ async function initializeUI() {
     // Set AI Routing Mode select value
     if (aiRoutingSelect) {
       aiRoutingSelect.value = aiRoutingMode;
+    }
+
+    // Set currency preference
+    if (currencySelect) {
+      currencySelect.value = currencyPreference;
     }
 
     // Set floating widget visibility value
@@ -540,6 +546,19 @@ function setupEventListeners() {
     });
   }
 
+  if (modelSelect) {
+    modelSelect.addEventListener('change', () => {
+      updateCostEstimate(rawPromptInput.value || '');
+    });
+  }
+
+  // Currency selector — instant live update
+  if (currencySelect) {
+    currencySelect.addEventListener('change', () => {
+      updateCostEstimate(rawPromptInput.value || '');
+    });
+  }
+
   // 1. Raw prompt character counter & text saver
   rawPromptInput.addEventListener('input', (e) => {
     try {
@@ -640,12 +659,13 @@ function setupEventListeners() {
         return;
       }
 
-      // Save API key, model, default length & routing mode to storage
+      // Save API key, model, default length, routing mode & currency to storage
       await chrome.storage.local.set({
         selectedModel: rawModel,
         defaultLength: rawDefaultLength,
         aiRoutingMode: aiRoutingMode,
-        hideWidgetEntirely: hideWidgetEntirely
+        hideWidgetEntirely: hideWidgetEntirely,
+        currencyPreference: currencySelect ? currencySelect.value : 'USD'
       });
 
       // Automatically synchronize the active prompt length selector state
@@ -994,6 +1014,52 @@ function escapeHtml(text) {
 function updateCharCounter(text) {
   const count = text.length;
   charCountLabel.textContent = `${count} ${count === 1 ? 'char' : 'chars'}`;
+  updateCostEstimate(text);
+}
+
+function updateCostEstimate(text) {
+  const charCount = text.length;
+  const tokenCount = charCount / 4;
+  
+  // Get active model
+  const model = modelSelect ? modelSelect.value : 'gemini-3.1-flash-lite';
+  
+  // Cost per million input tokens (USD)
+  let costPerMillionUSD = 0.075; // flash-lite default
+  if (model && model.includes('pro')) {
+    costPerMillionUSD = 1.25;
+  } else if (model && model.includes('flash') && !model.includes('lite')) {
+    costPerMillionUSD = 0.075;
+  }
+  
+  const costUSD = (tokenCount / 1_000_000) * costPerMillionUSD;
+
+  // Currency conversion
+  const currency = currencySelect ? currencySelect.value : 'USD';
+  const USD_TO_INR = 83.5; // approximate rate
+  const isINR = currency === 'INR';
+  const displayCost = isINR ? costUSD * USD_TO_INR : costUSD;
+  const symbol = isINR ? '₹' : '$';
+
+  // Dynamic precision: show enough decimals so the value is never "0"
+  // For very small numbers, use up to 8 decimal places
+  let formatted;
+  if (displayCost === 0) {
+    formatted = isINR ? '₹0.00000000' : '$0.00000000';
+  } else if (displayCost >= 0.01) {
+    formatted = `${symbol}${displayCost.toFixed(4)}`;
+  } else if (displayCost >= 0.0001) {
+    formatted = `${symbol}${displayCost.toFixed(6)}`;
+  } else {
+    formatted = `${symbol}${displayCost.toFixed(8)}`;
+  }
+  
+  const tokenCostGuardrail = document.getElementById('token-cost-guardrail');
+  if (tokenCostGuardrail) {
+    tokenCostGuardrail.textContent = charCount === 0
+      ? 'Est. Cost: —'
+      : `Est. Cost: ${formatted}`;
+  }
 }
 
 function toggleApiAlertBanner(key) {

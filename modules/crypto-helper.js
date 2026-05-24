@@ -15,7 +15,12 @@ function bufferToString(buf) {
 
 // Helper to convert an ArrayBuffer to Base64
 function bufferToBase64(buf) {
-  const binary = String.fromCharCode(...new Uint8Array(buf));
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  // Safe chunked conversion to prevent maximum call stack size exceeded errors
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
   return btoa(binary);
 }
 
@@ -59,6 +64,10 @@ async function deriveKey(passphrase, salt) {
   );
 }
 
+let cachedPassphrase = null;
+let cachedKey = null;
+let cachedSalt = null;
+
 /**
  * Encrypts plaintext string using AES-GCM 256-bit.
  * 
@@ -71,23 +80,26 @@ export async function encrypt(plaintext, passphrase) {
     throw new Error("Encryption passphrase cannot be empty.");
   }
 
-  const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   
-  const key = await deriveKey(passphrase, salt);
+  if (passphrase !== cachedPassphrase || !cachedKey || !cachedSalt) {
+    cachedSalt = crypto.getRandomValues(new Uint8Array(16));
+    cachedKey = await deriveKey(passphrase, cachedSalt);
+    cachedPassphrase = passphrase;
+  }
   
   const ciphertextBuffer = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
       iv: iv
     },
-    key,
+    cachedKey,
     stringToBuffer(plaintext)
   );
 
   const payload = {
     ciphertext: bufferToBase64(ciphertextBuffer),
-    salt: bufferToBase64(salt),
+    salt: bufferToBase64(cachedSalt),
     iv: bufferToBase64(iv)
   };
 
@@ -121,7 +133,15 @@ export async function decrypt(encryptedJson, passphrase) {
   const salt = base64ToBuffer(payload.salt);
   const iv = base64ToBuffer(payload.iv);
 
-  const key = await deriveKey(passphrase, new Uint8Array(salt));
+  let key;
+  if (passphrase === cachedPassphrase && cachedKey && bufferToBase64(salt) === bufferToBase64(cachedSalt)) {
+     key = cachedKey;
+  } else {
+     key = await deriveKey(passphrase, new Uint8Array(salt));
+     cachedPassphrase = passphrase;
+     cachedSalt = new Uint8Array(salt);
+     cachedKey = key;
+  }
 
   try {
     const decryptedBuffer = await crypto.subtle.decrypt(

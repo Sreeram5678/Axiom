@@ -46,6 +46,7 @@
               <button class="length-btn" data-length="detailed" type="button">Detailed</button>
             </div>
             <span id="char-count" class="label-hint">0 chars</span>
+            <span id="token-cost-guardrail" class="label-hint-muted" style="margin-left: 12px; font-weight: 500;">Est. Cost: —</span>
           </div>
         </div>
 
@@ -139,6 +140,17 @@
             </select>
           </div>
           <span id="ram-tip" class="label-hint" style="display: none; margin-top: 4px; color: var(--text-secondary);"></span>
+        </div>
+
+        <!-- Currency Display Selector -->
+        <div class="form-group" style="margin-top: 4px;">
+          <label for="currency-select" class="form-label">Cost Display Currency</label>
+          <div class="select-wrapper">
+            <select id="currency-select">
+              <option value="USD">USD ($) — US Dollar</option>
+              <option value="INR">INR (₹) — Indian Rupee</option>
+            </select>
+          </div>
         </div>
 
         <!-- Floating Widget Visibility Toggle -->

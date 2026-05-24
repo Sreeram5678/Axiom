@@ -6,7 +6,7 @@
 PLIST_NAME="com.axiom.axiomos.plist"
 PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_NAME"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BINARY_PATH="$SCRIPT_DIR/.build/release/axiomos"
+BINARY_PATH="$(dirname "$SCRIPT_DIR")/bin/axiomos"
 
 # Direct output colors
 GREEN='\033[0;32m'
@@ -25,11 +25,18 @@ if [ "$1" != "setup" ] && [ "$1" != "uninstall" ]; then
 fi
 
 if [ "$1" == "setup" ]; then
-    echo -e "${GREEN}[AxiomOS Auto-Start] Compiling Swift binary in release mode...${NC}"
+    echo -e "${GREEN}[AxiomOS Auto-Start] Compiling Swift binary in release mode via /tmp scratch...${NC}"
     cd "$SCRIPT_DIR" || exit 1
     
-    # Run release compilation
-    swift build -c release
+    # Run release compilation in a non-synced scratch directory to prevent iCloud database locks
+    rm -rf /tmp/AxiomOS-build
+    swift build -c release --scratch-path /tmp/AxiomOS-build
+    
+    # Ensure target stable bin folder exists
+    mkdir -p "$(dirname "$BINARY_PATH")"
+    
+    # Copy executable to the persistent/stable location
+    cp /tmp/AxiomOS-build/release/axiomos "$BINARY_PATH"
     
     if [ ! -f "$BINARY_PATH" ]; then
         echo -e "${RED}[AxiomOS Auto-Start] Compilation failed. Binary not found at $BINARY_PATH${NC}"
