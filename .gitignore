@@ -2,3 +2,6 @@
 .build/
 AxiomOS/.build/
 node_modules/
+AxiomOS/axiomos
+bin/
+axiomos
