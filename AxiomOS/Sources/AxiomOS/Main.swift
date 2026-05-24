@@ -15,6 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Disable output buffering to ensure print statements are written to log files instantly
+        setbuf(stdout, nil)
+        setbuf(stderr, nil)
+        
         // Run as background accessory application (no dock icon)
         NSApp.setActivationPolicy(.accessory)
         
@@ -68,7 +72,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         
         menu.addItem(withTitle: "Open HUD Panel (⌃⇧Space)", action: #selector(menuOpenHUD), keyEquivalent: "")
-        menu.addItem(withTitle: "Edit Config File (~/.axiom_config.json)", action: #selector(menuEditConfig), keyEquivalent: "")
+        menu.addItem(withTitle: "Update Gemini API Key...", action: #selector(menuUpdateAPIKey), keyEquivalent: "")
+        menu.addItem(withTitle: "Clear API Key", action: #selector(menuClearAPIKey), keyEquivalent: "")
         menu.addItem(withTitle: "Request Accessibility Access...", action: #selector(menuRequestAccessibility), keyEquivalent: "")
         
         menu.addItem(NSMenuItem.separator())
@@ -131,12 +136,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func performReplacement(with text: String) {
         hideHUD()
-        // Wait 150ms for target window focus restoration before writing selection back
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            Task {
-                await TextInterception.shared.replaceSelection(with: text)
-            }
+        Task {
+            await TextInterception.shared.replaceSelection(with: text)
         }
+    }
+
+    // Called by HUDView immediately on action selection to close the HUD
+    // and hand keyboard focus back to the target editor before streaming begins.
+    func beginStreamingReplacement() {
+        hideHUD()
+        TextInterception.shared.restorePreviousAppFocus()
     }
     
     // MARK: - Hotkey Configurations
@@ -145,37 +154,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             print("[AxiomOS] Initiating silent direct action: \(actionId)...")
             
-            // 1. Capture selection immediately from the active application (since it still has focus!)
+            // 1. Capture selection immediately (target app still has focus)
             guard let selection = await TextInterception.shared.getSelection(),
                   !selection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 print("[AxiomOS] Silent direct action cancelled: empty text selection.")
                 DispatchQueue.main.async {
-                    NSSound(named: "Basso")?.play() // Auditory error alert
+                    NSSound(named: "Basso")?.play()
                 }
                 return
             }
             
             do {
-                // 2. Query the Gemini API in the background (silent accumulation)
-                let result = try await GeminiClient.shared.optimizePrompt(
+                let modeName: String
+                switch actionId {
+                case "analyst": modeName = "Optimize Prompt"
+                case "engineer": modeName = "Engineer Mode"
+                case "proofread": modeName = "Proofread Text"
+                case "rewrite": modeName = "Rewrite & Elevate"
+                case "exec-summary": modeName = "Executive Summary"
+                case "first-principles": modeName = "First Principles"
+                case "summarize": modeName = "Summarize Text"
+                default: modeName = "Optimize"
+                }
+                
+                var streamText = ""
+                TextInterception.shared.streamingModeName = modeName
+                
+                // 2. Query the Gemini API (stream live to editor)
+                _ = try await GeminiClient.shared.optimizePrompt(
                     rawPrompt: selection,
                     modeId: actionId,
                     length: ConfigManager.shared.defaultLength,
-                    onChunk: { _ in } // Silently accumulate
+                    onChunk: { chunk in
+                        streamText += chunk
+                        let snapshot = streamText
+                        DispatchQueue.main.async {
+                            TextInterception.shared.processStreamChunk(snapshot)
+                        }
+                    }
                 )
                 
-                // 3. Write optimized selection back directly to active editor
-                await TextInterception.shared.replaceSelection(with: result)
+                await TextInterception.shared.finishStreaming()
                 print("[AxiomOS] Silent direct action \(actionId) completed successfully.")
                 
-                // 4. Play premium native macOS Glass tick sound as non-intrusive feedback
+                // 4. Glass tick sound confirms completion
                 DispatchQueue.main.async {
                     NSSound(named: "Glass")?.play()
                 }
             } catch {
+                TextInterception.shared.abortStreaming()
                 print("[AxiomOS] Silent direct action \(actionId) error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    NSSound(named: "Basso")?.play() // Auditory warning alert
+                    NSSound(named: "Basso")?.play()
                 }
             }
         }
@@ -224,10 +254,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         showHUD()
     }
     
-    @objc private func menuEditConfig() {
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-        let configURL = homeDir.appendingPathComponent(".axiom_config.json")
-        NSWorkspace.shared.open(configURL)
+    @objc private func menuUpdateAPIKey() {
+        let alert = NSAlert()
+        alert.messageText = "Update Gemini API Key"
+        alert.informativeText = "Please enter your Gemini API Key. It will be stored securely in the macOS Keychain."
+        alert.alertStyle = .informational
+        
+        let secureTextField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+        secureTextField.placeholderString = "Enter API Key"
+        
+        alert.accessoryView = secureTextField
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Cancel")
+        
+        NSApp.activate(ignoringOtherApps: true)
+        
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            let enteredKey = secureTextField.stringValue
+            if !enteredKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let success = ConfigManager.shared.updateAPIKey(enteredKey)
+                if success {
+                    let successAlert = NSAlert()
+                    successAlert.messageText = "API Key Updated"
+                    successAlert.informativeText = "Your Gemini API Key has been updated and securely stored in the macOS Keychain."
+                    successAlert.alertStyle = .informational
+                    successAlert.addButton(withTitle: "OK")
+                    successAlert.runModal()
+                } else {
+                    let errorAlert = NSAlert()
+                    errorAlert.messageText = "Update Failed"
+                    errorAlert.informativeText = "Failed to save the Gemini API Key to the secure macOS Keychain."
+                    errorAlert.alertStyle = .warning
+                    errorAlert.addButton(withTitle: "OK")
+                    errorAlert.runModal()
+                }
+            }
+        }
+    }
+    
+    @objc private func menuClearAPIKey() {
+        let alert = NSAlert()
+        alert.messageText = "Clear API Key"
+        alert.informativeText = "Are you sure you want to clear your Gemini API Key from the secure macOS Keychain?"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Clear")
+        alert.addButton(withTitle: "Cancel")
+        
+        NSApp.activate(ignoringOtherApps: true)
+        
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            ConfigManager.shared.clearAPIKey()
+            let successAlert = NSAlert()
+            successAlert.messageText = "API Key Cleared"
+            successAlert.informativeText = "Your Gemini API Key has been removed from the secure macOS Keychain."
+            successAlert.alertStyle = .informational
+            successAlert.addButton(withTitle: "OK")
+            successAlert.runModal()
+        }
     }
     
     @objc private func menuRequestAccessibility() {
