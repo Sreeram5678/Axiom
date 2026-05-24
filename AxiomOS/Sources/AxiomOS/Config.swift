@@ -4,12 +4,14 @@ struct ConfigModel: Codable {
     var apiKey: String
     var defaultLength: String // "short", "medium", "detailed"
     var selectedModeId: String // "analyst", "engineer", "first-principles", "exec-summary", "proofread", "rewrite"
+    var selectedModel: String? // Optional dynamic model selection
     
     static var `default`: ConfigModel {
         return ConfigModel(
             apiKey: "PASTE_YOUR_GEMINI_API_KEY_HERE",
             defaultLength: "medium",
-            selectedModeId: "analyst"
+            selectedModeId: "analyst",
+            selectedModel: "gemini-3.1-flash-lite"
         )
     }
 }
@@ -44,6 +46,14 @@ class ConfigManager {
         get { configModel.selectedModeId }
         set {
             configModel.selectedModeId = newValue
+            saveConfig()
+        }
+    }
+    
+    var selectedModel: String {
+        get { configModel.selectedModel ?? "gemini-3.1-flash-lite" }
+        set {
+            configModel.selectedModel = newValue
             saveConfig()
         }
     }

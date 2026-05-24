@@ -111,7 +111,7 @@ class GeminiClient {
             ]
         ]
         
-        let model = "gemini-3.1-flash-lite" // Native performant standard model
+        let model = ConfigManager.shared.selectedModel
         let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?key=\(apiKey)"
         guard let url = URL(string: urlString) else {
             throw GeminiError.networkError("Invalid Gemini API URL.")
