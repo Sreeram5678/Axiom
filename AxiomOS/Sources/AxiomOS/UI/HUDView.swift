@@ -20,6 +20,8 @@ struct HUDAction: Identifiable {
 struct HUDView: View {
     @State private var state: HUDState = .idle
     @State private var selectedIndex = 0
+    @ObservedObject private var session = AxiomSession.shared
+    @State private var selectedLength: String = ConfigManager.shared.defaultLength
     
     // Callback to close panel
     var onClose: (() -> Void)?
@@ -58,8 +60,10 @@ struct HUDView: View {
         }
         .frame(width: 450, height: 280)
         .foregroundColor(.white)
-        .onAppear {
-            setupKeyboardMonitor()
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("HUDKeyDown"))) { notification in
+            if let event = notification.object as? NSEvent {
+                handleKeyDown(event)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("TriggerHUDAction"))) { notification in
             if let actionId = notification.object as? String {
@@ -76,13 +80,20 @@ struct HUDView: View {
     // MARK: - Header
     
     private var headerView: some View {
-        HStack {
+        HStack(alignment: .center) {
             HStack(spacing: 8) {
                 Text("✨")
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                 Text("AxiomOS")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .tracking(0.5)
+            }
+            
+            Spacer()
+            
+            // Segmented length picker directly in the HUD header
+            if case .idle = state {
+                LengthSelectorView(selectedLength: $selectedLength)
             }
             
             Spacer()
@@ -107,9 +118,18 @@ struct HUDView: View {
     private var footerView: some View {
         HStack {
             if case .idle = state {
-                Text("Press matching letter key or use ⇅ arrows + Enter")
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.4))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Press matching letter key or use ⇅ arrows + Enter")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.4))
+                    
+                    let charCount = session.capturedText.count
+                    let tokenCount = Double(charCount) / 4.0
+                    let cost = (tokenCount / 1_000_000.0) * 0.075
+                    Text("Highlight: \(charCount) chars | Est. Cost: $\(String(format: "%.5f", cost))")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.white.opacity(0.35))
+                }
             } else if case .streaming = state {
                 Text("Streaming optimized prompt...")
                     .font(.system(size: 10))
@@ -285,76 +305,80 @@ struct HUDView: View {
     }
     
     // MARK: - Orchestrator Actions
-    
+
     func triggerAction(_ actionId: String) {
         state = .processing(actionId)
-        
+
         Task {
             // Retrieve selection from the pre-captured shared session context
             let selection = AxiomSession.shared.capturedText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !selection.isEmpty else {
-                state = .error("Highlight some text or type inside a field before triggering.")
+                DispatchQueue.main.async { self.state = .error("Highlight some text or type inside a field before triggering.") }
                 return
             }
-            
-            state = .streaming("")
-            
+
+            // Immediately hide HUD and restore focus to the target editor.
+            // The first API chunk arrives ~300-500ms later, well after focus is transferred.
+            DispatchQueue.main.async {
+                if let delegate = NSApplication.shared.delegate as? AppDelegate {
+                    delegate.beginStreamingReplacement()
+                }
+            }
+
             do {
-                var streamText = ""
-                let result = try await GeminiClient.shared.optimizePrompt(
+                var accumulated = ""
+                let modeName = actions.first(where: { $0.id == actionId })?.name ?? "Optimize"
+                TextInterception.shared.streamingModeName = modeName
+
+                _ = try await GeminiClient.shared.optimizePrompt(
                     rawPrompt: selection,
                     modeId: actionId,
                     length: ConfigManager.shared.defaultLength,
                     onChunk: { chunk in
+                        accumulated += chunk
+                        let snapshot = accumulated
+                        // Must run on main thread — AX API calls are not thread-safe
                         DispatchQueue.main.async {
-                            streamText += chunk
-                            state = .streaming(streamText)
+                            TextInterception.shared.processStreamChunk(snapshot)
                         }
                     }
                 )
-                
-                // Set text replacement via AppDelegate to release key window and restore focus
+
+                // Stream complete — finalize (plays Glass sound, handles clipboard fallback if needed)
+                await TextInterception.shared.finishStreaming()
                 DispatchQueue.main.async {
-                    if let delegate = NSApplication.shared.delegate as? AppDelegate {
-                        delegate.performReplacement(with: result)
-                    }
+                    NSSound(named: "Glass")?.play()
                 }
-                state = .success
+
             } catch {
-                state = .error(error.localizedDescription)
+                TextInterception.shared.abortStreaming()
+                DispatchQueue.main.async {
+                    NSSound(named: "Basso")?.play()
+                }
             }
         }
     }
     
     // MARK: - HUD Keyboard Handler
     
-    private func setupKeyboardMonitor() {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard case .idle = state else {
-                if event.keyCode == 53 { // Esc key
-                    onClose?()
-                    return nil
-                }
-                return event
-            }
-            
-            switch event.keyCode {
-            case 53: // Escape key
+    private func handleKeyDown(_ event: NSEvent) {
+        guard case .idle = state else {
+            if event.keyCode == 53 { // Esc key
                 onClose?()
-                return nil
-            case 125: // Down arrow key
-                selectedIndex = min(actions.count - 1, selectedIndex + 1)
-                return nil
-            case 126: // Up arrow key
-                selectedIndex = max(0, selectedIndex - 1)
-                return nil
-            case 36: // Enter key
-                triggerAction(actions[selectedIndex].id)
-                return nil
-            default:
-                break
             }
-            
+            return
+        }
+        
+        switch event.keyCode {
+        case 53: // Escape key
+            onClose?()
+        case 125: // Down arrow key
+            selectedIndex = min(actions.count - 1, selectedIndex + 1)
+        case 126: // Up arrow key
+            selectedIndex = max(0, selectedIndex - 1)
+        case 36: // Enter key
+            triggerAction(actions[selectedIndex].id)
+        default:
             // Check character hotkey matching (O, P, R, E, F)
             if let chars = event.charactersIgnoringModifiers?.uppercased(), !chars.isEmpty {
                 if let matched = actions.first(where: { $0.keyChar == chars }) {
@@ -362,11 +386,48 @@ struct HUDView: View {
                         selectedIndex = index
                     }
                     triggerAction(matched.id)
-                    return nil
                 }
             }
-            
-            return event
         }
+    }
+}
+
+/// A premium macOS-style horizontal segmented picker for selecting prompt length.
+struct LengthSelectorView: View {
+    @Binding var selectedLength: String
+    
+    private let options = [
+        ("short", "Small"),
+        ("medium", "Medium"),
+        ("detailed", "Detailed")
+    ]
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options, id: \.0) { option in
+                Text(option.1)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundColor(selectedLength == option.0 ? .white : .white.opacity(0.45))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(selectedLength == option.0 ? Color.white.opacity(0.12) : Color.clear)
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedLength = option.0
+                        ConfigManager.shared.defaultLength = option.0
+                        NSSound(named: "Pop")?.play()
+                    }
+            }
+        }
+        .padding(2)
+        .background(Color.black.opacity(0.2))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+        )
     }
 }

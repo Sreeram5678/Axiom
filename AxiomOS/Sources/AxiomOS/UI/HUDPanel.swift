@@ -70,4 +70,8 @@ class HUDPanel: NSPanel {
             self.setFrameOrigin(NSPoint(x: x, y: y))
         }
     }
+    
+    override func keyDown(with event: NSEvent) {
+        NotificationCenter.default.post(name: Notification.Name("HUDKeyDown"), object: event)
+    }
 }

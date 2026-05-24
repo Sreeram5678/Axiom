@@ -19,11 +19,15 @@ class ConfigManager {
     
     private let configFileName = ".axiom_config.json"
     private var configModel: ConfigModel = .default
+    private var cachedAPIKey: String?
     
     var apiKey: String {
-        // Read directly from secure Keychain if available and valid
-        if let secureKey = KeychainHelper.shared.read(), secureKey != "STORED_SECURELY_IN_KEYCHAIN" && secureKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !secureKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return secureKey
+        let localKey = configModel.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !localKey.isEmpty && localKey != "STORED_SECURELY_IN_KEYCHAIN" && localKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" {
+            return localKey
+        }
+        if let cached = cachedAPIKey {
+            return cached
         }
         return configModel.apiKey
     }
@@ -62,19 +66,20 @@ class ConfigManager {
                 let data = try Data(contentsOf: url)
                 var decoded = try JSONDecoder().decode(ConfigModel.self, from: data)
                 
-                // --- Keychain Migration & Redaction ---
-                let localKey = decoded.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                if localKey != "STORED_SECURELY_IN_KEYCHAIN" && localKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !localKey.isEmpty {
-                    // Safe copy plain-text API key from JSON dotfile into Secure Keychain
-                    let success = KeychainHelper.shared.save(password: localKey)
-                    if success {
-                        print("[AxiomOS Keychain] Successfully migrated API key to secure Keychain.")
-                        // Redact API key from plain text configuration model
-                        decoded.apiKey = "STORED_SECURELY_IN_KEYCHAIN"
+                // --- Safe Keychain-to-Plaintext Rollback Migration ---
+                // Reads the API key from Keychain once, writes it to the config file as plain text,
+                // and completely clears Keychain to prevent any future password prompts!
+                if decoded.apiKey == "STORED_SECURELY_IN_KEYCHAIN" {
+                    if let secureKey = KeychainHelper.shared.read(), !secureKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        print("[AxiomOS Migration] Successfully extracted API key from Keychain. Migrating to local config...")
+                        decoded.apiKey = secureKey
                         self.configModel = decoded
                         saveConfig()
+                        
+                        // Delete key from keychain so it never prompts again
+                        KeychainHelper.shared.delete()
+                        print("[AxiomOS Migration] Deleted API key from Keychain. Password prompts are now permanently disabled.")
                     } else {
-                        print("[AxiomOS Keychain] Failed to save key to secure Keychain. Falling back to plain text model.")
                         self.configModel = decoded
                     }
                 } else {
@@ -94,23 +99,30 @@ class ConfigManager {
     func saveConfig() {
         let url = configFileURL
         do {
-            var modelToSave = configModel
-            
-            // Check if the current model in memory contains a raw plain-text API key to protect
-            let localKey = modelToSave.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-            if localKey != "STORED_SECURELY_IN_KEYCHAIN" && localKey != "PASTE_YOUR_GEMINI_API_KEY_HERE" && !localKey.isEmpty {
-                KeychainHelper.shared.save(password: localKey)
-                modelToSave.apiKey = "STORED_SECURELY_IN_KEYCHAIN"
-            }
-            
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(modelToSave)
+            let data = try encoder.encode(configModel)
             try data.write(to: url, options: .atomic)
             print("[AxiomOS Config] Successfully saved config to ~/.axiom_config.json")
         } catch {
             print("[AxiomOS Config] Error saving config: \(error)")
         }
+    }
+    
+    @discardableResult
+    func updateAPIKey(_ key: String) -> Bool {
+        let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        configModel.apiKey = trimmedKey
+        cachedAPIKey = trimmedKey
+        saveConfig()
+        return true
+    }
+    
+    func clearAPIKey() {
+        KeychainHelper.shared.delete()
+        cachedAPIKey = nil
+        configModel.apiKey = "PASTE_YOUR_GEMINI_API_KEY_HERE"
+        saveConfig()
     }
     
     func systemInstruction(for mode: String) -> String {
