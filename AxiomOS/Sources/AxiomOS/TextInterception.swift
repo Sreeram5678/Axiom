@@ -318,21 +318,18 @@ class TextInterception {
         
         simulatePaste()
         
-        // Dynamically poll to see if the target app has completed the paste (checking selected text via accessibility)
-        // If accessibility is unavailable in the target app, we timeout after 150ms.
-        for _ in 0..<15 {
-            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
-            if let focusedElement = getFocusedElement(), let selectedText = getAccessibilitySelectedText(from: focusedElement) {
-                // If selection changed to empty or the new value, paste is likely complete
-                if selectedText.isEmpty || selectedText == newValue {
-                    break
-                }
+        // Restore original clipboard after a safe delay of 500ms in a background task.
+        // This gives the target application ample time to register the paste event and read the clipboard contents,
+        // while preventing active thread blocking. We only restore if the clipboard still holds our text.
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+            let currentPasteboard = NSPasteboard.general
+            if currentPasteboard.string(forType: .string) == newValue {
+                currentPasteboard.clearContents()
+                currentPasteboard.setString(previousString, forType: .string)
+                print("[AxiomOS Intercept] Successfully restored original clipboard contents after paste.")
             }
         }
-        
-        // Restore original clipboard
-        pasteboard.clearContents()
-        pasteboard.setString(previousString, forType: .string)
     }
     
     private func simulateCopy() {
