@@ -1,75 +1,96 @@
 # Axiom & AxiomOS — Unified Prompt Optimization Suite
 
-Axiom is a high-performance, elegant, developer-centric suite designed to transform basic text inputs into highly optimized, context-aware prompt engineering directives for Large Language Models. 
+Axiom is a high-performance, elegant, developer-centric suite designed to transform basic text inputs into highly optimized, context-aware prompt engineering directives for Large Language Models.
 
-> [!NOTE]
-> 🤖 **AI Assistant Entry Point**
-> If you are an AI agent, coding assistant, or repository crawler helping a developer in this codebase, please prioritize reading [llms.txt](./llms.txt) and [.cursorrules](./.cursorrules) first to align on our native performance budgets, Manifest V3 schemas, styling limitations, and architectural guardrails before editing code.
+### AI Assistant Context
+If you are an AI agent, coding assistant, or repository crawler helping a developer in this codebase, please prioritize reading [llms.txt](./llms.txt) and [.cursorrules](./.cursorrules) first to align on our native performance budgets, Manifest V3 schemas, styling limitations, and architectural guardrails before editing code.
 
 The suite is comprised of two parts:
 1.  **Axiom (Chrome Extension):** A Manifest V3 browser extension that injects inline prompt engineering controls directly into major LLM interfaces and routes requests dynamically using cloud Gemini models or native on-device Gemini Nano execution.
 2.  **AxiomOS (macOS Companion App):** A native, background-accessory menu-bar utility that intercepts selected text system-wide, overlays a glassmorphic HUD panel, and performs in-place text optimization in any Mac editor via global keyboard triggers.
 
-
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 🌐 Axiom Chrome Extension
-*   **Inline Optimization Capsules:** A modern, floatable "✨ Optimize Prompt" pill injected directly over the input fields of **Google Gemini, ChatGPT, Claude, DeepSeek, and Google AI Studio**.
-*   **Dynamic Hybrid Routing:** Intelligently checks for `window.ai` support and routes prompt optimizations directly to the native **Gemini Nano** engine on-device to minimize cloud latency and bandwidth. Falls back to cloud Gemini API.
-*   **Zero-Knowledge Settings Sync:** Local settings (including API keys and custom prompt instructions) are securely encrypted locally via AES-GCM 256-bit with PBKDF2 (100k iterations) using the standard `WebCrypto API` before syncing to the cloud via Chrome Sync.
+### Axiom Chrome Extension
+*   **Inline Optimization Capsules:** A modern, floatable "Optimize Prompt" pill injected directly over the input fields of ChatGPT, Claude, Gemini, DeepSeek, and Google AI Studio.
+*   **Dynamic Hybrid Routing:** Intelligently checks for window.ai support and routes prompt optimizations directly to the native Gemini Nano engine on-device to minimize cloud latency and bandwidth. Falls back to cloud Gemini API.
+*   **Zero-Knowledge Settings Sync:** Local settings (including API keys and custom prompt instructions) are securely encrypted locally via AES-GCM 256-bit with PBKDF2 (100k iterations) using the standard WebCrypto API before syncing to the cloud via Chrome Sync.
 *   **Modular JSON Mode Configuration:** Features an advanced settings options page that validates and saves custom JSON arrays of prompt engineering personas.
 
-### 🖥️ AxiomOS macOS Desktop Utility
-*   **System-Wide Interception:** Works in *any* desktop text area (Xcode, VS Code, Notes, Slack, browsers) by capturing active highlighted text.
-*   **Glassmorphic SwiftUI HUD Panel:** A gorgeous, translucent HUD panel that centers on the active mouse cursor, accepting arrow-key selections, direct hotkey triggers, or character chording.
-*   **Carbon Global Hotkey Daemon:** Integrates directly with Carbon Event Manager system hooks to listen for high-speed hotkeys (`Control+Shift+Space / O / P / R / S`).
-*   **Reliable Accessibility & Clipboard Fallbacks:** Employs a robust accessibility framework sequence using macOS `AXUIElement` to query and replace highlighted selections in-place, falling back to simulated Keyboard/Clipboard commands (`Cmd+C` / `Cmd+V`) if the target process is sandboxed or untrusted.
+### AxiomOS macOS Desktop Utility
+*   **System-Wide Interception:** Works in any desktop text area (Xcode, VS Code, Notes, Slack, browsers) by capturing active highlighted text.
+*   **Glassmorphic SwiftUI HUD Panel:** A translucent HUD panel that centers on the active mouse cursor, accepting arrow-key selections, direct hotkey triggers, or character chording.
+*   **Carbon Global Hotkey Daemon:** Integrates directly with Carbon Event Manager system hooks to listen for high-speed hotkeys (Control+Shift+Space / O / P / R / S).
+*   **Reliable Accessibility & Clipboard Fallbacks:** Employs a robust accessibility framework sequence using macOS AXUIElement to query and replace highlighted selections in-place, falling back to simulated Keyboard/Clipboard commands (Cmd+C / Cmd+V) if the target process is sandboxed or untrusted.
 
 ---
 
-## 📐 System Architecture
+## System Architecture
 
 The following diagram illustrates the hybrid data-flow and execution boundaries of both the browser extension and the macOS desktop utility:
 
 ```mermaid
-graph TD
-    subgraph Browser_Environment [Google Chrome Sandbox]
-        UI[LLM Web UI: ChatGPT / Claude / Gemini / DeepSeek]
-        CS[content.js Content Script]
-        BG[background.js Service Worker]
-        LAI[window.ai Gemini Nano - On-Device AI]
-        
-        UI -->|Inline Optimize Click| CS
-        CS -->|Port Streaming| BG
-        CS -->|Hybrid Routing Fallback| LAI
-        BG -->|Fetch HTTP POST Stream| GAPI_Cloud[Google Gemini Cloud API]
+flowchart TB
+    subgraph Client_Applications [Client Touchpoints]
+        Chrome_Ext["Axiom Chrome Extension (MV3)"]
+        macOS_App["AxiomOS Desktop Daemon (Swift)"]
     end
 
-    subgraph macOS_Native_Environment [AxiomOS Desktop Environment]
-        HK[Carbon Global Hotkey Listener]
-        AX[Accessibility Core: AXUIElement]
-        CB[Clipboard Simulation Engine]
-        HUD[SwiftUI HUD Glassmorphic View]
-        GC[GeminiClient.swift Engine]
-        
-        HK -->|Hotkey Pressed| AX
-        AX -->|1. Attempt AX Extract| HUD
-        AX -.->|2. Fallback to Cmd+C| CB
-        CB -->|3. Capture Clipboard Text| HUD
-        HUD -->|Action Selected| GC
-        GC -->|URLSession Async Bytes Stream| GAPI_Cloud
-        GC -->|4. Text Replacement Stream| AX
-        AX -.->|5. Fallback to Cmd+V Paste| CB
+    subgraph Input_Extraction [Context Capture & Triggering]
+        inline_capsule["Inline floatable 'Optimize' capsule"]
+        hotkey_listener["Carbon Global Hotkey Listener (0.0% Idle CPU)"]
+        dom_rag["Context-Aware DOM RAG (Adjacent bubbles, Shadow DOMs)"]
+        ax_element["macOS Accessibility Core (AXUIElement Selection)"]
+        clipboard_restorer["Asynchronous Non-Blocking Clipboard Restorer"]
     end
+
+    subgraph Routing_Decision [Intelligent Hybrid Router]
+        router{"Routing Engine"}
+        local_nano["Local Gemini Nano (window.ai)"]
+        cloud_api["Google Gemini Cloud API"]
+    end
+
+    subgraph Output_Injection [Text Replacement Engine]
+        extension_inject["Direct DOM Injection (Port Streaming)"]
+        accessibility_write["Accessibility AXUIElement In-Place Write"]
+        clipboard_paste["Virtualized Keystroke (Cmd+V) Fallback"]
+    end
+
+    %% Core Flows
+    Chrome_Ext --> inline_capsule
+    inline_capsule --> dom_rag
+    dom_rag --> router
+
+    macOS_App --> hotkey_listener
+    hotkey_listener --> ax_element
+    ax_element -- AX Extraction --> router
+    ax_element -- Permission Sandbox Block --> clipboard_restorer
+    clipboard_restorer --> router
+
+    router -- On-Device Support --> local_nano
+    router -- Network Fallback --> cloud_api
+
+    local_nano --> Output_Injection
+    cloud_api --> Output_Injection
+
+    Output_Injection --> extension_inject
+    Output_Injection --> accessibility_write
+    Output_Injection --> clipboard_paste
     
-    style LAI fill:#12a,stroke:#38f,stroke-width:2px,color:#fff
-    style HUD fill:#191923,stroke:#94f,stroke-width:2px,color:#fff
-    style GAPI_Cloud fill:#45a,stroke:#8bf,stroke-width:2px,color:#fff
+    %% Styling
+    classDef box fill:#1e1e24,stroke:#38f,stroke-width:1px,color:#fff;
+    classDef trigger fill:#1a1a2e,stroke:#94f,stroke-width:1.5px,color:#fff;
+    classDef router fill:#112244,stroke:#0f8,stroke-width:2px,color:#fff;
+    
+    class Chrome_Ext,macOS_App box;
+    class inline_capsule,hotkey_listener,dom_rag,ax_element,clipboard_restorer trigger;
+    class router,local_nano,cloud_api router;
 ```
 
 ### Text Interception & Injection Lifecycle
+
 The diagram below details the sequence of operations executed system-wide by AxiomOS when text interception is triggered:
 
 ```mermaid
@@ -111,7 +132,7 @@ sequenceDiagram
 
 ---
 
-## 🛠️ File Structure
+## File Structure
 
 The workspace is organized into separate directories, separating the client extension files from the macOS native executable:
 
@@ -154,7 +175,7 @@ The workspace is organized into separate directories, separating the client exte
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### 1. Axiom Chrome Extension Setup
 1.  Clone this repository locally:
@@ -198,7 +219,7 @@ Because AxiomOS registers system-wide key shortcuts and captures highlighted tex
 
 ---
 
-## ⚙️ Configuration & Custom Personas
+## Configuration & Custom Personas
 
 ### Chrome Extension Custom Modes
 You can customize the prompt engineering modes inside the Chrome Extension by navigating to the **Settings** page and modifying the JSON structure.
@@ -227,21 +248,21 @@ AxiomOS persists non-sensitive settings locally at `~/.axiom_config.json`.
 
 ---
 
-## ⌨️ Shortcut Cheat Sheet
+## Shortcut Cheat Sheet
 
 | Platform | Shortcut Key | Trigger Mode | Action Description |
 |:---|:---|:---|:---|
-| **Chrome Extension** | `Option+Shift+O` | Cloud / On-Device AI | Instantly optimizes the text highlighted inside any supported browser chat text field. |
-| **macOS Native** | `Control+Shift+Space` | Launch HUD | Captures highlighted text and brings up the glassmorphic HUD overlay panel near the mouse cursor. |
-| **macOS Native** | `Control+Shift+O` | Direct Optimize | Directly optimizes highlighted selection using the standard **Analyst** mode persona. |
-| **macOS Native** | `Control+Shift+P` | Direct Proofread | Fixes spelling, punctuation, and grammar without altering the original style or voice. |
-| **macOS Native** | `Control+Shift+R` | Direct Rewrite | Polishes vocabulary, elevates professional tone, and enhances flow. |
-| **macOS Native** | `Control+Shift+S` | Direct Summarize | Condenses highlighted text into its absolute core facts. |
-| **macOS Native** | `Control+Shift+E` | Direct Executive Summary | Reformats captured selection into a 2-sentence overarching synthesis and 3-5 key takeaways. |
+| **Chrome Extension** | Option+Shift+O | Cloud / On-Device AI | Instantly optimizes the text highlighted inside any supported browser chat text field. |
+| **macOS Native** | Control+Shift+Space | Launch HUD | Captures highlighted text and brings up the glassmorphic HUD overlay panel near the mouse cursor. |
+| **macOS Native** | Control+Shift+O | Direct Optimize | Directly optimizes highlighted selection using the standard **Analyst** mode persona. |
+| **macOS Native** | Control+Shift+P | Direct Proofread | Fixes spelling, punctuation, and grammar without altering the original style or voice. |
+| **macOS Native** | Control+Shift+R | Direct Rewrite | Polishes vocabulary, elevates professional tone, and enhances flow. |
+| **macOS Native** | Control+Shift+S | Direct Summarize | Condenses highlighted text into its absolute core facts. |
+| **macOS Native** | Control+Shift+E | Direct Executive Summary | Reformats captured selection into a 2-sentence overarching synthesis and 3-5 key takeaways. |
 
 ---
 
-## 🛡️ Security, Privacy & Compliance
+## Security, Privacy & Compliance
 
 *   **No Third-Party Analytics:** The suite contains absolutely zero telemetry, tracker integrations, or usage collection frameworks.
 *   **Direct API Isolation:** Your API key and prompt text are transmitted directly and exclusively from your local device to Google's official Gemini endpoint.
@@ -249,6 +270,6 @@ AxiomOS persists non-sensitive settings locally at `~/.axiom_config.json`.
 
 ---
 
-## 📝 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
