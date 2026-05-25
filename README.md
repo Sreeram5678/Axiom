@@ -2,9 +2,14 @@
 
 Axiom is a high-performance, elegant, developer-centric suite designed to transform basic text inputs into highly optimized, context-aware prompt engineering directives for Large Language Models. 
 
+> [!NOTE]
+> 🤖 **AI Assistant Entry Point**
+> If you are an AI agent, coding assistant, or repository crawler helping a developer in this codebase, please prioritize reading [llms.txt](./llms.txt) and [.cursorrules](./.cursorrules) first to align on our native performance budgets, Manifest V3 schemas, styling limitations, and architectural guardrails before editing code.
+
 The suite is comprised of two parts:
 1.  **Axiom (Chrome Extension):** A Manifest V3 browser extension that injects inline prompt engineering controls directly into major LLM interfaces and routes requests dynamically using cloud Gemini models or native on-device Gemini Nano execution.
 2.  **AxiomOS (macOS Companion App):** A native, background-accessory menu-bar utility that intercepts selected text system-wide, overlays a glassmorphic HUD panel, and performs in-place text optimization in any Mac editor via global keyboard triggers.
+
 
 ---
 

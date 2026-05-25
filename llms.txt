@@ -1,0 +1,55 @@
+# Axiom & AxiomOS — LLM Context & Architecture Map
+> This file is optimized specifically for LLMs, AI agents, and code assistants to quickly ingest the directory structure, technical topography, and architectural constraints of this repository.
+
+---
+
+## 🎯 Project Essence
+A unified, developer-centric prompt engineering and text optimization suite:
+1. **Axiom (Chrome Extension)**: Manifest V3 browser extension injecting floatable, context-aware prompt optimization capsules into AI chat fields (Gemini, ChatGPT, Claude, DeepSeek). Uses local Gemini Nano (`window.ai`) hybrid routing, falling back to Gemini Cloud APIs.
+2. **AxiomOS (macOS Companion App)**: Native background menu-bar accessory (`NSApp.setActivationPolicy(.accessory)`) intercepting highlighted text system-wide, displaying a SwiftUI glassmorphic HUD near the cursor, and replacing text in-place.
+
+---
+
+## 📐 High-Level Architecture & Data Flow
+```
+[Browser Sandbox] -> Inline Capsule -> content.js -> window.ai (Local Nano) OR Gemini Cloud API
+[macOS Native]    -> Global Hotkey -> Carbon Events -> Accessibility API (AXUIElement) -> SwiftUI HUD -> Gemini Cloud API -> Stream In-Place
+```
+
+---
+
+## 📁 Codebase Directory Topography & Core Modules
+
+### 🌐 1. Browser Extension (Chrome Extension)
+* **Root Configuration**: `manifest.json` (MV3 permissions, injected content scripts).
+* **Service Worker**: `background.js` (Manages background streaming, network requests, options synchronization).
+* **Content Injectors**:
+  - `content.js`: Main DOM injector targeting LLM input text areas.
+  - `content.css`: CSS styling for inline floating capsules.
+* **Core Modules** (`/modules`):
+  - `modules/api-handler.js`: Decodes line-buffered SSE chunks from Cloud Gemini endpoints.
+  - `modules/crypto-helper.js`: Secure AES-GCM 256-bit settings encryption with PBKDF2.
+  - `modules/modes.js`: Persists and retrieves custom JSON personas locally.
+* **Settings & Views**:
+  - `options/`: System persona editor with JSON scheme validations.
+  - `popup/`: Dropdown interface for on-the-fly streaming, prompt logs, and configurations.
+
+### 🖥️ 2. Desktop companion (AxiomOS macOS App)
+* **Build Manifest**: `AxiomOS/Package.swift` (Native Swift Package Manager configuration).
+* **Application Entry**: `AxiomOS/Sources/AxiomOS/Main.swift` (Status bar item, lifecycle triggers, single-instance lock prevention).
+* **Core Drivers**:
+  - `AxiomOS/Sources/AxiomOS/Config.swift`: File-based settings manager pointing to local disk enclaves (`~/.axiom_config.json`).
+  - `AxiomOS/Sources/AxiomOS/GeminiClient.swift`: Native `URLSession` async bytes streaming wrapper with byte-level brace tracking.
+  - `AxiomOS/Sources/AxiomOS/HotKeyManager.swift`: Kernel-level global hotkey listener wrapping Carbon `RegisterEventHotKey`.
+  - `AxiomOS/Sources/AxiomOS/TextInterception.swift`: macOS Accessibility API (`AXUIElement`) selection parser with simulated clipboard/keyboard (`Cmd+C` / `Cmd+V` CGEvent) sandboxing fallbacks.
+* **User Interface Views**:
+  - `AxiomOS/Sources/AxiomOS/UI/HUDPanel.swift`: Custom non-focus-stealing floating `NSPanel` wrapper.
+  - `AxiomOS/Sources/AxiomOS/UI/HUDView.swift`: Glassmorphic SwiftUI action menu and streaming display interface.
+
+---
+
+## ⛔ Hard Architectural Constraints & AI Rules
+* **Language Rules**: No Electron wrappers, webviews, or heavy cross-platform frameworks for desktop. The companion app MUST remain 100% native Swift, SwiftUI, and AppKit.
+* **Styling Rules**: Vanilla CSS with glassmorphic variables only for options and popups. Do NOT introduce Tailwind, Bootstrap, or heavy JS framework overlays unless explicitly instructed by the user.
+* **Resource Budgets**: Idle memory MUST stay under 30MB; active processing memory under 60MB. Idle CPU utilization MUST remain 0.0% by utilizing native hardware interrupts and Carbon events rather than active polling loops.
+* **Privacy Sovereignty**: Absolutely NO third-party telemetry, trackers, or centralized servers. All keys and text must go directly from the client to Gemini API enclaves.

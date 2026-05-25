@@ -1,0 +1,28 @@
+# Axiom & AxiomOS — AI Coder Rulebook (.cursorrules)
+> Act as a Senior Software Engineer specializing in Native macOS (Swift/AppKit) and Browser Extensions (MV3). Ensure all edits comply with these strict specifications.
+
+## 🛠️ Tech Stack & Implementation Guardrails
+
+### 🖥️ Native macOS Desktop App (`/AxiomOS`)
+* **Core Language**: Swift 5.8+ utilizing SwiftUI for rendering layouts and AppKit for native windows, system menus, and enclaves.
+* **No Heavy Frameworks**: Never suggest React Native, Electron, Neutralino, or Tauri. The companion utility must remain a pure native Swift compilation (`< 3 MB` binary).
+* **0.0% CPU Idle**: Never implement active polling loops (`Timer.scheduledTimer` or `while` checks) for system events. Use OS-level Carbon event interrupts via `RegisterEventHotKey` to ensure 0.0% background overhead.
+* **Memory Limits**: Max RAM allocation during execution: `30MB` (Idle state), `60MB` (Active Streaming). Prefer value types (structs) and non-retaining closures.
+* **Sandbox Fallback Safety**: Text replacement should prioritize `AXUIElement` accessibility scopes (`kAXSelectedTextAttribute`). If untrusted or sandboxed, fallback safely to posting `CGEvent` clipboard simulations (`Cmd+C` / `Cmd+V`) via asynchronous background threads to avoid locking the UI loop.
+
+### 🌐 Browser Extension (`/`)
+* **Standards**: Manifest V3 (MV3) compatible. Ensure Service Worker (`background.js`) is stateless and does not rely on persistent in-memory variables.
+* **Hybrid Routing**: Always check for `window.ai` language models before fallback routing to external cloud Gemini APIs.
+* **Encrypted Storage**: Sensitive settings and API keys MUST be protected using AES-GCM 256-bit client-side encryption via `WebCrypto API` using PBKDF2 (100,000 iterations) with local salts before storage syncing.
+
+## 🎨 Styling & Design Aesthetics (CSS & SwiftUI)
+* **Glassmorphism Spec**: Use high-translucency styles (macOS `material(.hudWindow)` or CSS `backdrop-filter: blur(20px)`) coupled with harmonized subtle dark mode color schemes (HSL/RGB values with high-fidelity contrasts).
+* **No CSS Frameworks**: Use Vanilla CSS only for extensions. Absolutely NO Tailwind CSS or utility-class engines unless explicitly asked by the user. Keep layouts responsive and visual variables isolated.
+* **Sensory Feedback**: Suggest micro-animations, fade-ins, and spring scaling for interactions. Use tactile audio clicks and swoop transitions for premium polish.
+
+## 🔒 Security & Privacy Standards
+* **Local Credentials**: Sensitve settings on desktop reside at `~/.axiom_config.json`. Do NOT store credentials or passwords in raw source code.
+* **Zero Telemetry**: Do NOT suggest or inject tracking scripts, analytics modules, Google Analytics, Mixpanel, or third-party usage data pipelines.
+
+## 💬 Code Quality & Comments
+* **Self-Documenting API**: Document all Swift files using structured `///` comments containing parameters, returns, and async annotations. Document JS files using standard JSDoc `/** ... */`.

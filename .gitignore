@@ -5,3 +5,7 @@ node_modules/
 AxiomOS/axiomos
 bin/
 axiomos
+.axiom_config.json
+.env
+.env.*
+*.local
