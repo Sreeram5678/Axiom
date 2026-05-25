@@ -13,36 +13,36 @@ interface Feature {
   description: string;
   icon: string;
   optimized: string;
-  color: "violet" | "teal";
+  color: "primary" | "secondary";
 }
 
 const features: Feature[] = [
   {
     id: "cpu",
-    title: "0.0% Idle CPU",
+    title: "Zero CPU Overhead",
     description:
-      "Leverages Carbon macOS event hooks for zero overhead processing. Your system stays responsive.",
+      "Leverages native event hooks for imperceptible resource usage. Your system stays perfectly responsive.",
     icon: "⚡",
     optimized: "⚡ Zero Overhead Processing: Leverages native event hooks for imperceptible resource usage.",
-    color: "violet",
+    color: "primary",
   },
   {
     id: "sovereign",
-    title: "On-Device Sovereign AI",
+    title: "On-Device Intelligence",
     description:
-      "All processing stays on your machine. Your data, your control. No cloud uploads.",
+      "All processing happens locally. Your data never leaves your machine. Complete sovereignty.",
     icon: "🔒",
     optimized: "🔒 Sovereign Intelligence: All processing stays on your machine. Your data, your control.",
-    color: "teal",
+    color: "secondary",
   },
   {
     id: "sync",
-    title: "Military-Grade Sync",
+    title: "End-to-End Encrypted",
     description:
-      "End-to-end encrypted synchronization. Your settings sync across devices securely.",
+      "Enterprise-grade synchronization across your devices. Secure, seamless, and transparent.",
     icon: "🛡️",
     optimized: "🛡️ Enterprise-Grade Security: End-to-end encrypted synchronization across all your devices.",
-    color: "violet",
+    color: "primary",
   },
 ];
 
@@ -67,23 +67,22 @@ export function Features({ onTextHover }: FeaturesProps) {
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
       viewport={{ once: false, margin: "-100px" }}
-      className="relative py-20 md:py-32 px-4 md:px-6"
+      className="relative py-24 md:py-32 px-4 md:px-6"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: false }}
-          className="text-center mb-16 md:mb-20"
+          className="text-center mb-20 md:mb-24"
         >
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Why Choose Axiom?
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Why Axiom
           </h2>
-          <p className="text-lg text-foreground-secondary max-w-2xl mx-auto">
-            Purpose-built for power users who demand performance, privacy, and
-            precision.
+          <p className="text-base text-foreground-secondary max-w-2xl mx-auto">
+            Built for power users who demand performance, privacy, and precision.
           </p>
         </motion.div>
 
@@ -101,38 +100,37 @@ export function Features({ onTextHover }: FeaturesProps) {
               viewport={{ once: false }}
               onMouseEnter={() => handleMouseEnter(feature)}
               onMouseLeave={handleMouseLeave}
-              whileHover={{ y: -8 }}
-              className={`group cursor-text p-6 md:p-8 rounded-xl transition-all ${
-                feature.color === "violet"
-                  ? "glass glass-violet hover:glow-violet"
-                  : "glass glass-teal hover:glow-teal"
+              whileHover={{ y: -4 }}
+              className={`group cursor-text p-8 rounded-lg transition-all ${
+                feature.color === "primary"
+                  ? "glass glass-primary hover:glow-primary"
+                  : "glass glass-secondary hover:glow-secondary"
               } ${hoveredId === feature.id ? "opacity-100" : "opacity-90"}`}
             >
               {/* Icon */}
               <motion.div
                 animate={{
-                  scale: hoveredId === feature.id ? 1.2 : 1,
-                  rotate: hoveredId === feature.id ? 10 : 0,
+                  scale: hoveredId === feature.id ? 1.1 : 1,
                 }}
                 transition={{ duration: 0.3 }}
-                className="text-5xl mb-4"
+                className="text-4xl mb-4"
               >
                 {feature.icon}
               </motion.div>
 
               {/* Title */}
               <h3
-                className={`text-xl md:text-2xl font-bold mb-3 ${
-                  feature.color === "violet"
-                    ? "text-accent-violet"
-                    : "text-accent-teal"
+                className={`text-lg font-semibold mb-3 ${
+                  feature.color === "primary"
+                    ? "text-accent-primary"
+                    : "text-accent-secondary"
                 }`}
               >
                 {feature.title}
               </h3>
 
               {/* Description */}
-              <p className="text-foreground-secondary leading-relaxed">
+              <p className="text-sm text-foreground-secondary leading-relaxed">
                 {feature.description}
               </p>
 
@@ -144,18 +142,14 @@ export function Features({ onTextHover }: FeaturesProps) {
                   x: hoveredId === feature.id ? 0 : -10,
                 }}
                 transition={{ duration: 0.3 }}
-                className={`mt-4 pt-4 border-t ${
-                  feature.color === "violet"
-                    ? "border-accent-violet border-opacity-20"
-                    : "border-accent-teal border-opacity-20"
-                }`}
+                className={`mt-4 pt-4 border-t border-border-light`}
               >
                 <a
                   href="#"
-                  className={`text-sm font-medium ${
-                    feature.color === "violet"
-                      ? "text-accent-violet hover:text-accent-violet-dark"
-                      : "text-accent-teal hover:text-accent-teal-light"
+                  className={`text-xs font-medium ${
+                    feature.color === "primary"
+                      ? "text-accent-primary hover:text-accent-primary-light"
+                      : "text-accent-secondary hover:text-accent-secondary-light"
                   } transition-colors`}
                 >
                   Learn more →

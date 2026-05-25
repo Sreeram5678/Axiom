@@ -40,35 +40,35 @@ export function CursorHUD({
         pointerEvents: "none",
         zIndex: 9999,
       }}
-      className="w-80"
+      className="w-72"
     >
-      <div className="glass glass-violet rounded-lg p-4 shadow-lg">
+      <div className="glass glass-primary rounded-md p-4 shadow-lg">
         {/* Original text */}
         <div className="mb-3">
-          <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
+          <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-widest">
             Original
           </p>
-          <p className="text-sm text-foreground-secondary mt-1 line-clamp-2">
+          <p className="text-xs text-foreground-secondary mt-1.5 line-clamp-2">
             {hoveredText}
           </p>
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-accent-violet to-transparent opacity-30 my-3" />
+        <div className="h-px bg-border-light my-3" />
 
         {/* Optimized text */}
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-xs font-medium text-accent-violet uppercase tracking-wide">
-              Optimized by Axiom
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-xs font-medium text-accent-primary uppercase tracking-widest">
+              Optimized
             </p>
             {isLoading && (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-3 h-3"
+                className="w-2.5 h-2.5"
               >
-                <div className="w-full h-full border-2 border-transparent border-t-accent-teal rounded-full" />
+                <div className="w-full h-full border-1.5 border-transparent border-t-accent-secondary rounded-full" />
               </motion.div>
             )}
           </div>
@@ -76,14 +76,14 @@ export function CursorHUD({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-sm text-accent-teal font-medium line-clamp-3"
+            className="text-xs text-accent-secondary font-medium line-clamp-3"
           >
             {optimizedText || (isLoading ? "Optimizing..." : "Analyzing...")}
           </motion.p>
         </div>
 
         {/* Glow effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-accent-violet to-accent-teal opacity-0 group-hover:opacity-10 rounded-lg -z-10 transition-opacity" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-accent-primary to-accent-secondary opacity-0 group-hover:opacity-10 rounded-md -z-10 transition-opacity" />
       </div>
     </motion.div>
   );
