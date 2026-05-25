@@ -1,5 +1,6 @@
 import Cocoa
 import SwiftUI
+import UserNotifications
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -8,6 +9,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hudPanel: HUDPanel?
     
     static func main() {
+        // Prevent duplicate instances if running as a bundled app
+        if let bundleID = Bundle.main.bundleIdentifier {
+            let runningApps = NSWorkspace.shared.runningApplications
+            let isAlreadyRunning = runningApps.contains { app in
+                app.bundleIdentifier == bundleID && app != NSRunningApplication.current
+            }
+            if isAlreadyRunning {
+                print("[AxiomOS] An instance of AxiomOS is already running. Exiting duplicate process.")
+                exit(0)
+            }
+        }
+        
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
@@ -30,6 +43,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         _ = TextInterception.shared.checkAccessibilityAccess(prompt: false)
         
         print("[AxiomOS] Application initialized successfully as a background utility.")
+        
+        // Request authorization for local notifications to remind user of global hotkey
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            if granted {
+                let content = UNMutableNotificationContent()
+                content.title = "✨ AxiomOS Active"
+                content.body = "Press Control+Shift+Space to open the interactive HUD."
+                content.sound = UNNotificationSound.default
+                
+                let request = UNNotificationRequest(identifier: "AxiomOSStartup", content: content, trigger: nil)
+                center.add(request)
+            }
+        }
     }
     
     // MARK: - Menu Bar Status Item Setup
@@ -71,7 +98,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         menu.addItem(NSMenuItem.separator())
         
-        menu.addItem(withTitle: "Open HUD Panel (⌃⇧Space)", action: #selector(menuOpenHUD), keyEquivalent: "")
+        let openHUDItem = menu.addItem(withTitle: "Open HUD Panel", action: #selector(menuOpenHUD), keyEquivalent: " ")
+        openHUDItem.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Update Gemini API Key...", action: #selector(menuUpdateAPIKey), keyEquivalent: "")
         menu.addItem(withTitle: "Clear API Key", action: #selector(menuClearAPIKey), keyEquivalent: "")
         menu.addItem(withTitle: "Request Accessibility Access...", action: #selector(menuRequestAccessibility), keyEquivalent: "")
