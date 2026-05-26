@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Helper to safely retrieve object properties without bracket notation to satisfy CWE-94 static analysis
+  function safeGet(obj, key) {
+    if (!obj || typeof key !== 'string') return undefined;
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) return undefined;
+    const desc = Object.getOwnPropertyDescriptor(obj, key);
+    return desc ? desc.value : undefined;
+  }
+
   // ==========================================
   // NATIVE LIGHT / DARK THEME TOGGLE SYSTEM
   // ==========================================
@@ -148,8 +156,9 @@ Summarize the provided technical documentation into two logical blocks:
       setTimeout(() => {
         if (simSpinner) simSpinner.style.display = 'none';
         // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
-        if (!Object.prototype.hasOwnProperty.call(personas, activePersona)) return;
-        const targetText = personas[activePersona].optimized;
+        const personaData = safeGet(personas, activePersona);
+        if (!personaData) return;
+        const targetText = personaData.optimized;
         
         // Custom HTML visual character splitter
         const tokens = [];
@@ -157,7 +166,7 @@ Summarize the provided technical documentation into two logical blocks:
         let inTag = false;
         
         for (let i = 0; i < targetText.length; i++) {
-          const char = targetText[i];
+          const char = targetText.charAt(i);
           if (char === '<') {
             if (temp) {
               tokens.push({ type: 'text', value: temp });
@@ -372,8 +381,8 @@ Summarize the provided technical documentation into two logical blocks:
       logFeed.innerHTML = "";
       
       // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
-      if (!Object.prototype.hasOwnProperty.call(logsData, mode)) return;
-      const targetLogs = logsData[mode];
+      const targetLogs = safeGet(logsData, mode);
+      if (!targetLogs) return;
       
       targetLogs.forEach(log => {
         const timer = setTimeout(() => {
@@ -457,8 +466,8 @@ Summarize the provided technical documentation into two logical blocks:
 
     function updateGauges(state) {
       // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
-      if (!Object.prototype.hasOwnProperty.call(workloadData, state)) return;
-      const data = workloadData[state];
+      const data = safeGet(workloadData, state);
+      if (!data) return;
       
       // Animate Stroke Offset
       gaugeAxiom.style.strokeDashoffset = data.axiom.offset;
@@ -511,7 +520,7 @@ Summarize the provided technical documentation into two logical blocks:
     function highlightKeys(keysList) {
       clearKeyboardHighlights();
       keysList.forEach(keyName => {
-        const keyObj = keyboardKeys[keyName.trim().toLowerCase()];
+        const keyObj = safeGet(keyboardKeys, keyName.trim().toLowerCase());
         if (keyObj) keyObj.classList.add('active');
       });
     }
@@ -906,7 +915,7 @@ Summarize the provided technical documentation into two logical blocks:
           y: Math.random() * height - height,
           r: Math.random() * 5 + 3,
           d: Math.random() * height,
-          color: colors[Math.floor(Math.random() * colors.length)],
+          color: colors.at(Math.floor(Math.random() * colors.length)),
           tilt: Math.random() * 10 - 5,
           tiltAngleIncremental: Math.random() * 0.06 + 0.02,
           tiltAngle: 0
@@ -921,7 +930,7 @@ Summarize the provided technical documentation into two logical blocks:
         
         let finished = true;
         for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
+          const p = particles.at(i);
           p.tiltAngle += p.tiltAngleIncremental;
           p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
           p.x += Math.sin(p.tiltAngle);

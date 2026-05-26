@@ -464,14 +464,12 @@ try {
     chrome.storage.onChanged.addListener((changes, area) => {
       try {
         if (area === 'session') {
-          // Use Object.create(null) to create a prototype-free object, preventing
-          // prototype pollution via bracket notation on user-supplied keys (CWE-94)
-          const sessionUpdate = Object.create(null);
           let hasUpdate = false;
-          
-          for (const [key, { newValue }] of Object.entries(changes)) {
-            sessionUpdate[key] = newValue;
-            hasUpdate = true;
+          for (const key of Object.keys(changes)) {
+            if (Object.prototype.hasOwnProperty.call(changes, key)) {
+              hasUpdate = true;
+              break;
+            }
           }
           
           if (hasUpdate) {
