@@ -39,9 +39,10 @@
         <h1 id="hero-title">Refine raw prompts into <span>high-performance intelligence</span>.</h1>
         <p id="hero-subtitle">A professional prompt engineering suite injecting context-aware directives inline in your browser and system-wide across any macOS application.</p>
         <div class="hero-buttons">
-          <a href="#simulator" class="btn btn-primary" id="hero-btn-primary">Try Live Simulator</a>
-          <a href="install.html" class="btn btn-secondary" id="hero-btn-secondary">View Installation</a>
+          <a href="macos.html" class="btn btn-primary" id="hero-btn-primary">Download macOS App</a>
+          <a href="chrome.html" class="btn btn-secondary" id="hero-btn-secondary">Get Chrome Extension</a>
         </div>
+        <div id="hero-platform-helper" style="margin-top: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center;"></div>
       </div>
     </section>
 
@@ -155,6 +156,117 @@
           </div>
           
           <a href="macos.html" class="btn btn-secondary" id="btn-explore-macos" style="width: 100%;">Explore macOS App & Key Trainer &rarr;</a>
+        </article>
+
+        <!-- Board Card 4: ROI Interactive Calculator (Width: 6 Columns) -->
+        <article class="board-card col-6" id="roi-calculator">
+          <div class="card-tag">Cost &amp; Performance ROI</div>
+          <h2 class="card-title">Local Routing ROI Calculator</h2>
+          <p class="card-description">Adjust prompt volume and average length to calculate your estimated API cost savings and latency saved from local Gemini Nano routing.</p>
+          
+          <div class="roi-layout">
+            <div class="roi-slider-group">
+              <div class="roi-slider-label">
+                <span>Daily Prompt Volume</span>
+                <span class="roi-slider-val" id="roi-prompts-val">500</span>
+              </div>
+              <input type="range" min="50" max="5000" step="50" value="500" class="roi-slider" id="roi-prompts-slider">
+            </div>
+            
+            <div class="roi-slider-group">
+              <div class="roi-slider-label">
+                <span>Average Prompt Length</span>
+                <span class="roi-slider-val" id="roi-length-val">1,200 tokens</span>
+              </div>
+              <input type="range" min="100" max="4000" step="100" value="1200" class="roi-slider" id="roi-length-slider">
+            </div>
+            
+            <div class="roi-metrics-grid">
+              <div class="roi-metric-card">
+                <span class="roi-metric-title">Est. API Cost Savings</span>
+                <span class="roi-metric-val highlight" id="roi-metric-savings">$27.00</span>
+              </div>
+              <div class="roi-metric-card">
+                <span class="roi-metric-title">Monthly Latency Saved</span>
+                <span class="roi-metric-val" id="roi-metric-latency">5.1 hrs</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board Card 5: Community Persona Gallery (Width: 6 Columns) -->
+        <article class="board-card col-6" id="community-gallery">
+          <div class="card-tag">Shared Personas</div>
+          <h2 class="card-title">Axiom Community Gallery</h2>
+          <p class="card-description">Select a community persona to inspect its JSON schema. Copy the config to synchronize directly with your local extension settings.</p>
+          
+          <div class="gallery-card-grid" id="gallery-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div class="gallery-card active" data-persona-id="sql-wizard" style="padding: 12px; gap: 8px;">
+              <div class="gallery-header" style="margin-bottom: 2px;">
+                <span class="gallery-avatar" style="width: 28px; height: 28px; font-size: 0.7rem; font-weight: 700; background: rgba(230,0,35,0.1); color: var(--accent-red); display: flex; align-items: center; justify-content: center;">SQL</span>
+                <span class="gallery-pill" style="font-size: 0.6rem; padding: 2px 6px;">DBA</span>
+              </div>
+              <div class="gallery-info">
+                <div class="gallery-name" style="font-size: 0.8rem; font-weight: 700;">SQL Wizard</div>
+                <div class="gallery-desc" style="font-size: 0.65rem; line-height: 1.2;">Plain English to SQL</div>
+              </div>
+              <div class="gallery-stats" style="font-size: 0.6rem; margin-top: 2px; padding-top: 6px;">
+                <span>Latency: 12ms</span>
+                <span>99%</span>
+              </div>
+            </div>
+            
+            <div class="gallery-card" data-persona-id="regex-optimizer" style="padding: 12px; gap: 8px;">
+              <div class="gallery-header" style="margin-bottom: 2px;">
+                <span class="gallery-avatar" style="width: 28px; height: 28px; font-size: 0.7rem; font-weight: 700; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center;">RGX</span>
+                <span class="gallery-pill" style="font-size: 0.6rem; padding: 2px 6px;">Regex</span>
+              </div>
+              <div class="gallery-info">
+                <div class="gallery-name" style="font-size: 0.8rem; font-weight: 700;">Regex Optimizer</div>
+                <div class="gallery-desc" style="font-size: 0.65rem; line-height: 1.2;">Optimize regex safety</div>
+              </div>
+              <div class="gallery-stats" style="font-size: 0.6rem; margin-top: 2px; padding-top: 6px;">
+                <span>Latency: 8ms</span>
+                <span>98%</span>
+              </div>
+            </div>
+
+            <div class="gallery-card" data-persona-id="git-commit" style="padding: 12px; gap: 8px;">
+              <div class="gallery-header" style="margin-bottom: 2px;">
+                <span class="gallery-avatar" style="width: 28px; height: 28px; font-size: 0.7rem; font-weight: 700; background: rgba(16,185,129,0.1); color: #10b981; display: flex; align-items: center; justify-content: center;">GIT</span>
+                <span class="gallery-pill" style="font-size: 0.6rem; padding: 2px 6px;">Git</span>
+              </div>
+              <div class="gallery-info">
+                <div class="gallery-name" style="font-size: 0.8rem; font-weight: 700;">Commit Formatter</div>
+                <div class="gallery-desc" style="font-size: 0.65rem; line-height: 1.2;">Semantic commits</div>
+              </div>
+              <div class="gallery-stats" style="font-size: 0.6rem; margin-top: 2px; padding-top: 6px;">
+                <span>Latency: 10ms</span>
+                <span>99%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Code Schema & 1-Click Copy Area -->
+          <div class="json-preview-container" style="margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-secondary); overflow: hidden;">
+            <div class="json-preview-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.05);">
+              <span class="json-preview-label" style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Selected JSON Payload</span>
+              <span class="panel-badge optimized" id="sync-json-status" style="font-size: 0.65rem;">Ready to Sync</span>
+            </div>
+            <pre class="json-preview" id="gallery-json-block" style="margin: 0; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.4; color: var(--text-primary); overflow-x: auto; background: transparent; text-align: left; max-height: 140px; overflow-y: auto;"></pre>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button class="sync-btn" id="btn-copy-gallery-json" style="flex: 1; margin-top: 0; background: var(--accent-red); color: white; border-color: transparent;">
+              <span>1-Click Copy Config</span>
+            </button>
+            <button class="sync-btn" id="btn-sync-gallery" style="flex: 1; margin-top: 0;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span>Simulate Sync</span>
+            </button>
+          </div>
         </article>
 
       </div>

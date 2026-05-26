@@ -125,6 +125,20 @@
               <div class="step-body">
                 <div class="step-title">Insert Gemini API Credentials</div>
                 <div class="step-desc">Click the Axiom extension icon in your Chrome toolbar. Tap the settings cog icon at the base of the viewport panel, paste your private Gemini Developer Key (generated securely via Google AI Studio), and hit <strong>Save Settings</strong>. Sync keys are immediately isolated using AES-GCM local storage.</div>
+                
+                <div class="connection-validator-box" id="connection-validator" style="flex-direction: column; align-items: stretch; gap: 14px; padding: 20px;">
+                  <div class="validator-status-info">
+                    <div class="validator-indicator-dot checking" id="validator-dot" style="background-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);"></div>
+                    <div style="flex: 1;">
+                      <div class="validator-text-status" id="validator-status-text">Awaiting Connection</div>
+                      <div class="validator-details" id="validator-details-text">Click the verification button below to simulate extension handshake.</div>
+                    </div>
+                  </div>
+                  
+                  <button class="btn btn-secondary" id="btn-test-connection" style="width: 100%; font-size: 0.8rem; padding: 8px 16px; font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 8px; border-color: var(--border-color); background: var(--bg-card); cursor: pointer;">
+                    <span>Test Extension Connection</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

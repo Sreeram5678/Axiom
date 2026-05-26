@@ -42,6 +42,10 @@
 
     <!-- macOS Grid Boards -->
     <section class="container">
+      
+      <!-- Dynamic Platform Alert Placeholder -->
+      <div id="platform-alert-container"></div>
+
       <div class="board-grid">
         
         <!-- Board Card 1: Keyboard Trainer (Full Width) -->
@@ -130,6 +134,44 @@
                 <div class="key-btn">option</div>
               </div>
             </div>
+            
+            <!-- Keyboard Muscle Trainer Challenge Box -->
+            <div class="shortcut-game-box" id="shortcut-game">
+              <div class="game-header">
+                <div class="game-title">
+                  Keyboard Muscle Trainer Challenge
+                </div>
+                <div class="game-stats">
+                  <div class="game-stat-item">Streak: <span id="game-streak-count">0</span></div>
+                  <div class="game-stat-item">Score: <span id="game-score-count">0</span></div>
+                </div>
+              </div>
+              
+              <div class="game-prompt-container">
+                <div class="game-instruction" id="game-prompt-text">
+                  Press the correct keys on your keyboard to match the Axiom trigger shortcut:
+                </div>
+                <div class="game-target-shortcut" id="game-target-keys">
+                  <!-- Dynamically populated or static starter keys -->
+                  <div class="game-key">Ctrl</div>
+                  <div class="game-key">Shift</div>
+                  <div class="game-key">Space</div>
+                </div>
+              </div>
+              
+              <div class="game-progress-wrapper">
+                <div class="game-progress-info">
+                  <span>Training Session Progress</span>
+                  <span id="game-progress-percent">0%</span>
+                </div>
+                <div class="game-progress-container">
+                  <div class="game-progress-bar" id="game-progress-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+              
+              <div class="game-status" id="game-status-message"></div>
+            </div>
+
           </div>
         </article>
 
