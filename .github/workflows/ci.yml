@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: '20'
           cache: 'npm'
@@ -34,10 +34,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Cache Swift Package Manager Build
-        uses: actions/cache@v4
+        uses: actions/cache@0c0113d5d0f97b665c71120485970c6344265697 # v4.0.0
         with:
           path: AxiomOS/.build
           key: ${{ runner.os }}-spm-${{ hashFiles('AxiomOS/Package.swift') }}

@@ -2,17 +2,13 @@ import os
 import sys
 import subprocess
 
-def install_and_import(import_name, install_name):
-    try:
-        __import__(import_name)
-    except ImportError:
-        print(f"Installing {install_name}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", install_name])
-
-# Make sure Pillow is installed
-install_and_import('PIL', 'Pillow')
-
-from PIL import Image
+# Ensure Pillow (PIL) is installed and available
+try:
+    from PIL import Image
+except ImportError:
+    print("Installing Pillow...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
+    from PIL import Image
 
 # Create icons directory
 os.makedirs('icons', exist_ok=True)
