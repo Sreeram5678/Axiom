@@ -170,6 +170,23 @@ Summarize the provided technical documentation into two logical blocks:
       if (simSpinner) simSpinner.style.display = 'flex';
       simOutput.innerHTML = "";
 
+      const charCountEl = document.getElementById('token-char-count');
+      const wordCountEl = document.getElementById('token-word-count');
+      const tokenCountEl = document.getElementById('token-token-count');
+      const costSavedEl = document.getElementById('token-cost-saved');
+      const latencyValEl = document.getElementById('token-latency-val');
+      const latencyPulseEl = document.getElementById('latency-pulse');
+
+      if (charCountEl) charCountEl.textContent = "0";
+      if (wordCountEl) wordCountEl.textContent = "0";
+      if (tokenCountEl) tokenCountEl.textContent = "0";
+      if (costSavedEl) costSavedEl.textContent = "$0.00000";
+      if (latencyPulseEl) {
+        latencyPulseEl.style.backgroundColor = 'var(--text-muted)';
+        latencyPulseEl.style.boxShadow = 'none';
+      }
+      if (latencyValEl) latencyValEl.textContent = "0 ms";
+
       setTimeout(() => {
         if (simSpinner) simSpinner.style.display = 'none';
         // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
@@ -213,22 +230,53 @@ Summarize the provided technical documentation into two logical blocks:
         
         sourceNodes.forEach(node => queueNode(node, simOutput));
 
+        function updateStats() {
+          const text = simOutput.textContent || "";
+          const chars = text.length;
+          const words = text.split(/\s+/).filter(Boolean).length;
+          const tokens = Math.ceil(chars / 4);
+          const cost = tokens * 0.000015;
+
+          if (charCountEl) charCountEl.textContent = chars.toLocaleString();
+          if (wordCountEl) wordCountEl.textContent = words.toLocaleString();
+          if (tokenCountEl) tokenCountEl.textContent = tokens.toLocaleString();
+          if (costSavedEl) costSavedEl.textContent = `$${cost.toFixed(5)}`;
+
+          if (latencyPulseEl) {
+            latencyPulseEl.style.backgroundColor = '#f59e0b';
+            latencyPulseEl.style.boxShadow = '0 0 8px #f59e0b';
+          }
+          if (latencyValEl) {
+            const simLatency = Math.floor(Math.random() * 8) + 8;
+            latencyValEl.textContent = `${simLatency} ms`;
+          }
+        }
+
         let actionIdx = 0;
         function stream() {
           if (actionIdx >= actions.length) {
             isTyping = false;
             simTriggerBtn.disabled = false;
             simTriggerBtn.textContent = "Optimize Prompt";
+            if (latencyPulseEl) {
+              latencyPulseEl.style.backgroundColor = '#10b981';
+              latencyPulseEl.style.boxShadow = '0 0 8px #10b981';
+            }
+            if (latencyValEl) {
+              latencyValEl.textContent = "12 ms";
+            }
             return;
           }
           
           const action = actions.at(actionIdx++);
           if (action.type === 'element') {
             action.parent.appendChild(action.element);
+            updateStats();
             setTimeout(stream, 4);
           } else if (action.type === 'char') {
             action.parent.appendChild(document.createTextNode(action.char));
             simOutput.scrollTop = simOutput.scrollHeight;
+            updateStats();
             setTimeout(stream, 2);
           }
         }
@@ -796,8 +844,11 @@ Summarize the provided technical documentation into two logical blocks:
             newCard.className = 'gallery-card';
             newCard.id = 'gallery-added-persona';
             newCard.dataset.personaId = 'analyst';
+            newCard.dataset.category = 'dev';
             newCard.style.padding = '12px';
             newCard.style.gap = '8px';
+            newCard.style.display = 'flex';
+            newCard.style.flexDirection = 'column';
             newCard.style.animation = 'fadeIn 0.5s ease-out';
             newCard.innerHTML = `
               <div class="gallery-header" style="margin-bottom: 2px;">
@@ -957,6 +1008,297 @@ Summarize the provided technical documentation into two logical blocks:
       }
 
       draw();
+    }
+  }
+
+  // ==========================================
+  // ADVANCED AXIOM INTERACTIVE FEATURES
+  // ==========================================
+
+  // 1. Interactive Prompt Compare Slider
+  const compareRange = document.getElementById('compare-slider-range');
+  const compareCard = document.getElementById('compare-slider-card');
+  if (compareRange && compareCard) {
+    compareRange.addEventListener('input', (e) => {
+      const val = e.target.value;
+      compareCard.style.setProperty('--slider-pos', `${val}%`);
+    });
+  }
+
+  // 2. Native window.ai Browser Capability Tester
+  function checkWindowAiCapabilities() {
+    const isAiAvailable = typeof window.ai !== 'undefined';
+    
+    // Header Nodes
+    const headerDot = document.getElementById('window-ai-header-dot');
+    const headerText = document.getElementById('window-ai-header-text');
+    
+    // Sidebar Nodes (Home page only)
+    const sidebarCard = document.getElementById('window-ai-status-card');
+    const sidebarDot = document.getElementById('window-ai-dot');
+    const sidebarTitle = document.getElementById('window-ai-status-title');
+    const sidebarDesc = document.getElementById('window-ai-status-desc');
+    
+    if (isAiAvailable) {
+      // Glow green if user has Gemini Nano enabled
+      if (headerDot) {
+        headerDot.style.backgroundColor = '#10b981';
+        headerDot.style.boxShadow = '0 0 10px #10b981';
+      }
+      if (headerText) {
+        headerText.textContent = 'Gemini Nano Active';
+      }
+      
+      if (sidebarDot) {
+        sidebarDot.style.backgroundColor = '#10b981';
+        sidebarDot.style.boxShadow = '0 0 10px #10b981';
+      }
+      if (sidebarTitle) {
+        sidebarTitle.textContent = 'local gemini nano';
+      }
+      if (sidebarDesc) {
+        sidebarDesc.textContent = 'Capable. Native window.ai provider detected and active.';
+      }
+    } else {
+      // Fallback instructions
+      if (headerDot) {
+        headerDot.style.backgroundColor = '#f59e0b';
+        headerDot.style.boxShadow = '0 0 8px #f59e0b';
+      }
+      if (headerText) {
+        headerText.textContent = 'AI Offline';
+      }
+      
+      if (sidebarDot) {
+        sidebarDot.style.backgroundColor = '#f59e0b';
+        sidebarDot.style.boxShadow = '0 0 8px #f59e0b';
+      }
+      if (sidebarTitle) {
+        sidebarTitle.textContent = 'local gemini nano';
+      }
+      if (sidebarDesc) {
+        sidebarDesc.textContent = 'Gemini Nano Unavailable. Enable optimization-guide-on-device-model flags in Chrome.';
+      }
+    }
+  }
+  
+  checkWindowAiCapabilities();
+
+  // 3. Interactive Configuration Profile Builder (install.html only)
+  const cfgApiKey = document.getElementById('cfg-api-key');
+  const cfgPersona = document.getElementById('cfg-persona');
+  const cfgTemp = document.getElementById('cfg-temp');
+  const cfgTempVal = document.getElementById('cfg-temp-val');
+  const cfgTokens = document.getElementById('cfg-tokens');
+  const cfgTokensVal = document.getElementById('cfg-tokens-val');
+  const cfgJsonBlock = document.getElementById('cfg-json-block');
+
+  if (cfgJsonBlock) {
+    function updateConfigJson() {
+      const apiKeyVal = cfgApiKey && cfgApiKey.value ? cfgApiKey.value : 'YOUR_STUDIO_KEY';
+      const personaVal = cfgPersona ? cfgPersona.value : 'code-reviewer';
+      const tempVal = cfgTemp ? parseFloat(cfgTemp.value) : 0.7;
+      const tokensVal = cfgTokens ? parseInt(cfgTokens.value, 10) : 2048;
+
+      const configObject = {
+        apiKey: apiKeyVal,
+        defaultPersona: personaVal,
+        temperature: tempVal,
+        maxTokens: tokensVal
+      };
+
+      cfgJsonBlock.textContent = JSON.stringify(configObject, null, 2);
+    }
+
+    if (cfgApiKey) cfgApiKey.addEventListener('input', updateConfigJson);
+    if (cfgPersona) cfgPersona.addEventListener('change', updateConfigJson);
+    if (cfgTemp) {
+      cfgTemp.addEventListener('input', (e) => {
+        if (cfgTempVal) cfgTempVal.textContent = e.target.value;
+        updateConfigJson();
+      });
+    }
+    if (cfgTokens) {
+      cfgTokens.addEventListener('input', (e) => {
+        if (cfgTokensVal) cfgTokensVal.textContent = e.target.value;
+        updateConfigJson();
+      });
+    }
+
+    updateConfigJson();
+  }
+
+  // 4. Floating Global Shortcuts Keyboard Cheat-Sheet
+  let modalEl = document.getElementById('shortcuts-modal');
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = 'shortcuts-modal';
+    modalEl.style.position = 'fixed';
+    modalEl.style.top = '0';
+    modalEl.style.left = '0';
+    modalEl.style.width = '100vw';
+    modalEl.style.height = '100vh';
+    modalEl.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modalEl.style.backdropFilter = 'blur(20px)';
+    modalEl.style.webkitBackdropFilter = 'blur(20px)';
+    modalEl.style.zIndex = '10000';
+    modalEl.style.display = 'none';
+    modalEl.style.alignItems = 'center';
+    modalEl.style.justifyContent = 'center';
+    modalEl.style.opacity = '0';
+    modalEl.style.transition = 'opacity 0.3s ease';
+
+    modalEl.innerHTML = `
+      <div class="shortcuts-modal-card" style="position: relative; width: 90%; max-width: 480px; background: rgba(30, 30, 35, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); animation: modalScaleIn 0.3s ease-out;">
+        <button id="btn-shortcuts-close" aria-label="Close modal" style="position: absolute; right: 20px; top: 20px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <div class="card-tag" style="margin-bottom: 8px;">System Documentation</div>
+        <h2 class="card-title" style="margin-top: 0; margin-bottom: 16px; font-size: 1.4rem;">Keyboard Shortcuts</h2>
+        
+        <div class="shortcuts-list" style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Toggle Global Help Sheet</span>
+            <kbd style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace; color: var(--accent-red); box-shadow: 0 2px 0 rgba(0,0,0,0.2);">?</kbd>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Dismiss Help Sheet / Modals</span>
+            <kbd style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace; color: var(--text-secondary); box-shadow: 0 2px 0 rgba(0,0,0,0.2);">ESC</kbd>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Toggle Dark Mode Theme</span>
+            <kbd style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace; color: var(--text-secondary); box-shadow: 0 2px 0 rgba(0,0,0,0.2);">T</kbd>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Trigger Context Optimization</span>
+            <kbd style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace; color: var(--text-secondary); box-shadow: 0 2px 0 rgba(0,0,0,0.2);">CMD + ENTER</kbd>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    // Add animation styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      @keyframes modalScaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  }
+
+  const closeBtn = document.getElementById('btn-shortcuts-close');
+
+  function openShortcutsModal() {
+    modalEl.style.display = 'flex';
+    setTimeout(() => {
+      modalEl.style.opacity = '1';
+    }, 10);
+  }
+
+  function closeShortcutsModal() {
+    modalEl.style.opacity = '0';
+    setTimeout(() => {
+      modalEl.style.display = 'none';
+    }, 300);
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeShortcutsModal);
+  modalEl.addEventListener('click', (e) => {
+    if (e.target === modalEl) closeShortcutsModal();
+  });
+
+  // Hotkey Trigger ('?')
+  window.addEventListener('keydown', (e) => {
+    // Prevent trigger inside text input elements
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) {
+      // Allow Cmd+Enter inside input/textarea to trigger prompt optimization
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        const triggerBtn = document.getElementById('btn-trigger-optimize');
+        if (triggerBtn && !triggerBtn.disabled) {
+          triggerBtn.click();
+        }
+      }
+      return;
+    }
+
+    if (e.key === '?' || e.key === '/') {
+      e.preventDefault();
+      openShortcutsModal();
+    } else if (e.key === 'Escape') {
+      closeShortcutsModal();
+    } else if (e.key.toLowerCase() === 't') {
+      const themeBtn = document.getElementById('btn-theme-toggle');
+      if (themeBtn) themeBtn.click();
+    }
+  });
+
+  // Toggle button header
+  const shortcutsToggleBtn = document.getElementById('btn-shortcuts-toggle');
+  if (shortcutsToggleBtn) {
+    shortcutsToggleBtn.addEventListener('click', openShortcutsModal);
+  }
+
+  // 5. Gallery Search & Category Filtering
+  const filterTabs = document.querySelectorAll('.gallery-filter-tab');
+  const searchInput = document.getElementById('gallery-search-input');
+  
+  if (filterTabs.length > 0 || searchInput) {
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    function filterGallery() {
+      const cards = galleryGrid ? galleryGrid.querySelectorAll('.gallery-card') : [];
+      cards.forEach(card => {
+        const cardCategory = card.dataset.category ? card.dataset.category.toLowerCase() : '';
+        const nameNode = card.querySelector('.gallery-name');
+        const descNode = card.querySelector('.gallery-desc');
+        const nameText = nameNode ? nameNode.textContent.toLowerCase() : '';
+        const descText = descNode ? descNode.textContent.toLowerCase() : '';
+        
+        const matchesCategory = currentFilter === 'all' || cardCategory === currentFilter;
+        const matchesSearch = nameText.includes(searchQuery) || descText.includes(searchQuery);
+
+        if (matchesCategory && matchesSearch) {
+          card.style.display = 'flex';
+          card.style.opacity = '1';
+          card.style.transform = 'scale(1)';
+          card.style.pointerEvents = 'auto';
+        } else {
+          card.style.display = 'none';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          card.style.pointerEvents = 'none';
+        }
+      });
+    }
+
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => {
+          t.classList.remove('active');
+          t.style.background = 'transparent';
+          t.style.border = '1px solid transparent';
+        });
+        tab.classList.add('active');
+        tab.style.background = 'var(--bg-secondary)';
+        tab.style.border = '1px solid var(--border-color)';
+        currentFilter = tab.dataset.filter.toLowerCase();
+        filterGallery();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        filterGallery();
+      });
     }
   }
 

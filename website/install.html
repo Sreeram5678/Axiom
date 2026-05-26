@@ -22,6 +22,17 @@
         <a href="install.html" class="nav-item active" id="link-install">Setup Guide</a>
       </nav>
       <div class="nav-actions">
+        <div id="window-ai-header-badge" class="capabilities-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.05); font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">
+          <span class="status-dot" id="window-ai-header-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);"></span>
+          <span id="window-ai-header-text">Checking AI...</span>
+        </div>
+        <button class="btn btn-secondary" id="btn-shortcuts-toggle" aria-label="Open Keyboard Shortcuts" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
         <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
           <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
@@ -168,19 +179,52 @@
           </div>
         </article>
 
-        <!-- Board Card 4: Configuration Schema (5 columns) -->
+        <!-- Board Card 4: Interactive Configuration Profile Builder (5 columns) -->
         <article class="board-card col-5" id="config-schema">
           <div class="card-tag">Keychain Storage</div>
-          <h2 class="card-title">Local Config Dotfiles</h2>
-          <p class="card-description">AxiomOS securely persists on-device settings options at <code>~/.axiom_config.json</code>, migrating API keys automatically into macOS Keychain buffers.</p>
+          <h2 class="card-title">Interactive Configuration Builder</h2>
+          <p class="card-description">Configure your native settings in real-time. AxiomOS securely persists these settings at <code>~/.axiom_config.json</code>, auto-migrating sensitive keys to macOS Keychain buffers.</p>
           
+          <!-- Controls Container -->
+          <div class="config-builder-controls" style="margin-bottom: 20px;">
+            <!-- API Key Input -->
+            <div style="margin-bottom: 12px;">
+              <label for="cfg-api-key" style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Gemini API Key</label>
+              <input type="password" id="cfg-api-key" placeholder="Enter Studio Key..." class="config-input" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; outline: none; transition: var(--transition-fast);">
+            </div>
+            
+            <!-- Persona Select Menu -->
+            <div style="margin-bottom: 12px;">
+              <label for="cfg-persona" style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Default Persona</label>
+              <select id="cfg-persona" class="config-select" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; outline: none; cursor: pointer;">
+                <option value="code-reviewer">Code Reviewer</option>
+                <option value="creative-writer">Creative Writer</option>
+                <option value="context-architect">Context Architect</option>
+              </select>
+            </div>
+            
+            <!-- Temperature Slider -->
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">
+                <span>Temperature</span>
+                <span id="cfg-temp-val" style="color: var(--accent-red); font-family: monospace;">0.7</span>
+              </div>
+              <input type="range" id="cfg-temp" min="0.0" max="1.0" step="0.1" value="0.7" style="width: 100%; accent-color: var(--accent-red); cursor: pointer;">
+            </div>
+            
+            <!-- Max Output Tokens Slider -->
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">
+                <span>Max Output Tokens</span>
+                <span id="cfg-tokens-val" style="color: var(--accent-red); font-family: monospace;">2048</span>
+              </div>
+              <input type="range" id="cfg-tokens" min="256" max="8192" step="256" value="2048" style="width: 100%; accent-color: var(--accent-red); cursor: pointer;">
+            </div>
+          </div>
+
           <div class="json-preview-container">
-            <span class="json-preview-label">Persistent Dotfile Schema</span>
-            <div class="json-preview" style="height: 180px;">{
-  "apiKey" : "YOUR_STUDIO_KEY",
-  "defaultLength" : "medium",
-  "selectedModeId" : "code-reviewer"
-}</div>
+            <span class="json-preview-label">Dynamic Dotfile Schema</span>
+            <pre class="json-preview" id="cfg-json-block" style="margin: 0; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.4; color: var(--text-primary); overflow-x: auto; background: transparent; text-align: left; max-height: 160px; overflow-y: auto;"></pre>
           </div>
         </article>
 
