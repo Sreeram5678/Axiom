@@ -177,85 +177,59 @@ Summarize the provided technical documentation into two logical blocks:
         if (!personaData) return;
         const targetText = personaData.optimized;
         
-        // Custom HTML visual character splitter
-        const tokens = [];
-        let temp = "";
-        let inTag = false;
+        // Parse the targetText into a secure DOM fragment to prevent CWE-79 and XSS
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(targetText, 'text/html');
+        const sourceNodes = Array.from(doc.body.childNodes);
+
+        // Queue of actions to take for typewriter
+        const actions = [];
         
-        for (let i = 0; i < targetText.length; i++) {
-          const char = targetText.charAt(i);
-          if (char === '<') {
-            if (temp) {
-              tokens.push({ type: 'text', value: temp });
-              temp = "";
+        function queueNode(node, parentEl) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent;
+            for (let i = 0; i < text.length; i++) {
+              actions.push({
+                type: 'char',
+                char: text.charAt(i),
+                parent: parentEl
+              });
             }
-            inTag = true;
-            temp += char;
-          } else if (char === '>') {
-            temp += char;
-            tokens.push({ type: 'tag', value: temp });
-            temp = "";
-            inTag = false;
-          } else {
-            temp += char;
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const newEl = document.createElement(node.tagName.toLowerCase());
+            for (const attr of node.attributes) {
+              newEl.setAttribute(attr.name, attr.value);
+            }
+            actions.push({
+              type: 'element',
+              element: newEl,
+              parent: parentEl
+            });
+            for (const child of node.childNodes) {
+              queueNode(child, newEl);
+            }
           }
         }
-        if (temp) {
-          tokens.push({ type: inTag ? 'tag' : 'text', value: temp });
-        }
-
-        let tokenIdx = 0;
-        let charIdx = 0;
         
+        sourceNodes.forEach(node => queueNode(node, simOutput));
+
+        let actionIdx = 0;
         function stream() {
-          if (tokenIdx >= tokens.length) {
+          if (actionIdx >= actions.length) {
             isTyping = false;
             simTriggerBtn.disabled = false;
             simTriggerBtn.textContent = "Optimize Prompt";
             return;
           }
           
-          const currentToken = tokens.at(tokenIdx);
-          if (currentToken.type === 'tag') {
-            simOutput.innerHTML += currentToken.value;
-            tokenIdx++;
-            setTimeout(stream, 8);
-          } else {
-            // Stream plain text visual element by visual element (grouping entities)
-            if (!currentToken.chars) {
-              currentToken.chars = [];
-              let i = 0;
-              const str = currentToken.value;
-              while (i < str.length) {
-                if (str.charAt(i) === '&') {
-                  let entity = '&';
-                  i++;
-                  while (i < str.length && str.charAt(i) !== ';') {
-                    entity += str.charAt(i);
-                    i++;
-                  }
-                  if (i < str.length) {
-                    entity += ';';
-                    i++;
-                  }
-                  currentToken.chars.push(entity);
-                } else {
-                  currentToken.chars.push(str.charAt(i));
-                  i++;
-                }
-              }
-            }
-
-            if (charIdx < currentToken.chars.length) {
-              simOutput.innerHTML += currentToken.chars.at(charIdx);
-              charIdx++;
-              simOutput.scrollTop = simOutput.scrollHeight;
-              setTimeout(stream, 4);
-            } else {
-              charIdx = 0;
-              tokenIdx++;
-              setTimeout(stream, 8);
-            }
+          const action = actions.at(actionIdx++);
+          if (action.type === 'element') {
+            action.parent.appendChild(action.element);
+            setTimeout(stream, 4);
+          } else if (action.type === 'char') {
+            action.parent.appendChild(document.createTextNode(action.char));
+            simOutput.scrollTop = simOutput.scrollHeight;
+            setTimeout(stream, 2);
           }
         }
         stream();
@@ -773,8 +747,8 @@ Summarize the provided technical documentation into two logical blocks:
     copyGalleryBtn.addEventListener('click', () => {
       const jsonText = galleryJsonBlock.textContent;
       navigator.clipboard.writeText(jsonText).then(() => {
-        const originalText = copyGalleryBtn.innerHTML;
-        copyGalleryBtn.innerHTML = "<span>JSON Copied!</span>";
+        const btnSpan = copyGalleryBtn.querySelector('span');
+        if (btnSpan) btnSpan.textContent = "JSON Copied!";
         copyGalleryBtn.style.backgroundColor = "#10b981";
         copyGalleryBtn.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
         if (syncJsonStatus) {
@@ -785,7 +759,7 @@ Summarize the provided technical documentation into two logical blocks:
         }
 
         setTimeout(() => {
-          copyGalleryBtn.innerHTML = originalText;
+          if (btnSpan) btnSpan.textContent = "1-Click Copy Config";
           copyGalleryBtn.style.backgroundColor = "";
           copyGalleryBtn.style.boxShadow = "";
           if (syncJsonStatus) {
