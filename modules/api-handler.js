@@ -130,7 +130,7 @@ export async function optimizePrompt({
 
       // Extract complete JSON objects from the streaming JSON array response
       while (i < buffer.length) {
-        const char = buffer[i];
+        const char = buffer.charAt(i);
         if (escapeNext) {
           escapeNext = false;
           i++;

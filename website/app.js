@@ -215,7 +215,7 @@ Summarize the provided technical documentation into two logical blocks:
             return;
           }
           
-          const currentToken = tokens[tokenIdx];
+          const currentToken = tokens.at(tokenIdx);
           if (currentToken.type === 'tag') {
             simOutput.innerHTML += currentToken.value;
             tokenIdx++;
@@ -227,11 +227,11 @@ Summarize the provided technical documentation into two logical blocks:
               let i = 0;
               const str = currentToken.value;
               while (i < str.length) {
-                if (str[i] === '&') {
+                if (str.charAt(i) === '&') {
                   let entity = '&';
                   i++;
-                  while (i < str.length && str[i] !== ';') {
-                    entity += str[i];
+                  while (i < str.length && str.charAt(i) !== ';') {
+                    entity += str.charAt(i);
                     i++;
                   }
                   if (i < str.length) {
@@ -240,14 +240,14 @@ Summarize the provided technical documentation into two logical blocks:
                   }
                   currentToken.chars.push(entity);
                 } else {
-                  currentToken.chars.push(str[i]);
+                  currentToken.chars.push(str.charAt(i));
                   i++;
                 }
               }
             }
 
             if (charIdx < currentToken.chars.length) {
-              simOutput.innerHTML += currentToken.chars[charIdx];
+              simOutput.innerHTML += currentToken.chars.at(charIdx);
               charIdx++;
               simOutput.scrollTop = simOutput.scrollHeight;
               setTimeout(stream, 4);

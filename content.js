@@ -608,7 +608,7 @@ function capturePageContext(rawPrompt) {
       }
     });
     for (let i = 0; i < matchedIndices.length - 1; i++) {
-      const dist = matchedIndices[i+1] - matchedIndices[i];
+      const dist = matchedIndices.at(i + 1) - matchedIndices.at(i);
       if (dist <= 10) {
         score += (10 - dist + 1) * 3; // Closer matches get a higher bonus
       }
