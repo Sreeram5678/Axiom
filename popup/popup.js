@@ -253,11 +253,23 @@ function renderModesGrid() {
     
     card.innerHTML = `
       <div class="mode-card-header">
-        <span class="mode-card-dot" style="background-color: ${color}; --dot-color: ${color};"></span>
-        <span class="mode-card-name">${mode.name}</span>
+        <span class="mode-card-dot"></span>
+        <span class="mode-card-name"></span>
       </div>
-      <div class="mode-card-desc">${mode.description}</div>
+      <div class="mode-card-desc"></div>
     `;
+    
+    const dot = card.querySelector('.mode-card-dot');
+    if (dot) {
+      dot.style.backgroundColor = color;
+      dot.style.setProperty('--dot-color', color);
+    }
+    
+    const nameEl = card.querySelector('.mode-card-name');
+    if (nameEl) nameEl.textContent = mode.name;
+    
+    const descEl = card.querySelector('.mode-card-desc');
+    if (descEl) descEl.textContent = mode.description;
     
     card.addEventListener('click', async () => {
       activeModeId = mode.id;
@@ -299,24 +311,43 @@ function renderVisualModesList() {
     
     item.innerHTML = `
       <div class="visual-mode-info">
-        <span class="visual-mode-dot" style="background-color: ${color}; --dot-color: ${color};"></span>
+        <span class="visual-mode-dot"></span>
         <div class="visual-mode-text">
-          <span class="visual-mode-name">${mode.name}</span>
-          <span class="visual-mode-desc">${mode.description}</span>
+          <span class="visual-mode-name"></span>
+          <span class="visual-mode-desc"></span>
         </div>
       </div>
-      <div class="visual-mode-actions">
-        ${isDefault ? `
+      <div class="visual-mode-actions"></div>
+    `;
+    
+    const dot = item.querySelector('.visual-mode-dot');
+    if (dot) {
+      dot.style.backgroundColor = color;
+      dot.style.setProperty('--dot-color', color);
+    }
+    
+    const nameEl = item.querySelector('.visual-mode-name');
+    if (nameEl) nameEl.textContent = mode.name;
+    
+    const descEl = item.querySelector('.visual-mode-desc');
+    if (descEl) descEl.textContent = mode.description;
+    
+    const actionsContainer = item.querySelector('.visual-mode-actions');
+    if (actionsContainer) {
+      if (isDefault) {
+        actionsContainer.innerHTML = `
           <span class="btn-icon-action" title="System Mode (Immutable)" style="cursor: not-allowed; display: inline-flex; align-items: center;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.45;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </span>
-        ` : `
+        `;
+      } else {
+        actionsContainer.innerHTML = `
           <button class="btn-icon-action delete-action" title="Delete Mode" style="display: inline-flex; align-items: center; justify-content: center;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
-        `}
-      </div>
-    `;
+        `;
+      }
+    }
     
     // Setup delete action
     if (!isDefault) {
@@ -923,23 +954,45 @@ async function renderHistoryList() {
     histItemEl.innerHTML = `
       <div class="history-item-header">
         <div class="history-item-meta">
-          <span class="history-item-badge">${escapeHtml(item.modeName)}</span>
-          <span class="history-item-badge length-${escapeHtml(lengthVal)}">${escapeHtml(lengthVal)}</span>
+          <span class="history-item-badge mode-name-badge"></span>
+          <span class="history-item-badge length-badge"></span>
         </div>
-        <span class="history-item-time">${escapeHtml(dateString)}, ${escapeHtml(timeString)}</span>
+        <span class="history-item-time time-badge"></span>
       </div>
-      <div class="history-item-body" title="Click to load raw prompt into editor">
-        ${escapeHtml(item.rawPrompt)}
-      </div>
+      <div class="history-item-body" title="Click to load raw prompt into editor"></div>
       <div class="history-item-actions">
         <button class="history-action-btn copy-hist-btn" title="Copy Optimized Prompt">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
-        <button class="history-action-btn star-hist-btn ${escapeHtml(starClass)}" title="${escapeHtml(starTitle)}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="${escapeHtml(starFill)}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <button class="history-action-btn star-hist-btn" title="">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </button>
       </div>
     `;
+
+    // Securely populate dynamic data using standard DOM properties to prevent XSS (CWE-116)
+    const modeBadgeEl = histItemEl.querySelector('.mode-name-badge');
+    if (modeBadgeEl) modeBadgeEl.textContent = item.modeName;
+
+    const lengthBadgeEl = histItemEl.querySelector('.length-badge');
+    if (lengthBadgeEl) {
+      lengthBadgeEl.textContent = lengthVal;
+      lengthBadgeEl.className = `history-item-badge length-${lengthVal}`;
+    }
+
+    const timeBadgeEl = histItemEl.querySelector('.history-item-time');
+    if (timeBadgeEl) timeBadgeEl.textContent = `${dateString}, ${timeString}`;
+
+    const bodyEl = histItemEl.querySelector('.history-item-body');
+    if (bodyEl) bodyEl.textContent = item.rawPrompt;
+
+    const starBtn = histItemEl.querySelector('.star-hist-btn');
+    if (starBtn) {
+      if (starClass) starBtn.classList.add(starClass);
+      starBtn.setAttribute('title', starTitle);
+      const starSvg = starBtn.querySelector('svg');
+      if (starSvg) starSvg.setAttribute('fill', starFill);
+    }
 
     // Click to load raw prompt
     const bodyEl = histItemEl.querySelector('.history-item-body');

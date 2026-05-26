@@ -411,9 +411,15 @@ Summarize the provided technical documentation into two logical blocks:
           if (log.type === "warning") icon = "[!]";
           
           logDiv.innerHTML = `
-            <span class="log-entry-icon">${escapeHtml(icon)}</span>
-            <span class="log-entry-text">${escapeHtml(log.text)}</span>
+            <span class="log-entry-icon"></span>
+            <span class="log-entry-text"></span>
           `;
+          
+          const iconEl = logDiv.querySelector('.log-entry-icon');
+          if (iconEl) iconEl.textContent = icon;
+          
+          const textEl = logDiv.querySelector('.log-entry-text');
+          if (textEl) textEl.textContent = log.text;
           
           logFeed.appendChild(logDiv);
           logFeed.scrollTop = logFeed.scrollHeight;
