@@ -17,14 +17,18 @@ class KeychainHelper {
         // Remove existing key if any
         delete()
         
-        // Require device passcode or biometric authentication before the secret can be read.
-        // This satisfies CWE-287 (Improper Authentication) by ensuring the OS verifies
-        // the user's identity before granting access to the Keychain item.
+        // .biometryCurrentSet binds this Keychain item to the EXACT biometric set enrolled
+        // at the time of saving. Fixes two HIGH findings:
+        //   • CWE-305: Unlike .userPresence, .biometryCurrentSet invalidates the entry if
+        //     new biometrics are added later — an attacker who knows the passcode cannot
+        //     enrol their own fingerprint/face to bypass authentication.
+        //   • CWE-272: Unlike .userPresence, .biometryCurrentSet has NO passcode fallback,
+        //     enforcing the stronger biometric modality instead of a 4/6-digit PIN.
         var accessError: Unmanaged<CFError>?
         guard let accessControl = SecAccessControlCreateWithFlags(
             nil,
             kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-            .userPresence,
+            .biometryCurrentSet,
             &accessError
         ), accessError == nil else {
             return false
@@ -43,8 +47,9 @@ class KeychainHelper {
     }
     
     func read() -> String? {
-        // Provide a LAContext with a prompt so the OS surfaces the biometric/passcode
-        // authentication dialog to the user before returning the secret.
+        // Supply an LAContext so the OS surfaces a Face ID / Touch ID prompt.
+        // No passcode fallback is possible because the item was stored with
+        // .biometryCurrentSet — the OS enforces biometric-only access automatically.
         let context = LAContext()
         context.localizedReason = "Authenticate to use your Axiom API key"
         
