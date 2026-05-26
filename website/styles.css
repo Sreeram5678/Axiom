@@ -2304,3 +2304,8 @@ body.dark-theme .gallery-stats {
   transform: rotate(180deg);
 }
 
+/* board card mockup image zoom scale hover animation */
+.board-card:hover .mockup-img {
+  transform: scale(1.03);
+}
+
