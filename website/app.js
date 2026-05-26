@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ==========================================
-  // ☀️ NATIVE LIGHT / DARK THEME TOGGLE SYSTEM 🌙
+  // NATIVE LIGHT / DARK THEME TOGGLE SYSTEM
   // ==========================================
   const themeToggleBtn = document.getElementById('btn-theme-toggle');
   
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ==========================================
-  // 📝 INTERACTIVE LIVE PROMPT SIMULATOR (Home Page)
+  // INTERACTIVE LIVE PROMPT SIMULATOR (Home Page)
   // ==========================================
   const simInput = document.getElementById('sim-input-text');
   const simOutput = document.getElementById('sim-output-text');
@@ -147,6 +147,8 @@ Summarize the provided technical documentation into two logical blocks:
 
       setTimeout(() => {
         if (simSpinner) simSpinner.style.display = 'none';
+        // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
+        if (!Object.prototype.hasOwnProperty.call(personas, activePersona)) return;
         const targetText = personas[activePersona].optimized;
         
         // Custom HTML visual character splitter
@@ -237,7 +239,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // ⚡ DYNAMIC ROUTING DECISION TREE (Chrome Page)
+  // DYNAMIC ROUTING DECISION TREE (Chrome Page)
   // ==========================================
   const toggleRoutingBtn = document.getElementById('btn-toggle-routing');
   const pathRoot = document.getElementById('path-root-router');
@@ -282,7 +284,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // 📝 PERSONA JSON BUILDER & VALIDATOR (Chrome Page)
+  // PERSONA JSON BUILDER & VALIDATOR (Chrome Page)
   // ==========================================
   const buildId = document.getElementById('builder-id');
   const buildName = document.getElementById('builder-name');
@@ -327,7 +329,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // 🖥️ AX INTERCEPTION / CLIPBOARD SIMULATOR (macOS Page)
+  // AX INTERCEPTION / CLIPBOARD SIMULATOR (macOS Page)
   // ==========================================
   const btnVSCode = document.getElementById('btn-ax-vscode');
   const btnSandboxed = document.getElementById('btn-ax-sandboxed');
@@ -369,6 +371,8 @@ Summarize the provided technical documentation into two logical blocks:
       clearLogTimers();
       logFeed.innerHTML = "";
       
+      // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
+      if (!Object.prototype.hasOwnProperty.call(logsData, mode)) return;
       const targetLogs = logsData[mode];
       
       targetLogs.forEach(log => {
@@ -376,9 +380,9 @@ Summarize the provided technical documentation into two logical blocks:
           const logDiv = document.createElement('div');
           logDiv.className = `log-entry ${log.type}`;
           
-          let icon = "→";
-          if (log.type === "success") icon = "✓";
-          if (log.type === "warning") icon = "⚠";
+          let icon = "->";
+          if (log.type === "success") icon = "[OK]";
+          if (log.type === "warning") icon = "[!]";
           
           logDiv.innerHTML = `
             <span class="log-entry-icon">${icon}</span>
@@ -421,7 +425,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // 📊 WORKLOAD CIRCULAR GAUGE SPEEDOMETER (macOS Page)
+  // WORKLOAD CIRCULAR GAUGE SPEEDOMETER (macOS Page)
   // ==========================================
   const gaugeAxiom = document.getElementById('gauge-axiom');
   const gaugeElectron = document.getElementById('gauge-electron');
@@ -452,6 +456,8 @@ Summarize the provided technical documentation into two logical blocks:
     };
 
     function updateGauges(state) {
+      // Guard with hasOwnProperty to prevent prototype chain access (CWE-94)
+      if (!Object.prototype.hasOwnProperty.call(workloadData, state)) return;
       const data = workloadData[state];
       
       // Animate Stroke Offset
@@ -484,7 +490,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // ⌨️ INTERACTIVE KEYBOARD SHORTCUT TRAINING
+  // INTERACTIVE KEYBOARD SHORTCUT TRAINING
   // ==========================================
   const shortcutCards = document.querySelectorAll('.shortcut-card');
   const keyboardKeys = {
@@ -528,7 +534,7 @@ Summarize the provided technical documentation into two logical blocks:
 
 
   // ==========================================
-  // 📋 CLICK-TO-COPY TERMINAL CLIPBOARD UTILITY
+  // CLICK-TO-COPY TERMINAL CLIPBOARD UTILITY
   // ==========================================
   const copyButtons = document.querySelectorAll('.btn-copy');
   copyButtons.forEach(btn => {
@@ -556,5 +562,393 @@ Summarize the provided technical documentation into two logical blocks:
       }
     });
   });
+
+  // ==========================================
+  // DYNAMIC PLATFORM/BROWSER AUTO-DETECTOR & SMART CTAs
+  // ==========================================
+  const heroBtnPrimary = document.getElementById('hero-btn-primary');
+  const heroBtnSecondary = document.getElementById('hero-btn-secondary');
+  const heroHelper = document.getElementById('hero-platform-helper');
+
+  if (heroBtnPrimary && heroBtnSecondary && heroHelper) {
+    const userAgent = navigator.userAgent;
+    const isMac = userAgent.includes("Mac") || navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isWindows = userAgent.includes("Win") || navigator.platform.toUpperCase().indexOf('WIN') >= 0;
+    const isLinux = userAgent.includes("Linux") || navigator.platform.toUpperCase().indexOf('LINUX') >= 0;
+    const isChrome = userAgent.includes("Chrome") && !userAgent.includes("Edg") && !userAgent.includes("OPR");
+
+    let osName = "Unknown OS";
+    if (isMac) osName = "macOS";
+    else if (isWindows) osName = "Windows";
+    else if (isLinux) osName = "Linux";
+
+    let primaryText = "View Installation Guide";
+    let primaryLink = "install.html";
+    let secondaryText = "Try Live Simulator";
+    let secondaryLink = "#simulator";
+    let helperHtml = "";
+
+    if (isMac) {
+      primaryText = "Download macOS App";
+      primaryLink = "macos.html";
+      secondaryText = "Get Chrome Extension";
+      secondaryLink = "chrome.html";
+      
+      const statusText = isChrome 
+        ? `<span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px #10b981;"></span>On-device AI enabled`
+        : `On-device AI requires Chrome`;
+
+      helperHtml = `
+        <div class="axiom-platform-alert" style="display: inline-flex; padding: 6px 18px; border-radius: var(--radius-full); margin-top: 12px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.8rem; color: var(--text-secondary); align-items: center; gap: 12px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+          <span>macOS 13+ and Chromium compatible</span>
+          <span style="width: 1px; height: 12px; background-color: var(--border-color);"></span>
+          <span style="display: inline-flex; align-items: center; color: var(--text-primary); font-weight: 500;">${statusText}</span>
+        </div>
+      `;
+    } else {
+      primaryText = "Get Chrome Extension";
+      primaryLink = "chrome.html";
+      secondaryText = "Explore Setup Guide";
+      secondaryLink = "install.html";
+
+      const statusText = isChrome 
+        ? `<span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px #10b981;"></span>On-device AI enabled`
+        : `On-device AI requires Chrome`;
+
+      helperHtml = `
+        <div class="axiom-platform-alert" style="display: inline-flex; padding: 6px 18px; border-radius: var(--radius-full); margin-top: 12px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.8rem; color: var(--text-secondary); align-items: center; gap: 12px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+          <span>Windows / Linux extension compatible</span>
+          <span style="width: 1px; height: 12px; background-color: var(--border-color);"></span>
+          <span style="display: inline-flex; align-items: center; color: var(--text-primary); font-weight: 500;">${statusText}</span>
+        </div>
+      `;
+    }
+
+    heroBtnPrimary.textContent = primaryText;
+    heroBtnPrimary.href = primaryLink;
+    heroBtnSecondary.textContent = secondaryText;
+    heroBtnSecondary.href = secondaryLink;
+    heroHelper.innerHTML = helperHtml;
+  }
+
+  // ==========================================
+  // INTERACTIVE COST-PERFORMANCE ROI CALCULATOR
+  // ==========================================
+  const promptsSlider = document.getElementById('roi-prompts-slider');
+  const lengthSlider = document.getElementById('roi-length-slider');
+  const promptsVal = document.getElementById('roi-prompts-val');
+  const lengthVal = document.getElementById('roi-length-val');
+  const metricSavings = document.getElementById('roi-metric-savings');
+  const metricLatency = document.getElementById('roi-metric-latency');
+
+  if (promptsSlider && lengthSlider) {
+    function calculateROI() {
+      const prompts = parseInt(promptsSlider.value, 10);
+      const length = parseInt(lengthSlider.value, 10);
+
+      promptsVal.textContent = prompts.toLocaleString();
+      lengthVal.textContent = `${length.toLocaleString()} tokens`;
+
+      // API Cost Savings: Blended rate of $0.0015 per 1,000 tokens ($0.0000015/token)
+      const monthlySavings = prompts * length * 30 * 0.0000015;
+      metricSavings.textContent = `$${monthlySavings.toFixed(2)}`;
+
+      // Latency Saved: Local Nano is ~25ms vs Cloud API is ~1250ms (Savings: 1225ms = 1.225s per call)
+      const monthlyLatencySeconds = prompts * 30 * 1.225;
+      const hoursSaved = monthlyLatencySeconds / 3600;
+      
+      if (hoursSaved < 1) {
+        const minutesSaved = monthlyLatencySeconds / 60;
+        metricLatency.textContent = `${minutesSaved.toFixed(0)} mins`;
+      } else {
+        metricLatency.textContent = `${hoursSaved.toFixed(1)} hrs`;
+      }
+    }
+
+    promptsSlider.addEventListener('input', calculateROI);
+    lengthSlider.addEventListener('input', calculateROI);
+    calculateROI();
+  }
+
+  // ==========================================
+  // COMMUNITY PERSONA GALLERY SYSTEM
+  // ==========================================
+  const galleryGrid = document.getElementById('gallery-grid');
+  const galleryJsonBlock = document.getElementById('gallery-json-block');
+  const copyGalleryBtn = document.getElementById('btn-copy-gallery-json');
+  const syncGalleryBtn = document.getElementById('btn-sync-gallery');
+  const syncJsonStatus = document.getElementById('sync-json-status');
+
+  const galleryPersonas = {
+    "sql-wizard": {
+      id: "sql-wizard",
+      name: "SQL Wizard",
+      description: "Transforms plain English specifications into high-performance, indexed SQL queries.",
+      systemInstruction: "You are a senior database administrator. Convert the request into an ANSI SQL-compliant query. Optimize for execution speed using index tips and appropriate JOIN strategies."
+    },
+    "regex-optimizer": {
+      id: "regex-optimizer",
+      name: "Regex Optimizer",
+      description: "Constructs and documents highly efficient, safe regular expressions.",
+      systemInstruction: "You are a master of regular expressions. Write an optimized regex pattern that is safe from ReDoS attacks. Explain each capture group structurally."
+    },
+    "git-commit": {
+      id: "git-commit-formatter",
+      name: "Git Commit Formatter",
+      description: "Generates pristine, semantic conventional commit messages from git diff statements.",
+      systemInstruction: "You are a technical lead. Generate a semantic commit message following the Conventional Commits specification based on the provided git diff. Keep it concise."
+    },
+    "analyst": {
+      id: "data-analyst",
+      name: "Data Analyst",
+      description: "Enriches raw data metrics into visual telemetry dashboards and analytical summaries.",
+      systemInstruction: "You are an expert data science consultant. Group these metrics into statistical classes, highlight standard dev spikes, and suggest markdown charts."
+    }
+  };
+
+  if (galleryGrid && galleryJsonBlock && copyGalleryBtn) {
+    let activePersonaId = "sql-wizard";
+
+    function updateGalleryJson() {
+      const data = galleryPersonas[activePersonaId];
+      if (data) {
+        galleryJsonBlock.textContent = JSON.stringify([data], null, 2);
+      }
+    }
+
+    updateGalleryJson();
+
+    const cards = galleryGrid.querySelectorAll('.gallery-card');
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        cards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        activePersonaId = card.dataset.personaId;
+        updateGalleryJson();
+        
+        if (syncJsonStatus) {
+          syncJsonStatus.textContent = "Ready to Sync";
+          syncJsonStatus.style.background = "";
+          syncJsonStatus.style.color = "";
+          syncJsonStatus.style.borderColor = "";
+        }
+      });
+    });
+
+    copyGalleryBtn.addEventListener('click', () => {
+      const jsonText = galleryJsonBlock.textContent;
+      navigator.clipboard.writeText(jsonText).then(() => {
+        const originalText = copyGalleryBtn.innerHTML;
+        copyGalleryBtn.innerHTML = "<span>JSON Copied!</span>";
+        copyGalleryBtn.style.backgroundColor = "#10b981";
+        copyGalleryBtn.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+        if (syncJsonStatus) {
+          syncJsonStatus.textContent = "Copied to Clipboard";
+          syncJsonStatus.style.background = "rgba(16, 185, 129, 0.08)";
+          syncJsonStatus.style.color = "#10b981";
+          syncJsonStatus.style.borderColor = "rgba(16, 185, 129, 0.15)";
+        }
+
+        setTimeout(() => {
+          copyGalleryBtn.innerHTML = originalText;
+          copyGalleryBtn.style.backgroundColor = "";
+          copyGalleryBtn.style.boxShadow = "";
+          if (syncJsonStatus) {
+            syncJsonStatus.textContent = "Ready to Sync";
+            syncJsonStatus.style.background = "";
+            syncJsonStatus.style.color = "";
+            syncJsonStatus.style.borderColor = "";
+          }
+        }, 1800);
+      });
+    });
+
+    if (syncGalleryBtn) {
+      syncGalleryBtn.addEventListener('click', () => {
+        const svg = syncGalleryBtn.querySelector('svg');
+        const btnText = syncGalleryBtn.querySelector('span');
+
+        if (svg) {
+          svg.style.transition = 'transform 1.5s var(--ease-smooth)';
+          svg.style.transform = 'rotate(720deg)';
+        }
+        btnText.textContent = 'Synchronizing...';
+        syncGalleryBtn.disabled = true;
+
+        setTimeout(() => {
+          if (svg) {
+            svg.style.transition = 'none';
+            svg.style.transform = 'none';
+          }
+          btnText.textContent = 'Synced successfully!';
+          
+          if (!document.getElementById('gallery-added-persona')) {
+            const newCard = document.createElement('div');
+            newCard.className = 'gallery-card';
+            newCard.id = 'gallery-added-persona';
+            newCard.dataset.personaId = 'analyst';
+            newCard.style.padding = '12px';
+            newCard.style.gap = '8px';
+            newCard.style.animation = 'fadeIn 0.5s ease-out';
+            newCard.innerHTML = `
+              <div class="gallery-header" style="margin-bottom: 2px;">
+                <span class="gallery-avatar" style="width: 28px; height: 28px; font-size: 0.7rem; font-weight: 700; background: rgba(168,85,247,0.1); color: #a855f7; display: flex; align-items: center; justify-content: center;">ANL</span>
+                <span class="gallery-pill" style="font-size: 0.6rem; padding: 2px 6px;">Data</span>
+              </div>
+              <div class="gallery-info">
+                <div class="gallery-name" style="font-size: 0.8rem; font-weight: 700;">Data Analyst</div>
+                <div class="gallery-desc" style="font-size: 0.65rem; line-height: 1.2;">Enrich telemetry charts</div>
+              </div>
+              <div class="gallery-stats" style="font-size: 0.6rem; margin-top: 2px; padding-top: 6px;">
+                <span>Latency: 10ms</span>
+                <span>99%</span>
+              </div>
+            `;
+            galleryGrid.appendChild(newCard);
+
+            newCard.addEventListener('click', () => {
+              galleryGrid.querySelectorAll('.gallery-card').forEach(c => c.classList.remove('active'));
+              newCard.classList.add('active');
+              activePersonaId = 'analyst';
+              updateGalleryJson();
+              
+              if (syncJsonStatus) {
+                syncJsonStatus.textContent = "Ready to Sync";
+                syncJsonStatus.style.background = "";
+                syncJsonStatus.style.color = "";
+                syncJsonStatus.style.borderColor = "";
+              }
+            });
+          }
+
+          setTimeout(() => {
+            btnText.textContent = 'Simulate Sync';
+            syncGalleryBtn.disabled = false;
+          }, 1500);
+        }, 1500);
+      });
+    }
+  }
+
+  // ==========================================
+  // INTERACTIVE ONBOARDING CONNECTION VALIDATOR
+  // ==========================================
+  const validatorBoxOnboarding = document.getElementById('connection-validator');
+  const btnTestConnection = document.getElementById('btn-test-connection');
+
+  if (validatorBoxOnboarding && btnTestConnection) {
+    const dot = document.getElementById('validator-dot');
+    const statusText = document.getElementById('validator-status-text');
+    const detailsText = document.getElementById('validator-details-text');
+
+    dot.className = "validator-indicator-dot checking";
+    dot.style.backgroundColor = "#f59e0b";
+    dot.style.boxShadow = "0 0 10px rgba(245, 158, 11, 0.6)";
+    statusText.textContent = "Awaiting Connection";
+    detailsText.textContent = "Click 'Test Extension Connection' to simulate secure client integration.";
+
+    btnTestConnection.addEventListener('click', () => {
+      btnTestConnection.disabled = true;
+      btnTestConnection.querySelector('span').textContent = "Pinging Axiom Client...";
+      
+      dot.style.animation = "orangePulse 0.5s infinite";
+      statusText.textContent = "Establishing Local SSL Handshake...";
+      detailsText.textContent = "Exchanging AES-GCM cryptographic validation tokens...";
+
+      setTimeout(() => {
+        dot.className = "validator-indicator-dot connected";
+        dot.style.animation = "none";
+        dot.style.backgroundColor = "#10b981";
+        dot.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.8)";
+        
+        statusText.innerHTML = `<span style="color: #10b981; font-weight: 700; animation: popSuccess 0.4s var(--ease-spring);">Connected!</span>`;
+        detailsText.textContent = "Secure Loopback fully operational on port 24200";
+        
+        validatorBoxOnboarding.style.borderColor = "rgba(16, 185, 129, 0.4)";
+        validatorBoxOnboarding.style.background = "rgba(16, 185, 129, 0.04)";
+
+        btnTestConnection.style.backgroundColor = "#10b981";
+        btnTestConnection.style.color = "#ffffff";
+        btnTestConnection.style.borderColor = "transparent";
+        btnTestConnection.querySelector('span').textContent = "Connection Valid!";
+
+        launchConfetti();
+      }, 1400);
+    });
+
+    function launchConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      document.body.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const colors = ['#ff5f56', '#ffbd2e', '#27c93f', '#e60023', '#3b82f6', '#10b981', '#a855f7'];
+      const particles = [];
+
+      for (let i = 0; i < 120; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height - height,
+          r: Math.random() * 5 + 3,
+          d: Math.random() * height,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10 - 5,
+          tiltAngleIncremental: Math.random() * 0.06 + 0.02,
+          tiltAngle: 0
+        });
+      }
+
+      let animationFrameId;
+      const startTime = Date.now();
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+        
+        let finished = true;
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.x += Math.sin(p.tiltAngle);
+          p.tilt = Math.sin(p.tiltAngle - i / 3) * 12;
+
+          if (p.y < height) {
+            finished = false;
+          }
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        }
+
+        if (finished || Date.now() - startTime > 3500) {
+          cancelAnimationFrame(animationFrameId);
+          canvas.remove();
+        } else {
+          animationFrameId = requestAnimationFrame(draw);
+        }
+      }
+
+      draw();
+    }
+  }
 
 });

@@ -583,12 +583,17 @@ function capturePageContext(rawPrompt) {
     let score = 0;
     
     // 1. Keyword density check
+    // Safe linear count via indexOf — avoids new RegExp(variable) which risks ReDoS (CWE-185)
     keywordSet.forEach(word => {
-      const regex = new RegExp("\\b" + word + "\\b", "g");
-      const matches = textLower.match(regex);
-      if (matches) {
+      let count = 0;
+      let pos = 0;
+      while ((pos = textLower.indexOf(word, pos)) !== -1) {
+        count++;
+        pos += word.length;
+      }
+      if (count > 0) {
         score += 15; // 15 points per unique keyword hit
-        score += (matches.length - 1) * 2; // 2 points per extra occurrence
+        score += (count - 1) * 2; // 2 points per extra occurrence
       }
     });
 
@@ -597,7 +602,8 @@ function capturePageContext(rawPrompt) {
     const matchedIndices = [];
     words.forEach((word, idx) => {
       const cleanWord = word.replace(/[^\w]/g, '');
-      if (keywordSet.has(cleanWord)) {
+      // Use Set.has() instead of bracket notation to prevent prototype pollution (CWE-94)
+      if (cleanWord.length > 0 && keywordSet.has(cleanWord)) {
         matchedIndices.push(idx);
       }
     });

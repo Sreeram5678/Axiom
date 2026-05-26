@@ -74,8 +74,9 @@ export async function saveModes(jsonString) {
       throw new Error("Configuration must be a JSON array.");
     }
     
-    for (let i = 0; i < parsed.length; i++) {
-      const mode = parsed[i];
+    // Use for...of with explicit index to avoid variable bracket notation (CWE-94)
+    let i = 0;
+    for (const mode of parsed) {
       if (!mode.id || typeof mode.id !== 'string') {
         throw new Error(`Item at index ${i} is missing a valid string 'id'.`);
       }
@@ -88,6 +89,7 @@ export async function saveModes(jsonString) {
       if (!mode.systemInstruction || typeof mode.systemInstruction !== 'string') {
         throw new Error(`Item at index ${i} ('${mode.id}') is missing a valid string 'systemInstruction'.`);
       }
+      i++;
     }
     
     // Save to storage

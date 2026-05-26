@@ -241,7 +241,10 @@ function renderModesGrid() {
     card.className = `mode-card ${mode.id === activeModeId ? 'active' : ''}`;
     card.setAttribute('data-mode-id', mode.id);
     
-    const color = colorMap[mode.icon] || colorMap[mode.id] || '#a1a1aa';
+    // Use hasOwnProperty guard on colorMap lookups to prevent prototype pollution (CWE-94)
+    const iconKey = Object.prototype.hasOwnProperty.call(colorMap, mode.icon) ? mode.icon : null;
+    const idKey = Object.prototype.hasOwnProperty.call(colorMap, mode.id) ? mode.id : null;
+    const color = (iconKey && colorMap[iconKey]) || (idKey && colorMap[idKey]) || '#a1a1aa';
     
     card.innerHTML = `
       <div class="mode-card-header">
@@ -287,7 +290,10 @@ function renderVisualModesList() {
     item.className = 'visual-mode-item';
     
     const isDefault = ['analyst', 'engineer', 'first-principles', 'exec-summary'].includes(mode.id);
-    const color = colorMap[mode.icon] || colorMap[mode.id] || '#a1a1aa';
+    // Use hasOwnProperty guard on colorMap lookups to prevent prototype pollution (CWE-94)
+    const iconKey2 = Object.prototype.hasOwnProperty.call(colorMap, mode.icon) ? mode.icon : null;
+    const idKey2 = Object.prototype.hasOwnProperty.call(colorMap, mode.id) ? mode.id : null;
+    const color = (iconKey2 && colorMap[iconKey2]) || (idKey2 && colorMap[idKey2]) || '#a1a1aa';
     
     item.innerHTML = `
       <div class="visual-mode-info">
@@ -458,7 +464,9 @@ try {
     chrome.storage.onChanged.addListener((changes, area) => {
       try {
         if (area === 'session') {
-          const sessionUpdate = {};
+          // Use Object.create(null) to create a prototype-free object, preventing
+          // prototype pollution via bracket notation on user-supplied keys (CWE-94)
+          const sessionUpdate = Object.create(null);
           let hasUpdate = false;
           
           for (const [key, { newValue }] of Object.entries(changes)) {
