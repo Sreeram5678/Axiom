@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AxiomOS macOS Companion App — Native background utility overlays a glassmorphic SwiftUI HUD panel to optimize selected text in Xcode, VS Code, Notes.">
+  <title>AxiomOS — macOS Desktop Touchpoint</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Premium Header -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="logo-link" id="nav-logo">
+        <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+        <span>axiom</span>
+      </a>
+      <nav class="nav-links">
+        <a href="chrome.html" class="nav-item" id="link-chrome">Chrome Extension</a>
+        <a href="macos.html" class="nav-item active" id="link-macos">macOS App</a>
+        <a href="install.html" class="nav-item" id="link-install">Setup Guide</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="btn btn-secondary" id="btn-github">GitHub</a>
+        <a href="install.html" class="btn btn-primary" id="btn-install-header">Install Now</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- macOS Hero -->
+    <section class="hero">
+      <div class="container">
+        <h1>System-wide prompt power, <span>natively in macOS</span>.</h1>
+        <p>A background accessory utility that intercepts highlighted text anywhere on your Mac, overlays a glassmorphic SwiftUI HUD panel, and updates selections in-place instantly.</p>
+      </div>
+    </section>
+
+    <!-- macOS Grid Boards -->
+    <section class="container">
+      <div class="board-grid">
+        
+        <!-- Board Card 1: Keyboard Trainer (Full Width) -->
+        <article class="board-card col-12" id="keyboard-trainer">
+          <div class="card-tag">Efficiency Training</div>
+          <h2 class="card-title">Global Hotkeys & Accessibility Triggers</h2>
+          <p class="card-description">Hover over a global shortcut trigger to visually map the Carbon Hook listeners inside the macOS native companion daemon.</p>
+          
+          <div class="shortcut-layout">
+            <div class="shortcut-grid">
+              
+              <div class="shortcut-card active" data-keys="control,shift,space" id="shortcut-hud">
+                <div class="shortcut-info">
+                  <div class="shortcut-name">Launch HUD overlay</div>
+                  <div class="shortcut-desc">Opens glass SwiftUI menu directly under mouse cursor</div>
+                </div>
+                <div class="shortcut-keys">
+                  <span>Ctrl</span>
+                  <span>Shift</span>
+                  <span>Space</span>
+                </div>
+              </div>
+
+              <div class="shortcut-card" data-keys="control,shift,o" id="shortcut-opt">
+                <div class="shortcut-info">
+                  <div class="shortcut-name">Direct Optimize</div>
+                  <div class="shortcut-desc">In-place replacement with Analyst prompt persona</div>
+                </div>
+                <div class="shortcut-keys">
+                  <span>Ctrl</span>
+                  <span>Shift</span>
+                  <span>O</span>
+                </div>
+              </div>
+
+              <div class="shortcut-card" data-keys="control,shift,p" id="shortcut-proof">
+                <div class="shortcut-info">
+                  <div class="shortcut-name">Grammar Proofread</div>
+                  <div class="shortcut-desc">Fixes spelling and punctuation in highlighted area</div>
+                </div>
+                <div class="shortcut-keys">
+                  <span>Ctrl</span>
+                  <span>Shift</span>
+                  <span>P</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Virtual Keyboard -->
+            <div class="virtual-keyboard" aria-hidden="true">
+              <div class="keyboard-row">
+                <div class="key-btn">esc</div>
+                <div class="key-btn">1</div><div class="key-btn">2</div><div class="key-btn">3</div><div class="key-btn">4</div>
+                <div class="key-btn">5</div><div class="key-btn">6</div><div class="key-btn">7</div><div class="key-btn">8</div>
+                <div class="key-btn">9</div><div class="key-btn">0</div><div class="key-btn">-</div><div class="key-btn">=</div>
+                <div class="key-btn key-wide">delete</div>
+              </div>
+              <div class="keyboard-row">
+                <div class="key-btn key-wide">tab</div>
+                <div class="key-btn">Q</div><div class="key-btn">W</div><div class="key-btn">E</div><div class="key-btn">R</div>
+                <div class="key-btn">T</div><div class="key-btn">Y</div><div class="key-btn">U</div><div class="key-btn">I</div>
+                <div class="key-btn" id="key-O">O</div><div class="key-btn" id="key-P">P</div><div class="key-btn">[</div><div class="key-btn">]</div>
+                <div class="key-btn">\</div>
+              </div>
+              <div class="keyboard-row">
+                <div class="key-btn key-wide">caps lock</div>
+                <div class="key-btn">A</div><div class="key-btn">S</div><div class="key-btn">D</div><div class="key-btn">F</div>
+                <div class="key-btn">G</div><div class="key-btn">H</div><div class="key-btn">J</div><div class="key-btn">K</div>
+                <div class="key-btn">L</div><div class="key-btn">;</div><div class="key-btn">'</div>
+                <div class="key-btn key-wide">return</div>
+              </div>
+              <div class="keyboard-row">
+                <div class="key-btn key-wide" id="key-left-shift">shift</div>
+                <div class="key-btn">Z</div><div class="key-btn">X</div><div class="key-btn">C</div><div class="key-btn">V</div>
+                <div class="key-btn">B</div><div class="key-btn">N</div><div class="key-btn">M</div><div class="key-btn">,</div>
+                <div class="key-btn">.</div><div class="key-btn">/</div>
+                <div class="key-btn key-wide">shift</div>
+              </div>
+              <div class="keyboard-row">
+                <div class="key-btn" id="key-left-ctrl">control</div>
+                <div class="key-btn">option</div>
+                <div class="key-btn key-wide">command</div>
+                <div class="key-btn key-space" id="key-space">space</div>
+                <div class="key-btn">command</div>
+                <div class="key-btn">option</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board Card 2: AX Interception vs Clipboard Simulator (7 columns) -->
+        <article class="board-card col-7" id="ax-selection-sim">
+          <div class="card-tag">Core Interception Engine</div>
+          <h2 class="card-title">Accessibility API Selection Interceptor</h2>
+          <p class="card-description">Toggle target environments below. Watch how the native Swift engine handles selections via trusted AX attributes or triggers simulated copy/paste fallbacks.</p>
+          
+          <div class="ax-sim-layout">
+            <div class="ax-sim-screen">
+              <div class="ax-screen-title" id="ax-app-header">Target Application: VS Code</div>
+              
+              <!-- Trusted VSCode content -->
+              <div id="ax-screen-trusted" style="display: block;">
+                <span>1&nbsp;&nbsp;import SwiftUI<br>2&nbsp;&nbsp;<br>3&nbsp;&nbsp;struct ParticleModel {<br>4&nbsp;&nbsp;&nbsp;&nbsp;// <span class="line-glow" id="trusted-selection">design a particles layout in Swift</span><br>5&nbsp;&nbsp;}</span>
+              </div>
+              
+              <!-- Sandboxed content -->
+              <div id="ax-screen-sandboxed" style="display: none;">
+                <span>Locked Sandbox Text Container<br><br>[<span class="line-glow" id="sandboxed-selection">Design a layout</span>]</span>
+                <div class="ax-warning-overlay" id="sandboxed-overlay">
+                  <div class="ax-warning-banner">
+                    <div class="ax-warning-title">AX Permissions Blocked</div>
+                    <div class="ax-warning-desc">Triggering Virtual Paste Clipboard Fallback</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="ax-flow-logs" id="ax-log-feed">
+              <!-- Animated logs go here -->
+            </div>
+          </div>
+          
+          <div class="ax-sim-controls">
+            <button class="btn btn-secondary active" data-ax="trusted" id="btn-ax-vscode">VS Code (AX Trusted)</button>
+            <button class="btn btn-secondary" data-ax="sandboxed" id="btn-ax-sandboxed">Sandboxed Terminal (AX Blocked)</button>
+          </div>
+        </article>
+
+        <!-- Board Card 3: Workload Telemetry Speedometer Gauge (5 columns) -->
+        <article class="board-card col-5" id="telemetry-gauge">
+          <div class="card-tag">Performance Telemetry</div>
+          <h2 class="card-title">Real-Time Swift Telemetry</h2>
+          <p class="card-description">Change workload state below to watch the circular gauges measure native Swift memory footprints compared to heavy, sandboxed Electron containers.</p>
+          
+          <div class="telemetry-layout">
+            <div class="gauge-card">
+              <svg class="gauge-svg">
+                <circle cx="75" cy="75" r="70" class="gauge-bg-circle"></circle>
+                <circle cx="75" cy="75" r="70" class="gauge-val-circle" id="gauge-axiom" style="stroke-dashoffset: 440;"></circle>
+              </svg>
+              <div class="gauge-text">
+                <span id="gauge-val-axiom-text">30MB</span>
+                <span>Swift RAM</span>
+              </div>
+            </div>
+            
+            <div class="gauge-card">
+              <svg class="gauge-svg">
+                <circle cx="75" cy="75" r="70" class="gauge-bg-circle"></circle>
+                <circle cx="75" cy="75" r="70" class="gauge-val-circle electron" id="gauge-electron" style="stroke-dashoffset: 440;"></circle>
+              </svg>
+              <div class="gauge-text">
+                <span id="gauge-val-electron-text">512MB</span>
+                <span>Electron</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="telemetry-controls">
+            <span class="routing-telemetry">Telemetry Status: <strong style="color: var(--accent-red);" id="telemetry-load-label">Idle Accessory</strong></span>
+            <div class="telemetry-selector">
+              <button class="telemetry-tab active" data-load="idle" id="tab-telemetry-idle">Idle Accessory</button>
+              <button class="telemetry-tab" data-load="active" id="tab-telemetry-active">Active Stream</button>
+              <button class="telemetry-tab" data-load="payload" id="tab-telemetry-payload">Peak Workload</button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link">
+            <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+            <span>axiom</span>
+          </a>
+          <p class="footer-desc">High-performance, elegant, and secure prompt engineering touchpoints natively deployed on-device.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-group">
+            <span class="footer-group-title">Product</span>
+            <a href="index.html#simulator" class="footer-link">Live Demo</a>
+            <a href="chrome.html" class="footer-link">Chrome Extension</a>
+            <a href="macos.html" class="footer-link">macOS App</a>
+            <a href="install.html" class="footer-link">Setup Guide</a>
+          </div>
+          <div class="footer-group">
+            <span class="footer-group-title">Developers</span>
+            <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="footer-link">GitHub Repo</a>
+            <a href="https://aistudio.google.com/" target="_blank" class="footer-link">Gemini Cloud API</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <span>&copy; 2026 Axiom Suite. Developed under the MIT License.</span>
+        <span>Zero tracking cookies. AES-GCM local cryptographic isolation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

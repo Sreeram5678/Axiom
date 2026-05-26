@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Axiom Chrome Extension — Injects floating optimize prompt capsules inline directly in Claude, ChatGPT, Gemini, DeepSeek, and routes locally to Gemini Nano.">
+  <title>Axiom — Chrome Extension Touchpoint</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Premium Header -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="logo-link" id="nav-logo">
+        <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+        <span>axiom</span>
+      </a>
+      <nav class="nav-links">
+        <a href="chrome.html" class="nav-item active" id="link-chrome">Chrome Extension</a>
+        <a href="macos.html" class="nav-item" id="link-macos">macOS App</a>
+        <a href="install.html" class="nav-item" id="link-install">Setup Guide</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="btn btn-secondary" id="btn-github">GitHub</a>
+        <a href="install.html" class="btn btn-primary" id="btn-install-header">Install Now</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Extension Hero -->
+    <section class="hero">
+      <div class="container">
+        <h1>Inline prompt engineering, <span>injected directly in your chat</span>.</h1>
+        <p>A sleek, lightweight browser extension overlays floatable optimization capsules inside your favorite AI chat fields, routing prompts intelligently on-device or via cloud APIs.</p>
+      </div>
+    </section>
+
+    <!-- Chrome Grid Boards -->
+    <section class="container">
+      <div class="board-grid">
+        
+        <!-- Board Card 1: Browser Showcase (7 columns) -->
+        <article class="board-card col-7" id="browser-showcase">
+          <div class="card-tag">Interface Injection</div>
+          <h2 class="card-title">Direct DOM Injection</h2>
+          <p class="card-description">Axiom injects an elegant, floatable pill directly over LLM input fields. Highlight text in Claude or ChatGPT and click the capsule to optimize on-the-fly.</p>
+          
+          <div class="mock-browser">
+            <div class="browser-header">
+              <div class="browser-dots">
+                <div class="browser-dot"></div>
+                <div class="browser-dot"></div>
+                <div class="browser-dot"></div>
+              </div>
+              <div class="browser-address">https://chat.openai.com</div>
+            </div>
+            <div class="browser-body">
+              <div class="chat-thread">
+                <div class="chat-bubble bubble-user">Highlighting text: "Explain quantum mechanics"</div>
+                <div class="chat-bubble bubble-ai">Analyzing physics context, configuring constraints...</div>
+              </div>
+              <div class="mock-input-area">
+                <div class="axiom-capsule" id="sim-floating-capsule">
+                  <span>Optimize with Axiom</span>
+                </div>
+                <textarea class="mock-textarea" readonly>Explain quantum mechanics in three paragraphs...</textarea>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board Card 2: Routing Decision Tree (5 columns) -->
+        <article class="board-card col-5" id="routing-tree">
+          <div class="card-tag">Intelligent Fallbacks</div>
+          <h2 class="card-title">Dynamic Hybrid Routing</h2>
+          <p class="card-description">Click the toggle below to trigger simulated prompt routing. Watch how Axiom queries local Nano parameters or falls back securely to cloud API systems.</p>
+          
+          <div class="routing-container">
+            <svg class="routing-svg" viewBox="0 0 300 200" id="svg-router-tree">
+              <!-- Paths -->
+              <path d="M150,30 L150,75" class="routing-path active" id="path-root-router"></path>
+              <path d="M150,115 L60,150" class="routing-path active" id="path-router-nano"></path>
+              <path d="M150,115 L240,150" class="routing-path" id="path-router-cloud"></path>
+              
+              <!-- Root Prompt node -->
+              <rect x="90" y="5" width="120" height="25" class="node-box active" id="node-prompt"></rect>
+              <text x="150" y="17.5" class="node-text">User Highlight Text</text>
+              
+              <!-- Router Decision node -->
+              <rect x="90" y="75" width="120" height="40" class="node-box active" id="node-router"></rect>
+              <text x="150" y="95" class="node-text">window.ai Router</text>
+              
+              <!-- On-Device Gemini Nano node -->
+              <rect x="10" y="150" width="100" height="35" class="node-box active" id="node-nano"></rect>
+              <text x="60" y="167.5" class="node-text">Gemini Nano (Local)</text>
+              
+              <!-- Cloud Gemini node -->
+              <rect x="190" y="150" width="100" height="35" class="node-box" id="node-cloud"></rect>
+              <text x="240" y="167.5" class="node-text">Gemini API (Cloud)</text>
+            </svg>
+          </div>
+          
+          <div class="routing-controls">
+            <div class="routing-telemetry">
+              Status: <span id="telemetry-status">Local window.ai Active</span><br>
+              Simulated latency: <span id="telemetry-latency">5 ms (On-device)</span>
+            </div>
+            <button class="btn btn-secondary" id="btn-toggle-routing" style="padding: 8px 16px; font-size: 0.85rem;">Toggle window.ai</button>
+          </div>
+        </article>
+
+        <!-- Board Card 3: Persona JSON Builder & Validator (Full Width) -->
+        <article class="board-card col-12" id="json-builder">
+          <div class="card-tag">Advanced Settings</div>
+          <h2 class="card-title">Persona Playground & Sync Validator</h2>
+          <p class="card-description">Customize prompt personas in real-time. Edit parameters below to compile settings sync JSON objects ready for import.</p>
+          
+          <div class="json-builder-layout">
+            <div class="builder-form">
+              <div class="form-group-builder">
+                <label for="builder-id">Persona ID</label>
+                <input type="text" class="builder-input" id="builder-id" value="code-critic">
+              </div>
+              <div class="form-group-builder">
+                <label for="builder-name">Persona Display Name</label>
+                <input type="text" class="builder-input" id="builder-name" value="Code Critic">
+              </div>
+              <div class="form-group-builder">
+                <label for="builder-desc">Brief Description</label>
+                <input type="text" class="builder-input" id="builder-desc" value="Performs a deep logic and optimization review of code files.">
+              </div>
+              <div class="form-group-builder">
+                <label for="builder-instruction">System Instruction (Prompt Context)</label>
+                <textarea class="builder-input builder-textarea" id="builder-instruction">You are a senior compiler staff engineer. Analyze this script for efficiency regressions, memory allocations, and redundancy. Recommend concrete modular enhancements.</textarea>
+              </div>
+            </div>
+            
+            <div class="json-preview-container">
+              <div class="json-preview-header">
+                <span class="json-preview-label">Compiled Sync Payload</span>
+                <span class="panel-badge optimized" id="json-status">Valid Schema</span>
+              </div>
+              <div class="json-preview" id="json-output-block"></div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link">
+            <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+            <span>axiom</span>
+          </a>
+          <p class="footer-desc">High-performance, elegant, and secure prompt engineering touchpoints natively deployed on-device.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-group">
+            <span class="footer-group-title">Product</span>
+            <a href="index.html#simulator" class="footer-link">Live Demo</a>
+            <a href="chrome.html" class="footer-link">Chrome Extension</a>
+            <a href="macos.html" class="footer-link">macOS App</a>
+            <a href="install.html" class="footer-link">Setup Guide</a>
+          </div>
+          <div class="footer-group">
+            <span class="footer-group-title">Developers</span>
+            <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="footer-link">GitHub Repo</a>
+            <a href="https://aistudio.google.com/" target="_blank" class="footer-link">Gemini Cloud API</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <span>&copy; 2026 Axiom Suite. Developed under the MIT License.</span>
+        <span>Zero tracking cookies. AES-GCM local cryptographic isolation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

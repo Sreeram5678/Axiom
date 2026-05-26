@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Axiom & AxiomOS — An ultra-premium, high-performance, developer-centric suite to optimize prompts on the web and system-wide in macOS using Google Gemini.">
+  <meta name="keywords" content="prompt engineering, gemini, chrome extension, macOS utility, prompt optimizer, swift, LLM">
+  <title>Axiom — Unified Prompt Optimization Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Premium Header -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="logo-link" id="nav-logo">
+        <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+        <span>axiom</span>
+      </a>
+      <nav class="nav-links">
+        <a href="chrome.html" class="nav-item" id="link-chrome">Chrome Extension</a>
+        <a href="macos.html" class="nav-item" id="link-macos">macOS App</a>
+        <a href="install.html" class="nav-item" id="link-install">Setup Guide</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="btn btn-secondary" id="btn-github">GitHub</a>
+        <a href="install.html" class="btn btn-primary" id="btn-install-header">Install Now</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <h1 id="hero-title">Refine raw prompts into <span>high-performance intelligence</span>.</h1>
+        <p id="hero-subtitle">A professional prompt engineering suite injecting context-aware directives inline in your browser and system-wide across any macOS application.</p>
+        <div class="hero-buttons">
+          <a href="#simulator" class="btn btn-primary" id="hero-btn-primary">Try Live Simulator</a>
+          <a href="install.html" class="btn btn-secondary" id="hero-btn-secondary">View Installation</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Pinterest-style Grid Section -->
+    <section class="container">
+      <div class="board-grid">
+        
+        <!-- Board Card 1: Interactive Live Simulator (Full Width) -->
+        <article class="board-card col-12" id="simulator">
+          <div class="card-tag">Live Demonstration</div>
+          <h2 class="card-title">Experience Real-Time Prompt Engineering</h2>
+          <p class="card-description">Select a target engineering persona and watch Axiom structurally enrich basic prompts into highly optimized directives with specialized context injection.</p>
+          
+          <div class="simulator-layout">
+            <aside class="simulator-sidebar">
+              <span class="sidebar-label">Select Persona</span>
+              
+              <button class="persona-btn active" data-persona="critic" id="persona-critic">
+                <div class="persona-info">
+                  <div class="persona-name">Code Critic</div>
+                  <div class="persona-desc">Optimizes for architectural review</div>
+                </div>
+                <div class="persona-indicator"></div>
+              </button>
+
+              <button class="persona-btn" data-persona="writer" id="persona-writer">
+                <div class="persona-info">
+                  <div class="persona-name">Professional Writer</div>
+                  <div class="persona-desc">Polishes voice & styling context</div>
+                </div>
+                <div class="persona-indicator"></div>
+              </button>
+
+              <button class="persona-btn" data-persona="summary" id="persona-summary">
+                <div class="persona-info">
+                  <div class="persona-name">Context Architect</div>
+                  <div class="persona-desc">Builds direct structural guides</div>
+                </div>
+                <div class="persona-indicator"></div>
+              </button>
+            </aside>
+            
+            <section class="simulator-workspace">
+              <div class="workspace-panels">
+                
+                <div class="workspace-panel">
+                  <header class="panel-header">
+                    <span class="panel-title">Your Raw Input</span>
+                    <span class="panel-badge">Basic Prompt</span>
+                  </header>
+                  <textarea class="prompt-area" readonly id="sim-input-text">write a javascript function to sort an array of objects by a key</textarea>
+                </div>
+                
+                <div class="workspace-panel">
+                  <header class="panel-header">
+                    <span class="panel-title">Axiom Injected Context</span>
+                    <span class="panel-badge optimized">Optimized Directives</span>
+                  </header>
+                  <div class="optimized-output" id="sim-output-text"></div>
+                </div>
+
+              </div>
+              
+              <div class="workspace-actions">
+                <div class="sim-loader" id="sim-spinner">
+                  <div class="spinner"></div>
+                  <span>Enriching context tags...</span>
+                </div>
+                <button class="btn btn-primary" id="btn-trigger-optimize">Optimize Prompt</button>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <!-- Board Card 2: Chrome Extension Spotlight Card (Width: 6 Columns) -->
+        <article class="board-card col-6" id="chrome-spotlight">
+          <div class="card-tag">Web Browser Integration</div>
+          <h2 class="card-title">Axiom Chrome Extension</h2>
+          <p class="card-description">Injects custom overlay capsules cleanly inside ChatGPT, Claude, Gemini, DeepSeek, and AI Studio. Includes local <code>window.ai</code> Nano support, secure AES-GCM local cryptographic settings options, and custom personas.</p>
+          
+          <div style="margin-bottom: 24px;">
+            <svg viewBox="0 0 200 100" width="100%" height="80" style="background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); padding: 10px;">
+              <rect x="20" y="20" width="160" height="60" rx="6" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5"></rect>
+              <circle cx="35" cy="35" r="3" fill="#ff5f56"></circle>
+              <circle cx="45" cy="35" r="3" fill="#ffbd2e"></circle>
+              <circle cx="55" cy="35" r="3" fill="#27c93f"></circle>
+              <rect x="70" y="30" width="90" height="10" rx="3" fill="var(--bg-secondary)" stroke="var(--border-color)" stroke-width="1"></rect>
+              <rect x="30" y="55" width="140" height="15" rx="4" fill="var(--accent-red-light)" stroke="var(--accent-red-border)" stroke-width="1"></rect>
+              <circle cx="42" cy="62.5" r="4" fill="var(--accent-red)"></circle>
+              <line x1="52" y1="62.5" x2="160" y2="62.5" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round"></line>
+            </svg>
+          </div>
+          
+          <a href="chrome.html" class="btn btn-secondary" id="btn-explore-chrome" style="width: 100%;">Explore Extension & Interactive Widgets &rarr;</a>
+        </article>
+
+        <!-- Board Card 3: macOS App Spotlight Card (Width: 6 Columns) -->
+        <article class="board-card col-6" id="macos-spotlight">
+          <div class="card-tag">Native macOS Client</div>
+          <h2 class="card-title">AxiomOS macOS App</h2>
+          <p class="card-description">Lightweight Swift background accessory menu-bar daemon that captures highlights system-wide in any editor via Carbon Global Hotkeys, overlaying a SwiftUI glassmorphic HUD panel to write optimized text back in-place.</p>
+          
+          <div style="margin-bottom: 24px;">
+            <svg viewBox="0 0 200 100" width="100%" height="80" style="background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); padding: 10px;">
+              <rect x="15" y="15" width="170" height="70" rx="8" fill="#111" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"></rect>
+              <circle cx="100" cy="50" r="15" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-dasharray="4"></circle>
+              <rect x="50" y="35" width="100" height="30" rx="10" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="1" style="backdrop-filter: blur(10px);"></rect>
+              <circle cx="65" cy="50" r="4" fill="var(--accent-red)"></circle>
+              <line x1="78" y1="50" x2="135" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round"></line>
+            </svg>
+          </div>
+          
+          <a href="macos.html" class="btn btn-secondary" id="btn-explore-macos" style="width: 100%;">Explore macOS App & Key Trainer &rarr;</a>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link">
+            <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+            <span>axiom</span>
+          </a>
+          <p class="footer-desc">High-performance, elegant, and secure prompt engineering touchpoints natively deployed on-device.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-group">
+            <span class="footer-group-title">Product</span>
+            <a href="index.html#simulator" class="footer-link">Live Demo</a>
+            <a href="chrome.html" class="footer-link">Chrome Extension</a>
+            <a href="macos.html" class="footer-link">macOS App</a>
+            <a href="install.html" class="footer-link">Setup Guide</a>
+          </div>
+          <div class="footer-group">
+            <span class="footer-group-title">Developers</span>
+            <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="footer-link">GitHub Repo</a>
+            <a href="https://aistudio.google.com/" target="_blank" class="footer-link">Gemini Cloud API</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <span>&copy; 2026 Axiom Suite. Developed under the MIT License.</span>
+        <span>Zero tracking cookies. AES-GCM local cryptographic isolation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

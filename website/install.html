@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Axiom Installation Guide — Step-by-step technical instructions to compile native macOS daemons and setup WebCrypto Manifest V3 browser client extensions.">
+  <title>Axiom — Suite Installation & Configuration Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Premium Header -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="logo-link" id="nav-logo">
+        <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+        <span>axiom</span>
+      </a>
+      <nav class="nav-links">
+        <a href="chrome.html" class="nav-item" id="link-chrome">Chrome Extension</a>
+        <a href="macos.html" class="nav-item" id="link-macos">macOS App</a>
+        <a href="install.html" class="nav-item active" id="link-install">Setup Guide</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="btn btn-secondary" id="btn-github">GitHub</a>
+        <a href="install.html" class="btn btn-primary" id="btn-install-header">Install Now</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Setup Hero -->
+    <section class="hero">
+      <div class="container">
+        <h1>Setup your <span>unified client touchpoints</span>.</h1>
+        <p>A unified configuration reference to load unpacking Chrome extensions and compile native macOS accessibilities binaries securely.</p>
+      </div>
+    </section>
+
+    </section>
+
+    <!-- Installation Grid Boards -->
+    <section class="container">
+      <div class="board-grid">
+        
+        <!-- Board Card 1: AxiomOS macOS Companion Setup (Build from Source) -->
+        <article class="board-card col-12" id="install-panels-card" style="padding: 40px;">
+          <div style="margin-bottom: 30px;">
+            <div class="card-tag">macOS Utility</div>
+            <h2 class="card-title" style="margin-top: 4px; margin-bottom: 8px; font-size: 1.8rem;">AxiomOS Companion Setup</h2>
+            <p class="card-description" style="max-width: 750px;">Integrate the Swift daemon into your macOS desktop to unlock global shortcuts, direct window focus context interception, and background API routing. Compiling from source provides absolute security transparency.</p>
+          </div>
+
+          <div class="step-list" style="display: flex; flex-direction: column; gap: 30px;">
+            
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-body" style="flex: 1;">
+                <div class="step-title">Clone the Repository</div>
+                <div class="step-desc">Open your Terminal application and clone the codebase repository directly to your machine:</div>
+                <div class="code-terminal">
+                  <div class="code-text" id="code-git-clone">git clone https://github.com/Sreeram5678/Axiom.git</div>
+                  <button class="btn-copy" data-target="code-git-clone" id="btn-copy-clone">Copy Command</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-body" style="flex: 1;">
+                <div class="step-title">Compile Release Swift Bundle</div>
+                <div class="step-desc">Navigate into the cloned directory and invoke the native Swift Package Manager compiler to build the optimized release package:</div>
+                <div class="code-terminal">
+                  <div class="code-text" id="code-swift-build-source">cd Axiom/AxiomOS && swift build -c release</div>
+                  <button class="btn-copy" data-target="code-swift-build-source" id="btn-copy-build-source">Copy Command</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div class="step-body" style="flex: 1;">
+                <div class="step-title">Deploy App Container to /Applications</div>
+                <div class="step-desc">Copy the compiled application bundle into your system applications deck:</div>
+                <div class="code-terminal">
+                  <div class="code-text" id="code-deploy-app">cp -R .build/release/AxiomOS.app /Applications/</div>
+                  <button class="btn-copy" data-target="code-deploy-app" id="btn-copy-deploy">Copy Command</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Security Advantage Note -->
+          <div class="quarantine-wrapper" style="margin-top: 30px; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; background: var(--bg-secondary);">
+            <div class="quarantine-header">
+              <span class="quarantine-tag" style="background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); font-weight: 700;">Security Benefit</span>
+              <span class="quarantine-title" style="font-weight: 700;">Zero Gatekeeper Warnings</span>
+            </div>
+            <p class="quarantine-desc" style="margin-bottom: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+              <strong>Frictionless Installation:</strong> Because you are compiling and launching AxiomOS natively from source directly on your own hardware, macOS automatically stamps it as a trusted developer binary. The application will open instantly with <strong>zero Gatekeeper quarantine warning blocks</strong> or security blocks!
+            </p>
+          </div>
+        </article>
+
+        <!-- Board Card 2: Chrome Extension Setup -->
+        <article class="board-card col-12" id="chrome-extension-setup-card" style="padding: 40px;">
+          <div class="card-tag">Browser Integration</div>
+          <h2 class="card-title" style="margin-top: 4px; margin-bottom: 8px; font-size: 1.8rem;">Axiom Chrome Extension Setup</h2>
+          <p class="card-description" style="max-width: 600px; margin-bottom: 30px;">Load the structural client extension in Google Chrome to enable in-page DOM parsing, schema injections, and WebCrypto settings management.</p>
+          
+          <div class="step-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <div class="step-title">Load Unpacked Developer Module</div>
+                <div class="step-desc">Navigate to <code>chrome://extensions/</code> in Google Chrome. Toggle the <strong>Developer mode</strong> switch in the upper-right corner of the pane to active. Click the <strong>Load unpacked</strong> button in the action bar, and choose the root directory of your cloned Axiom codebase folder.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <div class="step-title">Insert Gemini API Credentials</div>
+                <div class="step-desc">Click the Axiom extension icon in your Chrome toolbar. Tap the settings cog icon at the base of the viewport panel, paste your private Gemini Developer Key (generated securely via Google AI Studio), and hit <strong>Save Settings</strong>. Sync keys are immediately isolated using AES-GCM local storage.</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board Card 3: Accessibility Trust Config (7 columns) -->
+        <article class="board-card col-7" id="ax-permissions-trust">
+          <div class="card-tag">System Security</div>
+          <h2 class="card-title">Accessibility Trust Integration</h2>
+          <p class="card-description">Because AxiomOS registers system-wide shortcuts and performs in-place text replacements, macOS requires accessibility privileges to handle event writes securely.</p>
+          
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <div class="step-title">Accessibility Dialog Overlay</div>
+                <div class="step-desc">Upon triggering the HUD panel for the first time via <code>Control+Shift+Space</code>, macOS automatically locks the selection and prompts a standard "Accessibility Access" approval modal.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <div class="step-title">System Panel Authorization</div>
+                <div class="step-desc">Navigate to <strong>System Settings > Privacy & Security > Accessibility</strong>, select <strong>AxiomOS</strong> in the app list (or authorize the launching Terminal shell if compiling via CLI), and switch the toggle switch to <strong>ON</strong>.</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board Card 4: Configuration Schema (5 columns) -->
+        <article class="board-card col-5" id="config-schema">
+          <div class="card-tag">Keychain Storage</div>
+          <h2 class="card-title">Local Config Dotfiles</h2>
+          <p class="card-description">AxiomOS securely persists on-device settings options at <code>~/.axiom_config.json</code>, migrating API keys automatically into macOS Keychain buffers.</p>
+          
+          <div class="json-preview-container">
+            <span class="json-preview-label">Persistent Dotfile Schema</span>
+            <div class="json-preview" style="height: 180px;">{
+  "apiKey" : "YOUR_STUDIO_KEY",
+  "defaultLength" : "medium",
+  "selectedModeId" : "code-reviewer"
+}</div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link">
+            <img src="../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+            <span>axiom</span>
+          </a>
+          <p class="footer-desc">High-performance, elegant, and secure prompt engineering touchpoints natively deployed on-device.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-group">
+            <span class="footer-group-title">Product</span>
+            <a href="index.html#simulator" class="footer-link">Live Demo</a>
+            <a href="chrome.html" class="footer-link">Chrome Extension</a>
+            <a href="macos.html" class="footer-link">macOS App</a>
+            <a href="install.html" class="footer-link">Setup Guide</a>
+          </div>
+          <div class="footer-group">
+            <span class="footer-group-title">Developers</span>
+            <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="footer-link">GitHub Repo</a>
+            <a href="https://aistudio.google.com/" target="_blank" class="footer-link">Gemini Cloud API</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <span>&copy; 2026 Axiom Suite. Developed under the MIT License.</span>
+        <span>Zero tracking cookies. AES-GCM local cryptographic isolation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

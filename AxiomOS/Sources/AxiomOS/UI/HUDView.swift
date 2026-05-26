@@ -82,8 +82,16 @@ struct HUDView: View {
     private var headerView: some View {
         HStack(alignment: .center) {
             HStack(spacing: 8) {
-                Text("✨")
-                    .font(.system(size: 16))
+                if let appIcon = NSApplication.shared.applicationIconImage {
+                    Image(nsImage: appIcon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 16, height: 16)
+                        .cornerRadius(3)
+                } else {
+                    Text("✨")
+                        .font(.system(size: 16))
+                }
                 Text("AxiomOS")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .tracking(0.5)
