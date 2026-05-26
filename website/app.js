@@ -8,6 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return desc ? desc.value : undefined;
   }
 
+  // Helper to escape HTML characters and prevent Cross-Site Scripting (XSS) (CWE-116)
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   // ==========================================
   // NATIVE LIGHT / DARK THEME TOGGLE SYSTEM
   // ==========================================
@@ -131,7 +142,10 @@ Summarize the provided technical documentation into two logical blocks:
     let isTyping = false;
 
     // Set initial values
-    simInput.value = personas[activePersona].input;
+    const initialPersonaData = safeGet(personas, activePersona);
+    if (initialPersonaData) {
+      simInput.value = initialPersonaData.input;
+    }
     simOutput.innerHTML = "<em>Click 'Optimize Prompt' to run Axiom's context injection engine...</em>";
 
     personaBtns.forEach(btn => {
@@ -140,7 +154,10 @@ Summarize the provided technical documentation into two logical blocks:
         personaBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activePersona = btn.dataset.persona;
-        simInput.value = personas[activePersona].input;
+        const currentPersonaData = safeGet(personas, activePersona);
+        if (currentPersonaData) {
+          simInput.value = currentPersonaData.input;
+        }
         simOutput.innerHTML = "<em>Click 'Optimize Prompt' to run Axiom's context injection engine...</em>";
       });
     });
@@ -394,8 +411,8 @@ Summarize the provided technical documentation into two logical blocks:
           if (log.type === "warning") icon = "[!]";
           
           logDiv.innerHTML = `
-            <span class="log-entry-icon">${icon}</span>
-            <span class="log-entry-text">${log.text}</span>
+            <span class="log-entry-icon">${escapeHtml(icon)}</span>
+            <span class="log-entry-text">${escapeHtml(log.text)}</span>
           `;
           
           logFeed.appendChild(logDiv);
@@ -602,42 +619,45 @@ Summarize the provided technical documentation into two logical blocks:
       primaryLink = "macos.html";
       secondaryText = "Get Chrome Extension";
       secondaryLink = "chrome.html";
-      
-      const statusText = isChrome 
-        ? `<span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px #10b981;"></span>On-device AI enabled`
-        : `On-device AI requires Chrome`;
-
-      helperHtml = `
-        <div class="axiom-platform-alert" style="display: inline-flex; padding: 6px 18px; border-radius: var(--radius-full); margin-top: 12px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.8rem; color: var(--text-secondary); align-items: center; gap: 12px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
-          <span>macOS 13+ and Chromium compatible</span>
-          <span style="width: 1px; height: 12px; background-color: var(--border-color);"></span>
-          <span style="display: inline-flex; align-items: center; color: var(--text-primary); font-weight: 500;">${statusText}</span>
-        </div>
-      `;
     } else {
       primaryText = "Get Chrome Extension";
       primaryLink = "chrome.html";
       secondaryText = "Explore Setup Guide";
       secondaryLink = "install.html";
-
-      const statusText = isChrome 
-        ? `<span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px #10b981;"></span>On-device AI enabled`
-        : `On-device AI requires Chrome`;
-
-      helperHtml = `
-        <div class="axiom-platform-alert" style="display: inline-flex; padding: 6px 18px; border-radius: var(--radius-full); margin-top: 12px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.8rem; color: var(--text-secondary); align-items: center; gap: 12px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
-          <span>Windows / Linux extension compatible</span>
-          <span style="width: 1px; height: 12px; background-color: var(--border-color);"></span>
-          <span style="display: inline-flex; align-items: center; color: var(--text-primary); font-weight: 500;">${statusText}</span>
-        </div>
-      `;
     }
 
     heroBtnPrimary.textContent = primaryText;
     heroBtnPrimary.href = primaryLink;
     heroBtnSecondary.textContent = secondaryText;
     heroBtnSecondary.href = secondaryLink;
-    heroHelper.innerHTML = helperHtml;
+
+    // Secure dynamic DOM construction to prevent CWE-116 and XSS
+    heroHelper.innerHTML = "";
+    const alertBox = document.createElement('div');
+    alertBox.className = 'axiom-platform-alert';
+    alertBox.style.cssText = 'display: inline-flex; padding: 6px 18px; border-radius: var(--radius-full); margin-top: 12px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 0.8rem; color: var(--text-secondary); align-items: center; gap: 12px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);';
+
+    const compatSpan = document.createElement('span');
+    compatSpan.textContent = isMac ? "macOS 13+ and Chromium compatible" : "Windows / Linux extension compatible";
+    alertBox.appendChild(compatSpan);
+
+    const separator = document.createElement('span');
+    separator.style.cssText = 'width: 1px; height: 12px; background-color: var(--border-color);';
+    alertBox.appendChild(separator);
+
+    const statusWrapper = document.createElement('span');
+    statusWrapper.style.cssText = 'display: inline-flex; align-items: center; color: var(--text-primary); font-weight: 500;';
+
+    if (isChrome) {
+      const dot = document.createElement('span');
+      dot.style.cssText = 'display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 8px #10b981;';
+      statusWrapper.appendChild(dot);
+      statusWrapper.appendChild(document.createTextNode("On-device AI enabled"));
+    } else {
+      statusWrapper.appendChild(document.createTextNode("On-device AI requires Chrome"));
+    }
+    alertBox.appendChild(statusWrapper);
+    heroHelper.appendChild(alertBox);
   }
 
   // ==========================================
@@ -719,7 +739,7 @@ Summarize the provided technical documentation into two logical blocks:
     let activePersonaId = "sql-wizard";
 
     function updateGalleryJson() {
-      const data = galleryPersonas[activePersonaId];
+      const data = safeGet(galleryPersonas, activePersonaId);
       if (data) {
         galleryJsonBlock.textContent = JSON.stringify([data], null, 2);
       }

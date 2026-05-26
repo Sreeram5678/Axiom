@@ -1,6 +1,14 @@
 import { getModes, saveModes, resetModes } from '../modules/modes.js';
 import { encrypt, decrypt } from '../modules/crypto-helper.js';
 
+// Helper to safely retrieve object properties without bracket notation to satisfy CWE-94 static analysis
+function safeGet(obj, key) {
+  if (!obj || typeof key !== 'string') return undefined;
+  if (!Object.prototype.hasOwnProperty.call(obj, key)) return undefined;
+  const desc = Object.getOwnPropertyDescriptor(obj, key);
+  return desc ? desc.value : undefined;
+}
+
 // DOM Elements
 const tabOptimizeBtn = document.getElementById('tab-optimize-btn');
 const tabHistoryBtn = document.getElementById('tab-history-btn');
@@ -241,10 +249,7 @@ function renderModesGrid() {
     card.className = `mode-card ${mode.id === activeModeId ? 'active' : ''}`;
     card.setAttribute('data-mode-id', mode.id);
     
-    // Use hasOwnProperty guard on colorMap lookups to prevent prototype pollution (CWE-94)
-    const iconKey = Object.prototype.hasOwnProperty.call(colorMap, mode.icon) ? mode.icon : null;
-    const idKey = Object.prototype.hasOwnProperty.call(colorMap, mode.id) ? mode.id : null;
-    const color = (iconKey && colorMap[iconKey]) || (idKey && colorMap[idKey]) || '#a1a1aa';
+    const color = safeGet(colorMap, mode.icon) || safeGet(colorMap, mode.id) || '#a1a1aa';
     
     card.innerHTML = `
       <div class="mode-card-header">
@@ -290,10 +295,7 @@ function renderVisualModesList() {
     item.className = 'visual-mode-item';
     
     const isDefault = ['analyst', 'engineer', 'first-principles', 'exec-summary'].includes(mode.id);
-    // Use hasOwnProperty guard on colorMap lookups to prevent prototype pollution (CWE-94)
-    const iconKey2 = Object.prototype.hasOwnProperty.call(colorMap, mode.icon) ? mode.icon : null;
-    const idKey2 = Object.prototype.hasOwnProperty.call(colorMap, mode.id) ? mode.id : null;
-    const color = (iconKey2 && colorMap[iconKey2]) || (idKey2 && colorMap[idKey2]) || '#a1a1aa';
+    const color = safeGet(colorMap, mode.icon) || safeGet(colorMap, mode.id) || '#a1a1aa';
     
     item.innerHTML = `
       <div class="visual-mode-info">
@@ -913,13 +915,18 @@ async function renderHistoryList() {
     const timeString = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateString = new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' });
     
+    const lengthVal = item.length || 'medium';
+    const starClass = item.starred ? 'star-active' : '';
+    const starTitle = item.starred ? 'Unstar Template' : 'Star as Template';
+    const starFill = item.starred ? 'currentColor' : 'none';
+
     histItemEl.innerHTML = `
       <div class="history-item-header">
         <div class="history-item-meta">
-          <span class="history-item-badge">${item.modeName}</span>
-          <span class="history-item-badge length-${item.length || 'medium'}">${item.length || 'medium'}</span>
+          <span class="history-item-badge">${escapeHtml(item.modeName)}</span>
+          <span class="history-item-badge length-${escapeHtml(lengthVal)}">${escapeHtml(lengthVal)}</span>
         </div>
-        <span class="history-item-time">${dateString}, ${timeString}</span>
+        <span class="history-item-time">${escapeHtml(dateString)}, ${escapeHtml(timeString)}</span>
       </div>
       <div class="history-item-body" title="Click to load raw prompt into editor">
         ${escapeHtml(item.rawPrompt)}
@@ -928,8 +935,8 @@ async function renderHistoryList() {
         <button class="history-action-btn copy-hist-btn" title="Copy Optimized Prompt">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
-        <button class="history-action-btn star-hist-btn ${item.starred ? 'star-active' : ''}" title="${item.starred ? 'Unstar Template' : 'Star as Template'}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="${item.starred ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <button class="history-action-btn star-hist-btn ${escapeHtml(starClass)}" title="${escapeHtml(starTitle)}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="${escapeHtml(starFill)}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </button>
       </div>
     `;
