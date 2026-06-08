@@ -89,4 +89,9 @@ else
     echo -e "${BLUE}[AxiomOS Build] Master icon not found at ${ICON_MASTER}. Skipping icon integration.${NC}"
 fi
 
+# 5. Ad-hoc sign the App Bundle to seal Info.plist and resources
+echo -e "${BLUE}[AxiomOS Build] Ad-hoc signing the App Bundle...${NC}"
+codesign --force --deep --sign - "${APP_DIR}"
+echo -e "${GREEN}[AxiomOS Build] Bundle codesigned successfully!${NC}"
+
 echo -e "${GREEN}[AxiomOS Build] SUCCESS! Native macOS application created at ${APP_DIR}${NC}"

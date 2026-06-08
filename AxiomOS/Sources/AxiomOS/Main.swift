@@ -8,6 +8,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var hudPanel: HUDPanel?
     
+    static var shared: AppDelegate?
+    
     static func main() {
         // Prevent duplicate instances if running as a bundled app
         if let bundleID = Bundle.main.bundleIdentifier {
@@ -23,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let app = NSApplication.shared
         let delegate = AppDelegate()
+        AppDelegate.shared = delegate // Retain strong reference to prevent deallocation in release builds
         app.delegate = delegate
         app.run()
     }
