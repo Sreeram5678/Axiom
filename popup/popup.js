@@ -68,6 +68,7 @@ const historyList = document.getElementById('history-list');
 let currentModes = [];
 let activeModeId = 'analyst';
 let selectedLength = 'medium';
+let saveTimeout;
 
 // DOMContentLoaded Entry point
 document.addEventListener('DOMContentLoaded', async () => {
@@ -598,13 +599,16 @@ function setupEventListeners() {
     });
   }
 
-  // 1. Raw prompt character counter & text saver
+  // 1. Raw prompt character counter & text saver (debounced to prevent UI lag and reduce SSD wear)
   rawPromptInput.addEventListener('input', (e) => {
     try {
       const text = e.target.value;
       updateCharCounter(text);
-      // Persist input to local storage (un-interrupted save)
-      chrome.storage.local.set({ savedInput: text });
+      
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        chrome.storage.local.set({ savedInput: text });
+      }, 300);
     } catch (err) {
       console.warn("[Axiom Popup] Storage set savedInput failed:", err.message);
     }
