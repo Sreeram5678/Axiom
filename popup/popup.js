@@ -995,38 +995,39 @@ async function renderHistoryList() {
     }
 
     // Click to load raw prompt
-    const bodyEl = histItemEl.querySelector('.history-item-body');
-    bodyEl.addEventListener('click', async () => {
-      rawPromptInput.value = item.rawPrompt;
-      updateCharCounter(item.rawPrompt);
-      await chrome.storage.local.set({ savedInput: item.rawPrompt });
+    if (bodyEl) {
+      bodyEl.addEventListener('click', async () => {
+        rawPromptInput.value = item.rawPrompt;
+        updateCharCounter(item.rawPrompt);
+        await chrome.storage.local.set({ savedInput: item.rawPrompt });
 
-      // Load matching length and mode ID
-      if (item.length) {
-        updateSelectedLengthUI(item.length);
-        await chrome.storage.local.set({ selectedLength: item.length });
-      }
+        // Load matching length and mode ID
+        if (item.length) {
+          updateSelectedLengthUI(item.length);
+          await chrome.storage.local.set({ selectedLength: item.length });
+        }
 
-      if (item.modeId) {
-        activeModeId = item.modeId;
-        await chrome.storage.local.set({ lastActiveModeId: activeModeId });
-        
-        // Re-toggle grid cards active styling
-        document.querySelectorAll('.mode-card').forEach(el => {
-          if (el.getAttribute('data-mode-id') === activeModeId) {
-            el.classList.add('active');
-          } else {
-            el.classList.remove('active');
-          }
-        });
-      }
+        if (item.modeId) {
+          activeModeId = item.modeId;
+          await chrome.storage.local.set({ lastActiveModeId: activeModeId });
+          
+          // Re-toggle grid cards active styling
+          document.querySelectorAll('.mode-card').forEach(el => {
+            if (el.getAttribute('data-mode-id') === activeModeId) {
+              el.classList.add('active');
+            } else {
+              el.classList.remove('active');
+            }
+          });
+        }
 
-      // Hide output card (waiting for new optimization)
-      outputSection.style.display = 'none';
+        // Hide output card (waiting for new optimization)
+        outputSection.style.display = 'none';
 
-      // Switch to main Optimize panel tab
-      tabOptimizeBtn.click();
-    });
+        // Switch to main Optimize panel tab
+        tabOptimizeBtn.click();
+      });
+    }
 
     // Copy optimized prompt action
     const copyHistBtn = histItemEl.querySelector('.copy-hist-btn');
