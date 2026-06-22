@@ -27,7 +27,7 @@ Key Features:
 How to Use:
 1. Obtain a free Gemini Developer API Key from Google AI Studio.
 2. Open Axiom's Settings tab, paste the key, and click Save.
-3. Select your model (defaulting to the highly efficient Gemini 3.1 Flash-Lite).
+3. Select your model (defaulting to the highly efficient Gemini 3.5 Flash).
 4. EITHER: Open the extension popup, type a prompt, choose a Mode, click Optimize, and Copy it.
 5. OR: Go to ChatGPT, Claude, Gemini, Google AI Studio, or DeepSeek, type a prompt inside the input box, and click the beautiful "✨ Optimize Prompt" pill button that appears right above it!
 6. OR: Use the global keyboard shortcut `Alt+Shift+O` (`Option+Shift+O` on Mac) when focused inside a prompt input on any supported AI chat interface to trigger optimization instantly without lifting your hands from the keyboard!

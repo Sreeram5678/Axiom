@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
+  <!-- Ambient Glow background blobs -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+  <div class="ambient-glow glow-4"></div>
+
   <div class="app-container">
     <!-- Header with Branding and Nav Tabs -->
     <header>
@@ -72,6 +78,11 @@
         <!-- Dynamic Output Workspace Area -->
         <div id="output-section" class="output-card" style="display: none;">
           <div class="output-header">
+            <div class="window-controls">
+              <span class="dot-control close"></span>
+              <span class="dot-control minimize"></span>
+              <span class="dot-control expand"></span>
+            </div>
             <span class="output-title">Optimized Prompt</span>
             <button id="copy-btn" class="action-icon-btn" title="Copy to clipboard">
               <!-- Copy SVG Icon -->
@@ -110,9 +121,10 @@
           <label for="model-select" class="form-label">Gemini Model</label>
           <div class="select-wrapper">
             <select id="model-select">
-              <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Recommended)</option>
-              <option value="gemini-3.1-flash">Gemini 3.1 Flash (High-Speed)</option>
+              <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended)</option>
               <option value="gemini-3.1-pro">Gemini 3.1 Pro (Complex Tasks)</option>
+              <option value="gemini-3.1-flash">Gemini 3.1 Flash (High-Speed)</option>
+              <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Lightweight)</option>
             </select>
           </div>
         </div>

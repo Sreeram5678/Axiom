@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   // Set default model if not configured
   const { selectedModel } = await chrome.storage.local.get(['selectedModel']);
   if (!selectedModel) {
-    await chrome.storage.local.set({ selectedModel: 'gemini-3.1-flash-lite' });
+    await chrome.storage.local.set({ selectedModel: 'gemini-3.5-flash' });
   }
 
   // Pre-populate modes if not configured
@@ -37,7 +37,7 @@ function getCacheKey(model, modeId, length, prompt) {
 
 // Unified helper to run the prompt optimization process
 async function runOptimization(params, onChunk) {
-  const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite' } = await chrome.storage.local.get(['apiKey', 'selectedModel']);
+  const { apiKey = '', selectedModel = 'gemini-3.5-flash' } = await chrome.storage.local.get(['apiKey', 'selectedModel']);
   const modes = await getModes();
   const mode = modes.find(m => m.id === params.selectedModeId);
   
@@ -114,7 +114,7 @@ chrome.runtime.onConnect.addListener((port) => {
     port.onMessage.addListener(async (message) => {
       if (message.type === 'OPTIMIZE_PROMPT_STREAM') {
         const { rawPrompt, contextPrompt, selectedModeId, selectedLength } = message;
-        const { defaultLength = 'medium', selectedModel = 'gemini-3.1-flash-lite' } = await chrome.storage.local.get(['defaultLength', 'selectedModel']);
+        const { defaultLength = 'medium', selectedModel = 'gemini-3.5-flash' } = await chrome.storage.local.get(['defaultLength', 'selectedModel']);
         const length = selectedLength || defaultLength;
 
         // Check local session storage cache first (0ms latency optimization)
@@ -240,7 +240,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'OPTIMIZE_PROMPT') {
     (async () => {
       try {
-        const { defaultLength = 'medium', selectedModel = 'gemini-3.1-flash-lite' } = await chrome.storage.local.get(['defaultLength', 'selectedModel']);
+        const { defaultLength = 'medium', selectedModel = 'gemini-3.5-flash' } = await chrome.storage.local.get(['defaultLength', 'selectedModel']);
         const length = message.selectedLength || defaultLength;
 
         // Check Cache
