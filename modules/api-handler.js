@@ -13,7 +13,7 @@ export async function optimizePrompt({
   rawPrompt,
   systemInstruction,
   apiKey,
-  model = "gemini-3.1-flash-lite",
+  model = "gemini-3.5-flash",
   length = "medium",
   timeoutMs = 15000,
   onChunk = null

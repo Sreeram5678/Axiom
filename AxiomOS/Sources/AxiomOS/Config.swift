@@ -11,7 +11,7 @@ struct ConfigModel: Codable {
             apiKey: "PASTE_YOUR_GEMINI_API_KEY_HERE",
             defaultLength: "medium",
             selectedModeId: "analyst",
-            selectedModel: "gemini-3.1-flash-lite"
+            selectedModel: "gemini-3.5-flash"
         )
     }
 }
@@ -51,7 +51,7 @@ class ConfigManager {
     }
     
     var selectedModel: String {
-        get { configModel.selectedModel ?? "gemini-3.1-flash-lite" }
+        get { configModel.selectedModel ?? "gemini-3.5-flash" }
         set {
             configModel.selectedModel = newValue
             saveConfig()

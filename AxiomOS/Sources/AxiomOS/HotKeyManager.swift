@@ -94,6 +94,8 @@ class HotKeyManager {
     }
     
     private func dispatch(id: UInt32) {
+        print("[AxiomOS HotKey] Global hotkey intercepted with ID: \(id)")
+        fflush(stdout)
         switch id {
         case 1:
             onTriggerHUD?()

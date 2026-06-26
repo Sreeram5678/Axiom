@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function initializeUI() {
   try {
     // Load API Key, Model settings, prompt length & last selected Mode
-    const { apiKey = '', selectedModel = 'gemini-3.1-flash-lite', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', hideWidgetEntirely = false, currencyPreference = 'USD' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'hideWidgetEntirely', 'currencyPreference']);
+    const { apiKey = '', selectedModel = 'gemini-3.5-flash', savedInput = '', lastActiveModeId = 'analyst', selectedLength = '', defaultLength = 'medium', aiRoutingMode = 'hybrid', hideWidgetEntirely = false, currencyPreference = 'USD' } = await chrome.storage.local.get(['apiKey', 'selectedModel', 'savedInput', 'lastActiveModeId', 'selectedLength', 'defaultLength', 'aiRoutingMode', 'hideWidgetEntirely', 'currencyPreference']);
     
     modelSelect.value = selectedModel;
     defaultLengthSelect.value = defaultLength;
@@ -260,10 +260,10 @@ function renderModesGrid() {
       <div class="mode-card-desc"></div>
     `;
     
+    card.style.setProperty('--dot-color', color);
     const dot = card.querySelector('.mode-card-dot');
     if (dot) {
       dot.style.backgroundColor = color;
-      dot.style.setProperty('--dot-color', color);
     }
     
     const nameEl = card.querySelector('.mode-card-name');
@@ -321,10 +321,10 @@ function renderVisualModesList() {
       <div class="visual-mode-actions"></div>
     `;
     
+    item.style.setProperty('--dot-color', color);
     const dot = item.querySelector('.visual-mode-dot');
     if (dot) {
       dot.style.backgroundColor = color;
-      dot.style.setProperty('--dot-color', color);
     }
     
     const nameEl = item.querySelector('.visual-mode-name');
@@ -1093,13 +1093,15 @@ function updateCostEstimate(text) {
   const tokenCount = charCount / 4;
   
   // Get active model
-  const model = modelSelect ? modelSelect.value : 'gemini-3.1-flash-lite';
+  const model = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
   
   // Cost per million input tokens (USD)
-  let costPerMillionUSD = 0.075; // flash-lite default
+  let costPerMillionUSD = 1.50; // gemini-3.5-flash default
   if (model && model.includes('pro')) {
     costPerMillionUSD = 1.25;
-  } else if (model && model.includes('flash') && !model.includes('lite')) {
+  } else if (model && model.includes('3.5-flash')) {
+    costPerMillionUSD = 1.50;
+  } else if (model && (model.includes('3.1-flash') || model.includes('lite'))) {
     costPerMillionUSD = 0.075;
   }
   
