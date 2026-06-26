@@ -1117,15 +1117,16 @@ try {
 
 console.log("[Axiom] Extension Content Script successfully loaded and scanning started!");
 
-// 5. Global focused input keyboard shortcut listener (Alt+Shift+O / Option+Shift+O)
+// 5. Global focused input keyboard shortcut listener (Alt+Shift+O / Option+Shift+O & Control+Shift+O)
 document.addEventListener('keydown', async (e) => {
   if (!isContextValid()) {
     destroyAxiom();
     return;
   }
   
-  // Option+Shift+O or Alt+Shift+O
-  if (e.altKey && e.shiftKey && e.code === 'KeyO') {
+  // Option+Shift+O (Alt+Shift+O) or Control+Shift+O
+  const isMatch = (e.altKey && e.shiftKey && e.code === 'KeyO') || (e.ctrlKey && e.shiftKey && e.code === 'KeyO');
+  if (isMatch) {
     const inputEl = getTargetInput();
     if (inputEl) {
       e.preventDefault();

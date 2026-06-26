@@ -323,7 +323,7 @@ class TextInterception {
     }
     
     private func simulateCopy() {
-        let source = CGEventSource(stateID: .combinedSessionState)
+        let source = CGEventSource(stateID: .privateState)
         
         let cVirtualKey: CGKeyCode = 8 // 'C' key on standard QWERTY
         
@@ -332,12 +332,12 @@ class TextInterception {
         let cUp = CGEvent(keyboardEventSource: source, virtualKey: cVirtualKey, keyDown: false)
         cUp?.flags = .maskCommand
         
-        cDown?.post(tap: .cghidEventTap)
-        cUp?.post(tap: .cghidEventTap)
+        cDown?.post(tap: .cgSessionEventTap)
+        cUp?.post(tap: .cgSessionEventTap)
     }
     
     private func simulatePaste() {
-        let source = CGEventSource(stateID: .combinedSessionState)
+        let source = CGEventSource(stateID: .privateState)
         
         let vVirtualKey: CGKeyCode = 9 // 'V' key on standard QWERTY
         
@@ -346,7 +346,7 @@ class TextInterception {
         let vUp = CGEvent(keyboardEventSource: source, virtualKey: vVirtualKey, keyDown: false)
         vUp?.flags = .maskCommand
         
-        vDown?.post(tap: .cghidEventTap)
-        vUp?.post(tap: .cghidEventTap)
+        vDown?.post(tap: .cgSessionEventTap)
+        vUp?.post(tap: .cgSessionEventTap)
     }
 }
