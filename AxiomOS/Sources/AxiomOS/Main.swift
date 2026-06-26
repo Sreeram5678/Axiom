@@ -42,9 +42,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupHUD()
         setupHotKeys()
         
-        // Initial accessibility permission verification (silent prompt)
-        _ = TextInterception.shared.checkAccessibilityAccess(prompt: false)
-        
         print("[AxiomOS] Application initialized successfully as a background utility.")
         
         // Request authorization for local notifications to remind user of global hotkey
@@ -105,7 +102,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         openHUDItem.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Update Gemini API Key...", action: #selector(menuUpdateAPIKey), keyEquivalent: "")
         menu.addItem(withTitle: "Clear API Key", action: #selector(menuClearAPIKey), keyEquivalent: "")
-        menu.addItem(withTitle: "Request Accessibility Access...", action: #selector(menuRequestAccessibility), keyEquivalent: "")
         
         menu.addItem(NSMenuItem.separator())
         
@@ -343,18 +339,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             successAlert.alertStyle = .informational
             successAlert.addButton(withTitle: "OK")
             successAlert.runModal()
-        }
-    }
-    
-    @objc private func menuRequestAccessibility() {
-        let trusted = TextInterception.shared.checkAccessibilityAccess(prompt: true)
-        if trusted {
-            let alert = NSAlert()
-            alert.messageText = "Accessibility Approved"
-            alert.informativeText = "AxiomOS already has Accessibility permissions active. You're ready to optimize text anywhere!"
-            alert.alertStyle = .informational
-            alert.addButton(withTitle: "OK")
-            alert.runModal()
         }
     }
     

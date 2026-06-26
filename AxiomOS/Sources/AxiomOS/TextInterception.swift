@@ -167,16 +167,6 @@ class TextInterception {
         cachedSelectionRange = nil
         streamingFocusLost = false
     }
-    
-    func checkAccessibilityAccess(prompt: Bool = false) -> Bool {
-        if prompt {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-            return AXIsProcessTrustedWithOptions(options as CFDictionary)
-        } else {
-            return AXIsProcessTrusted()
-        }
-    }
-    
     func getFocusedElement() -> AXUIElement? {
         let systemWide = AXUIElementCreateSystemWide()
         var focusedElement: CFTypeRef?
