@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Axiom Analytics & Configuration Dashboard — Track prompt optimizations, character counts, API usage costs, and configure custom optimization personas.">
+  <title>Axiom — Analytics & Config Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js CDN for modern, premium data visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+
+  <!-- Premium Header -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="../index.html" class="logo-link" id="nav-logo">
+        <img src="../../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+        <span>axiom</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../chrome.html" class="nav-item" id="link-chrome">Chrome Extension</a>
+        <a href="../macos.html" class="nav-item" id="link-macos">macOS App</a>
+        <a href="../install.html" class="nav-item" id="link-install">Setup Guide</a>
+        <a href="index.html" class="nav-item active" id="link-dashboard">Dashboard</a>
+      </nav>
+      <div class="nav-actions">
+        <div id="window-ai-header-badge" class="capabilities-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.05); font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">
+          <span class="status-dot" id="window-ai-header-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);"></span>
+          <span id="window-ai-header-text">Checking AI...</span>
+        </div>
+        <button class="btn btn-secondary" id="btn-theme-toggle" aria-label="Toggle Dark Mode" style="padding: 10px; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="btn btn-secondary" id="btn-github">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 40px; padding-bottom: 80px;">
+    
+    <!-- Page Title & Header Section -->
+    <section style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+      <div>
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em;">Productivity Workspace</h1>
+        <p style="color: var(--text-secondary); max-width: 600px; font-size: 0.95rem;">Track, analyze, and fine-tune your global prompt optimizations and custom system personas.</p>
+      </div>
+      <!-- Time Period / Control Button -->
+      <div>
+        <button class="btn btn-secondary" id="btn-reset-demo" style="font-size: 0.8rem; padding: 8px 16px;">Reset Demo Data</button>
+      </div>
+    </section>
+
+    <!-- 1. KPI Metrics Grid Section -->
+    <section class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px;">
+      
+      <!-- Card 1: Total Optimizations -->
+      <article class="board-card" style="padding: 24px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin: 0; font-weight: 600;">Total Optimizations</h3>
+          <span class="card-tag" style="margin: 0; background: rgba(230, 0, 35, 0.1); color: var(--accent-red); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; line-height: 1;">Optimized</span>
+        </div>
+        <p id="kpi-total-opts" style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 8px;">--</p>
+        <span id="kpi-total-opts-trend" style="font-size: 0.75rem; color: #10b981; font-weight: 600;">+--% active recently</span>
+      </article>
+
+      <!-- Card 2: Characters Processed -->
+      <article class="board-card" style="padding: 24px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin: 0; font-weight: 600;">Characters Tuned</h3>
+          <span class="card-tag" style="margin: 0; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; line-height: 1;">Volume</span>
+        </div>
+        <p id="kpi-total-chars" style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 8px;">--</p>
+        <span id="kpi-chars-ratio" style="font-size: 0.75rem; color: var(--text-secondary);">Avg. enrichment: --x size</span>
+      </article>
+
+      <!-- Card 3: Estimated Cost Saved -->
+      <article class="board-card" style="padding: 24px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin: 0; font-weight: 600;">Est. Cost Saved</h3>
+          <span class="card-tag" style="margin: 0; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; line-height: 1;">Saved</span>
+        </div>
+        <p id="kpi-cost-saved" style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 8px;">$--</p>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">Calculated via token metrics</span>
+      </article>
+
+      <!-- Card 4: Local Routing Ratio -->
+      <article class="board-card" style="padding: 24px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin: 0; font-weight: 600;">Local Router Rate</h3>
+          <span class="card-tag" style="margin: 0; background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; line-height: 1;">On-Device</span>
+        </div>
+        <p id="kpi-local-ratio" style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 8px;">--%</p>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed by Gemini Nano</span>
+      </article>
+
+    </section>
+
+    <!-- 2. Charts Visualisation Grid Section -->
+    <section class="charts-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 40px; flex-wrap: wrap;">
+      
+      <!-- Big Chart: Daily Optimization Volume -->
+      <article class="board-card" style="padding: 24px;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: 16px;">Optimization Activity Timeline</h2>
+        <div style="position: relative; height: 260px; width: 100%;">
+          <canvas id="chart-timeline"></canvas>
+        </div>
+      </article>
+
+      <!-- Small Chart: Persona Mode Split -->
+      <article class="board-card" style="padding: 24px;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: 16px;">Persona Distribution</h2>
+        <div style="position: relative; height: 260px; width: 100%; display: flex; align-items: center; justify-content: center;">
+          <canvas id="chart-personas"></canvas>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- 3. Prompt History Log Table Section -->
+    <section class="board-card" style="padding: 24px; margin-bottom: 40px;" id="prompt-history-section">
+      
+      <!-- Table Header & Filters -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 600; margin-bottom: 4px;">Optimization Logs</h2>
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">Review and copy previously enriched prompt structures.</p>
+        </div>
+        
+        <!-- Filters Layout -->
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="log-search-input" placeholder="Search prompts..." style="padding: 8px 16px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; outline: none; width: 220px; transition: var(--transition-fast);">
+          
+          <select id="log-mode-filter" style="padding: 8px 16px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; outline: none; cursor: pointer;">
+            <option value="all">All Modes</option>
+            <option value="analyst">Optimize Prompt</option>
+            <option value="engineer">Engineer Mode</option>
+            <option value="proofread">Proofread Text</option>
+            <option value="rewrite">Rewrite & Elevate</option>
+            <option value="summarize">Summarize Text</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Logs Table -->
+      <div style="overflow-x: auto; width: 100%;">
+        <table id="history-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
+              <th style="padding: 12px 16px; width: 15%;">Date & Time</th>
+              <th style="padding: 12px 16px; width: 15%;">Persona</th>
+              <th style="padding: 12px 16px; width: 10%;">Method</th>
+              <th style="padding: 12px 16px; width: 45%;">Raw Prompt Sample</th>
+              <th style="padding: 12px 16px; width: 10%; text-align: right;">Cost / Latency</th>
+              <th style="padding: 12px 16px; width: 5%;"></th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- Dynamically populated via JS -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty Logs State -->
+      <div id="history-empty-state" style="display: none; text-align: center; padding: 48px 24px; color: var(--text-secondary);">
+        <p style="font-size: 1rem; margin-bottom: 8px;">No optimizations match your current filters.</p>
+        <span style="font-size: 0.8rem;">Try typing a different query or resetting your options.</span>
+      </div>
+
+    </section>
+
+    <!-- 4. Persona Configurations Playground Section -->
+    <section class="board-card" style="padding: 24px;" id="personas-playground-section">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 600; margin-bottom: 4px;">Persona Customizer</h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">Fine-tune prompt optimization configurations and custom system personas.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex-wrap: wrap;">
+        <!-- Left Side: Custom Config List -->
+        <div>
+          <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; color: var(--text-secondary);">Active Personas</h3>
+          <div id="personas-list" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Right Side: Config Editor Form -->
+        <div style="border-left: 1px solid var(--border-color); padding-left: 24px;">
+          <h3 id="form-title" style="font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; color: var(--text-secondary);">Add / Edit Persona</h3>
+          
+          <form id="persona-config-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <input type="hidden" id="persona-edit-id">
+            
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label for="persona-input-id" style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase;">Unique ID</label>
+                <input type="text" id="persona-input-id" required placeholder="e.g., creative-writer" style="width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline: none;">
+              </div>
+              <div style="flex: 1;">
+                <label for="persona-input-name" style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase;">Display Name</label>
+                <input type="text" id="persona-input-name" required placeholder="e.g., Creative Writer" style="width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline: none;">
+              </div>
+            </div>
+
+            <div>
+              <label for="persona-input-desc" style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase;">Short Description</label>
+              <input type="text" id="persona-input-desc" required placeholder="e.g., Optimizes for engaging fiction & poetry prompts" style="width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline: none;">
+            </div>
+
+            <div>
+              <label for="persona-input-instruct" style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase;">System Instruction</label>
+              <textarea id="persona-input-instruct" required rows="4" placeholder="You are an expert creative editor. Rewrite the user's prompt to focus on descriptive prose, visual imagery, narrative tension, and complex character development..." style="width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline: none; font-family: inherit; font-size: 0.85rem; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+              <button type="button" id="btn-cancel-edit" class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 16px; border-radius: var(--radius-sm);">Cancel</button>
+              <button type="submit" id="btn-submit-form" class="btn btn-primary" style="font-size: 0.8rem; padding: 8px 16px; border-radius: var(--radius-sm);">Save Persona</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Premium Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <a href="../index.html" class="logo-link">
+            <img src="../../icons/icon-128.png" class="logo-img" alt="Axiom Logo">
+            <span>axiom</span>
+          </a>
+          <p class="footer-desc">High-performance, elegant, and secure prompt engineering touchpoints natively deployed on-device.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-group">
+            <span class="footer-group-title">Product</span>
+            <a href="../index.html#simulator" class="footer-link">Live Demo</a>
+            <a href="../chrome.html" class="footer-link">Chrome Extension</a>
+            <a href="../macos.html" class="footer-link">macOS App</a>
+            <a href="../install.html" class="footer-link">Setup Guide</a>
+          </div>
+          <div class="footer-group">
+            <span class="footer-group-title">Developers</span>
+            <a href="https://github.com/Sreeram5678/Axiom" target="_blank" class="footer-link">GitHub Repo</a>
+            <a href="https://aistudio.google.com/" target="_blank" class="footer-link">Gemini Cloud API</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <span>&copy; 2026 Axiom Suite. Developed under the MIT License.</span>
+        <span>Zero tracking cookies. AES-GCM local cryptographic isolation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Include App.js for theme toggles and capability checking -->
+  <script src="app.js"></script>
+  <!-- Include Dashboard controller script -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
