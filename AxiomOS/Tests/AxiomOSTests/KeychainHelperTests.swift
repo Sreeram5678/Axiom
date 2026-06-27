@@ -11,6 +11,7 @@ final class KeychainHelperTests: XCTestCase {
         // Point KeychainHelper to test service/account
         KeychainHelper.shared.service = testService
         KeychainHelper.shared.account = testAccount
+        KeychainHelper.shared.useAccessControl = false
         
         // Clean up before test runs
         KeychainHelper.shared.delete()
@@ -19,6 +20,7 @@ final class KeychainHelperTests: XCTestCase {
     override func tearDownWithError() throws {
         // Clean up after test runs
         KeychainHelper.shared.delete()
+        KeychainHelper.shared.useAccessControl = true
         
         try super.tearDownWithError()
     }

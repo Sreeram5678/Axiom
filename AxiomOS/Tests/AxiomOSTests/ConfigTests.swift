@@ -12,6 +12,7 @@ final class ConfigTests: XCTestCase {
         // Point KeychainHelper to test service/account
         KeychainHelper.shared.service = testService
         KeychainHelper.shared.account = testAccount
+        KeychainHelper.shared.useAccessControl = false
         KeychainHelper.shared.delete()
         
         // Setup isolated configuration directory
@@ -35,6 +36,7 @@ final class ConfigTests: XCTestCase {
         
         // Clean Keychain and file system
         KeychainHelper.shared.delete()
+        KeychainHelper.shared.useAccessControl = true
         if FileManager.default.fileExists(atPath: tempDirectory.path) {
             try FileManager.default.removeItem(at: tempDirectory)
         }
@@ -53,10 +55,13 @@ final class ConfigTests: XCTestCase {
     }
     
     func testLoadCustomConfig() throws {
-        // Prepare a custom JSON config file
+        // 1. Save custom API key in Keychain
+        XCTAssertTrue(KeychainHelper.shared.save(password: "MY_CUSTOM_TEST_KEY"))
+        
+        // 2. Prepare a config file with the redaction placeholder (triggering migration rollback)
         let customJSON = """
         {
-            "apiKey": "MY_CUSTOM_TEST_KEY",
+            "apiKey": "STORED_SECURELY_IN_KEYCHAIN",
             "defaultLength": "detailed",
             "selectedModeId": "engineer"
         }
@@ -65,24 +70,23 @@ final class ConfigTests: XCTestCase {
         let configURL = tempDirectory.appendingPathComponent(".axiom_config.json")
         try customJSON.write(to: configURL, atomically: true, encoding: .utf8)
         
-        // Load custom config
+        // 3. Load custom config (this should trigger rollback: read key from Keychain, write to file as plaintext, delete from Keychain)
         ConfigManager.shared.loadConfig()
         
-        // The API Key should be successfully migrated to Keychain, and the plain-text in-memory/JSON value should be redacted to "STORED_SECURELY_IN_KEYCHAIN"
-        // Let's verify keychain has the raw value first
-        XCTAssertEqual(KeychainHelper.shared.read(), "MY_CUSTOM_TEST_KEY")
-        
-        // The computed apiKey property of ConfigManager should still return "MY_CUSTOM_TEST_KEY" (via Keychain)
+        // 4. The computed apiKey property of ConfigManager should still return "MY_CUSTOM_TEST_KEY"
         XCTAssertEqual(ConfigManager.shared.apiKey, "MY_CUSTOM_TEST_KEY")
         
-        // Verify defaultLength and selectedModeId are loaded
+        // 5. Verify defaultLength and selectedModeId are loaded
         XCTAssertEqual(ConfigManager.shared.defaultLength, "detailed")
         XCTAssertEqual(ConfigManager.shared.selectedModeId, "engineer")
         
-        // Verify that the file content was rewritten and redacted
+        // 6. Verify that the file content was rewritten as plain text (no longer redacted)
         let updatedData = try Data(contentsOf: configURL)
         let decoded = try JSONDecoder().decode(ConfigModel.self, from: updatedData)
-        XCTAssertEqual(decoded.apiKey, "STORED_SECURELY_IN_KEYCHAIN", "The API key in JSON dotfile must be redacted to protect privacy")
+        XCTAssertEqual(decoded.apiKey, "MY_CUSTOM_TEST_KEY")
+        
+        // 7. Verify that the key was successfully deleted from Keychain to prevent future prompt annoyances
+        XCTAssertNil(KeychainHelper.shared.read())
     }
     
     func testSystemInstructions() {
