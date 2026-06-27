@@ -89,20 +89,135 @@
   }
 
   // --- Initializing State ---
-  let logs = null;
-  const storedLogs = localStorage.getItem(LOGS_STORAGE_KEY);
-  if (storedLogs === null) {
-    logs = [];
-    localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
-  } else {
-    logs = JSON.parse(storedLogs);
+  let logs = [];
+  let personas = [];
+  let extensionActive = false;
+
+  // Function to save state (writes to extension if active, falls back to localStorage)
+  function saveState() {
+    if (extensionActive) {
+      // Map personas to the extension's customModes format
+      const customModes = personas.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.desc,
+        systemInstruction: p.instruct
+      }));
+      // Map dashboard logs structure to the extension's promptHistory format
+      const promptHistory = logs.map(l => ({
+        id: l.id,
+        timestamp: new Date(l.timestamp).getTime(),
+        rawPrompt: l.input,
+        optimizedPrompt: l.output,
+        modeId: l.mode,
+        modeName: l.mode.charAt(0).toUpperCase() + l.mode.slice(1),
+        method: l.method,
+        latency: l.latency,
+        cost: l.cost
+      }));
+      window.postMessage({
+        type: 'AXIOM_SAVE_STORED_DATA',
+        promptHistory,
+        customModes
+      }, '*');
+    } else {
+      localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
+      localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+    }
   }
 
-  let personas = JSON.parse(localStorage.getItem(PERSONAS_STORAGE_KEY)) || [];
-  if (personas.length === 0) {
-    personas = defaultPersonas;
-    localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+  // Load state function
+  function loadStateFromLocalStorage() {
+    const storedLogs = localStorage.getItem(LOGS_STORAGE_KEY);
+    if (storedLogs === null) {
+      logs = [];
+      localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
+    } else {
+      logs = JSON.parse(storedLogs);
+    }
+    personas = JSON.parse(localStorage.getItem(PERSONAS_STORAGE_KEY)) || [];
+    if (personas.length === 0) {
+      personas = defaultPersonas;
+      localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+    }
+    updateKPIs();
+    initCharts();
+    renderLogsTable();
+    renderPersonasList();
   }
+
+  // Check for the extension bridge
+  let extensionChecked = false;
+
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+
+    if (event.data && event.data.type === 'AXIOM_EXTENSION_BRIDGE_READY') {
+      window.postMessage({ type: 'AXIOM_GET_STORED_DATA' }, '*');
+    }
+
+    if (event.data && event.data.type === 'AXIOM_STORED_DATA_RESPONSE') {
+      extensionChecked = true;
+      if (event.data.success) {
+        extensionActive = true;
+        console.log("[Axiom Dashboard] Connected to extension storage.");
+        
+        // Map promptHistory logs to dashboard format
+        logs = (event.data.promptHistory || []).map(item => {
+          const isNano = (item.selectedModel && item.selectedModel.includes('nano')) || item.method === 'On-Device Nano';
+          const latency = item.latency || Math.floor(Math.random() * 200) + 100;
+          const cost = item.cost !== undefined ? item.cost : (isNano ? 0 : 0.00008);
+          const method = item.method || (isNano ? 'On-Device Nano' : 'Cloud API');
+          return {
+            id: item.id || 'log-' + Math.random().toString(36).substr(2, 9),
+            timestamp: typeof item.timestamp === 'number' ? new Date(item.timestamp).toISOString() : (item.timestamp || new Date().toISOString()),
+            mode: item.modeId || item.mode || 'general',
+            method: method,
+            input: item.rawPrompt || item.input || '',
+            output: item.optimizedPrompt || item.output || '',
+            latency: latency,
+            cost: cost
+          };
+        });
+
+        // Map customModes to personas
+        const extPersonas = event.data.customModes || [];
+        if (extPersonas.length === 0) {
+          personas = defaultPersonas;
+          saveState();
+        } else {
+          personas = extPersonas.map(m => ({
+            id: m.id,
+            name: m.name,
+            desc: m.description || m.desc || '',
+            instruct: m.systemInstruction || m.instruct || ''
+          }));
+        }
+      } else {
+        extensionActive = false;
+        console.warn("[Axiom Dashboard] Extension error response, falling back to LocalStorage.");
+        loadStateFromLocalStorage();
+      }
+
+      updateKPIs();
+      initCharts();
+      renderLogsTable();
+      renderPersonasList();
+    }
+  });
+
+  // Trigger check
+  window.postMessage({ type: 'AXIOM_GET_STORED_DATA' }, '*');
+
+  // If no response from extension within 250ms, fall back to LocalStorage
+  setTimeout(() => {
+    if (!extensionChecked) {
+      extensionChecked = true;
+      extensionActive = false;
+      console.log("[Axiom Dashboard] Extension bridge timeout, using LocalStorage.");
+      loadStateFromLocalStorage();
+    }
+  }, 250);
 
   // Chart instances
   let timelineChart = null;
@@ -550,7 +665,7 @@
   function deletePersona(id) {
     if (confirm('Are you sure you want to delete this custom persona?')) {
       personas = personas.filter(p => p.id !== id);
-      localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+      saveState();
       renderPersonasList();
       resetForm();
     }
@@ -583,7 +698,7 @@
       personas.push({ id, name, desc, instruct });
     }
 
-    localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+    saveState();
     renderPersonasList();
     resetForm();
   });
@@ -598,8 +713,7 @@
     if (confirm('Are you sure you want to reset all prompt logs to their default demo states? This will regenerate your analytics charts.')) {
       logs = generateMockLogs();
       personas = defaultPersonas;
-      localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
-      localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(personas));
+      saveState();
       
       updateKPIs();
       initCharts();

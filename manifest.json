@@ -40,6 +40,14 @@
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://localhost/*",
+        "*://*.vercel.app/*"
+      ],
+      "js": ["dashboard-bridge.js"],
+      "run_at": "document_idle"
     }
   ]
 }
