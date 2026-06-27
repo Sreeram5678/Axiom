@@ -1,0 +1,2 @@
+# Exclude dashboard folder from public Vercel deployment uploads
+dashboard/
