@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Cache Swift Package Manager Build
-        uses: actions/cache@0c0113d5d0f97b665c71120485970c6344265697 # v4.0.0
+        uses: actions/cache@0c011e40025d8e7906d20399d25166299b860662 # v4.0.0
         with:
           path: AxiomOS/.build
           key: ${{ runner.os }}-spm-${{ hashFiles('AxiomOS/Package.swift') }}
