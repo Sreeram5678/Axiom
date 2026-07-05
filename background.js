@@ -369,4 +369,16 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
   }
 });
 
+// 4. Keyboard Shortcut Chrome Command Listener
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'optimize-prompt') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].id) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'optimize-prompt-shortcut' })
+          .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab:", err.message));
+      }
+    });
+  }
+});
+
 

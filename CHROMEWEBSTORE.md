@@ -18,7 +18,7 @@ Simply type a raw prompt, select your preferred Mode (Analyst, Engineer, First-P
 Key Features:
 - Four expert default modes (Analyst, Engineer, First-Principles, Exec-Summary).
 - Inline Prompt Optimizer: A beautiful "✨ Optimize Prompt" capsule button is injected directly above search/ask fields on Google Gemini, ChatGPT, Claude, Google AI Studio, and DeepSeek. It optimizes and replaces prompts in-place instantly!
-- Customizable Keyboard Shortcut: Instantly trigger prompt optimization using `Alt+Shift+O` (`Option+Shift+O` on macOS) inside supported AI chat inputs.
+- Customizable Keyboard Shortcut: Instantly trigger prompt optimization using `Alt+Shift+O` (`Command+Shift+U` on macOS) inside supported AI chat inputs.
 - Fully customizable Modes system (edit and validate your prompt configurations as raw JSON blocks directly in Settings).
 - Sleek dark-mode glassmorphic user interface.
 - Secure local storage for API keys and configurations.
@@ -30,7 +30,7 @@ How to Use:
 3. Select your model (defaulting to the highly efficient Gemini 3.5 Flash).
 4. EITHER: Open the extension popup, type a prompt, choose a Mode, click Optimize, and Copy it.
 5. OR: Go to ChatGPT, Claude, Gemini, Google AI Studio, or DeepSeek, type a prompt inside the input box, and click the beautiful "✨ Optimize Prompt" pill button that appears right above it!
-6. OR: Use the global keyboard shortcut `Alt+Shift+O` (`Option+Shift+O` on Mac) when focused inside a prompt input on any supported AI chat interface to trigger optimization instantly without lifting your hands from the keyboard!
+6. OR: Use the global keyboard shortcut `Alt+Shift+O` (`Command+Shift+U` on Mac) when focused inside a prompt input on any supported AI chat interface to trigger optimization instantly without lifting your hands from the keyboard!
 
 Privacy and Permissions:
 Axiom values your privacy. Your API key, custom configurations, and history never leave your machine and are stored strictly on-device in secure extension storage. All API requests are made directly from your browser to Google's official Gemini endpoints. No telemetry, analytics, or third-party trackers are included.

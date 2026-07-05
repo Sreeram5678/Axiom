@@ -252,7 +252,7 @@ AxiomOS persists non-sensitive settings locally at `~/.axiom_config.json`.
 
 | Platform | Shortcut Key | Trigger Mode | Action Description |
 |:---|:---|:---|:---|
-| **Chrome Extension** | Option+Shift+O | Cloud / On-Device AI | Instantly optimizes the text highlighted inside any supported browser chat text field. |
+| **Chrome Extension** | Command+Shift+U (Mac)<br>Alt+Shift+O (Windows) | Cloud / On-Device AI | Instantly optimizes the text highlighted inside any supported browser chat text field. |
 | **macOS Native** | Control+Shift+Space | Launch HUD | Captures highlighted text and brings up the glassmorphic HUD overlay panel near the mouse cursor. |
 | **macOS Native** | Control+Shift+O | Direct Optimize | Directly optimizes highlighted selection using the standard **Analyst** mode persona. |
 | **macOS Native** | Control+Shift+P | Direct Proofread | Fixes spelling, punctuation, and grammar without altering the original style or voice. |

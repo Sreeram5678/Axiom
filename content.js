@@ -1117,20 +1117,16 @@ try {
 
 console.log("[Axiom] Extension Content Script successfully loaded and scanning started!");
 
-// 5. Global focused input keyboard shortcut listener (Alt+Shift+O / Option+Shift+O & Control+Shift+O)
-document.addEventListener('keydown', async (e) => {
+// 5. Native Chrome Command Message Listener
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!isContextValid()) {
     destroyAxiom();
     return;
   }
   
-  // Option+Shift+O (Alt+Shift+O) or Control+Shift+O
-  const isMatch = (e.altKey && e.shiftKey && e.code === 'KeyO') || (e.ctrlKey && e.shiftKey && e.code === 'KeyO');
-  if (isMatch) {
+  if (message.action === 'optimize-prompt-shortcut') {
     const inputEl = getTargetInput();
     if (inputEl) {
-      e.preventDefault();
-      
       const buttonEl = floatingWidget ? floatingWidget.querySelector('.axiom-optimize-btn') : null;
       handlePromptOptimization(inputEl, buttonEl, floatingWidget);
     }

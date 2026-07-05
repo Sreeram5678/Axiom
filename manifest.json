@@ -49,5 +49,14 @@
       "js": ["dashboard-bridge.js"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "commands": {
+    "optimize-prompt": {
+      "suggested_key": {
+        "default": "Alt+Shift+O",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Optimize the prompt in the active text field"
+    }
+  }
 }
