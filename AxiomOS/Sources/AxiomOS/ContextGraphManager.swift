@@ -259,6 +259,10 @@ final class ContextGraphManager: @unchecked Sendable {
         writeDebounceWorkItem?.cancel()
         flushPendingBatch()
     }
+    
+    func exportAllNodes() -> [[String: Any]] {
+        return ContextGraph.shared.exportAllNodes()
+    }
 }
 
 // MARK: - ContextSnippet

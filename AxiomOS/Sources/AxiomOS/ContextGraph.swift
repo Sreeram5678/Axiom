@@ -307,6 +307,29 @@ final class ContextGraph: @unchecked Sendable {
 
     // MARK: - Helpers
 
+    func exportAllNodes() -> [[String: Any]] {
+        return dbQueue.sync {
+            var results: [[String: Any]] = []
+            let query = "SELECT content, mode_id FROM nodes ORDER BY created_at DESC LIMIT 100;"
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, query, -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    if let contentVal = sqlite3_column_text(stmt, 0),
+                       let modeVal = sqlite3_column_text(stmt, 1) {
+                        let contentStr = String(cString: contentVal)
+                        let modeStr = String(cString: modeVal)
+                        results.append([
+                            "content": contentStr,
+                            "mode_id": modeStr
+                        ])
+                    }
+                }
+            }
+            sqlite3_finalize(stmt)
+            return results
+        }
+    }
+
     @discardableResult
     func execute(_ sql: String) -> Bool {
         var errorMsg: UnsafeMutablePointer<CChar>?
