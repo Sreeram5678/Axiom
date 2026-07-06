@@ -1,6 +1,6 @@
 # Axiom Suite: Master Technical Specification & Implementation Plan
 
-This document synthesizes the architectural specifications for the **Axiom Suite** (encompassing the Axiom Chrome Extension and the AxiomOS macOS Companion) based on the evaluations of nine specialized AI sub-agents. It details the Phase 1 execution roadmap, the 8GB RAM system safety constraint strategy, and the unified security-first data flow model.
+This document synthesizes the architectural specifications for the **Axiom Suite** (encompassing the Axiom Chrome Extension and the AxiomOS macOS Companion) based on the evaluations of nine specialized AI sub-agents and finalized design decisions. It details the Phase 1 execution roadmap, the 8GB RAM system safety constraint strategy, and the unified security-first data flow model.
 
 ---
 
@@ -13,7 +13,7 @@ graph TD
         CE_CS[content.js: Content Script]
         CE_OP[options.html: Options/Dashboard]
         CE_CS -- "DOM / Code Snippets" --> CE_SW
-        CE_OP -- "mTLS/Auth Handshake" --> CE_SW
+        CE_OP -- "Message Passing" --> CE_SW
     end
 
     subgraph "AxiomOS macOS Native Companion (Accessory App)"
@@ -54,9 +54,20 @@ graph TD
 
 ---
 
+## ⚖️ Finalized System Decisions
+
+To establish Axiom's standard of privacy and seamless integration, the following architectural choices have been finalized:
+
+1. **Browser-to-OS Transport Interface**: **Chrome Native Messaging Host**. AxiomOS registers as a native messenger host using standard input/output (`stdin`/`stdout`). This completely avoids opening localhost sockets, mitigating XSS, CSRF, and DNS rebinding attacks.
+2. **On-Device Multimodal VLM Support**: **Strict RAM Tiering**. On-device visual models (LLaVA / Qwen-VL) are strictly disabled on $8\text{GB}$ RAM machines to prevent memory swap trashing. They default to the Cloud Gemini Vision API. Local VLM visual processing is reserved strictly as an opt-in for configurations with $\ge16\text{GB}$ unified memory.
+3. **P2P Mesh Sync Pairing UX**: **6-Digit PIN Verification**. Local device authentication over Bonjour uses a standard 6-digit PIN to establish secure, zero-knowledge keys (stored in macOS Keychain) via Diffie-Hellman validation, avoiding awkward desktop camera scans.
+4. **Xcode Workspace DerivedData Access**: **Targeted Directory Monitoring**. During onboarding, AxiomOS requests targeted sandbox permission for the global `~/Library/Developer/Xcode/DerivedData` directory. A native file watcher (`FSEvents`) monitors changes in `.xcactivitylog` files to capture build issues automatically without requiring project-specific directory linking.
+
+---
+
 ## 📅 1. Phase 1 Execution Plan
 
-To establish the core operational loop of the Axiom Suite across both the browser and desktop environments, Phase 1 prioritizes four foundational engine components. These lay the framework for inter-process communication, local context capture, embedded vector search, and hybrid routing.
+To establish the core operational loop of the Axiom Suite across both the browser and desktop environments, Phase 1 prioritizes four foundational engine components.
 
 | Milestone | Component | Objectives | Target Files & Scope |
 | :--- | :--- | :--- | :--- |
@@ -65,11 +76,8 @@ To establish the core operational loop of the Axiom Suite across both the browse
 | **Milestone 3** | **Persistent Context Graph Core** | Configure SQLite WAL database, create initial schema (`nodes`, `edges`), and set up local embeddings. | • **AxiomOS**: `DatabaseManager.swift` calling `NaturalLanguage.framework` and Accelerate for dot-products. |
 | **Milestone 4** | **Ambient Context Stitcher (Basic)** | Set up cursor tracking, build error interception, and HTML-to-Markdown window-pruning filters. | • **AxiomOS**: `AXUIElement` polling helper, Xcode log parser (`DerivedData` watcher)<br>• **Extension**: CSS & DOM extractors. |
 
-### Foundational Engine vs. Later Stages
-By prioritizing these four components, we create a complete **Local Loop** (Context -> IPC -> Router -> DB) without the complexity of advanced agents, peer-to-peer mesh sync, screen-capture visual models, or open SDK runtimes.
-
-* **Phase 2 (Expansion)**: Agentic Workflow Pipelines (ReAct), Multi-Modal Window Capture, and Cross-Tab Semantic Sync.
-* **Phase 3 (Enterprise & SDK)**: Decentralized P2P Sync Mesh (Bonjour), Open SDK Adapter Interface, and the Evaluation Sandbox UI.
+* **Phase 2 (Expansion)**: Agentic Workflow Pipelines (ReAct), Multi-Modal Window Capture (using cloud-first routing on 8GB RAM, and local on $\ge16\text{GB}$ RAM), and Cross-Tab Semantic Sync.
+* **Phase 3 (Enterprise & SDK)**: Decentralized P2P Sync Mesh (Bonjour with 6-digit PIN), Open SDK Adapter Interface, and the Evaluation Sandbox UI.
 
 ---
 
@@ -78,7 +86,7 @@ By prioritizing these four components, we create a complete **Local Loop** (Cont
 Executing on-device LLMs, computing real-time vector embeddings, and running background context scanners on basic 8GB RAM Apple Silicon Macs requires strict containment strategies to prevent memory swap execution thrashing and system UI freeze.
 
 ### A. Lifecycle Memory Containment & "Idle Reaper"
-Local models (such as those loaded via Apple's native `FoundationModels.framework` or Local Ollama/MLX backends) hold between 1.8GB and 4.2GB of weights in unified system memory. To keep Axiom's idle footprint at **~30MB RAM**:
+Local models hold between 1.8GB and 4.2GB of weights in unified system memory. To keep Axiom's idle footprint at **~30MB RAM**:
 1. **Pre-Warming Lifecycle**: The native model is **never** loaded at startup. Instead, the model session is initialized on the global hotkey key-down event (`Control+Shift+Space`). While the user is typing their HUD instruction or selecting options (~2–3 seconds), the weights are loaded into VRAM asynchronously.
 2. **The 45s Idle Reaper**: A high-resolution timer tracks model usage. If no inference request is executed within **45 seconds** of the last token streamed, the `LanguageModelSession` is destroyed, Metal GPU command queues are flushed, and ARC deallocates the buffers, reclaiming memory back to the macOS pool.
 3. **Kernel Memory Pressure Listeners**: AxiomOS subscribes to dispatch memory pressure notifications:
@@ -231,22 +239,10 @@ func registerCosineSimilarity(db: OpaquePointer) {
 ### ADR 01: Elimination of Local Loopback WebSocket Server in Phase 1
 * **Context**: Chrome Extension needs a path to pull and push data to AxiomOS.
 * **Decision**: We rejected establishing local WebSocket ports (`ws://127.0.0.1`) for general application operations in favor of **Chrome Native Messaging Host** APIs.
-* **Impact**: Mitigates security surfaces (XSS/CSRF scripting attacks targeting local ports). Native messaging enforces OS-level validation of caller identity via manifest registries, yielding an improved security envelope. WebSockets are reserved strictly as an opt-in fallback for sandbox benchmarking UI tasks requiring parallel multi-client threads.
+* **Impact**: Mitigates security surfaces (XSS/CSRF scripting attacks targeting local ports). Native messaging enforces OS-level validation of caller identity via manifest registries, yielding an improved security envelope.
 
 ### ADR 02: Dynamic Model Eviction Profile
 * **Context**: Local LLM execution on 8GB RAM platforms risks system UI hang if models permanently pin memory.
 * **Decision**: Implemented hotkey-triggered pre-warming combined with a 45-second lazy eviction timer ("Idle Reaper").
 * **Impact**: Minimizes active memory overhead during idle periods. Idle app operates at **~30MB RAM** footprint, consuming **0% CPU**. The 2-3 second loading time is masked during HUD interaction/typing, preserving user latency experience.
-
----
-
-## 📈 Verification Plan
-
-### Automated Test Matrix
-1. **IPC Stress Harness**: Verify transmission of 1,000 serialized JSON packets via Native Messaging stream without frame loss.
-2. **Dynamic Unloader Test**: Assert `InferenceProvider` memory deallocation occurs exactly $45\text{s} \pm 1\text{s}$ post-execution.
-3. **SQLite Mathematical Accuracy**: Verify that custom `cosine_similarity` results match Swift standard calculation values up to 5 decimal places.
-
-### Manual System Audits
-1. **8GB Memory Watchdog**: Run `Activity Monitor` and verify that total AxiomOS footprint drops to `<35MB` after 45s of system inactivity.
-2. **Access Control Check**: Ensure prompt context extraction respects `.axiomignore` and blocked file directories.
+```

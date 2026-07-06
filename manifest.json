@@ -5,7 +5,8 @@
   "description": "A personal prompt optimizer using the Gemini API. Perfect your prompts instantly using customized system instructions.",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*"

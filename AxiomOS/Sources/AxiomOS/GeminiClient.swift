@@ -1,7 +1,8 @@
 import Foundation
 
-class GeminiClient {
+final class GeminiClient: InferenceProvider, @unchecked Sendable {
     static let shared = GeminiClient()
+    let identifier = "gemini.cloud"
     
     private init() {}
     
@@ -29,7 +30,7 @@ class GeminiClient {
         rawPrompt: String,
         modeId: String,
         length: String,
-        onChunk: @escaping (String) -> Void
+        onChunk: @escaping @Sendable (String) -> Void
     ) async throws -> String {
         let apiKey = ConfigManager.shared.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if apiKey.isEmpty || apiKey == "PASTE_YOUR_GEMINI_API_KEY_HERE" {

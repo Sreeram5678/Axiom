@@ -11,6 +11,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate?
     
     static func main() {
+        // Check if launched by Chrome as a Native Messaging Host
+        let isNativeMessaging = CommandLine.arguments.contains { arg in
+            arg.contains("chrome-extension://") || arg.contains("com.axiom.axiomos.bridge") || arg == "--native-bridge"
+        }
+        
+        if isNativeMessaging {
+            // Run standard I/O bridge mode and exit (bypassing HUD / Cocoa UI app)
+            AxiomNativeBridge.shared.run()
+            exit(0)
+        }
+
         // Prevent duplicate instances if running as a bundled app
         if let bundleID = Bundle.main.bundleIdentifier {
             let runningApps = NSWorkspace.shared.runningApplications
@@ -204,17 +215,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 default: modeName = "Optimize"
                 }
                 
-                var streamText = ""
+                let streamText = ThreadSafeBox("")
                 TextInterception.shared.streamingModeName = modeName
                 
-                // 2. Query the Gemini API (stream live to editor)
-                _ = try await GeminiClient.shared.optimizePrompt(
+                // 2. Query the Router Engine (stream live to editor)
+                _ = try await FoundationModelRouter.shared.optimizePrompt(
                     rawPrompt: selection,
                     modeId: actionId,
                     length: ConfigManager.shared.defaultLength,
-                    onChunk: { chunk in
-                        streamText += chunk
-                        let snapshot = streamText
+                    onChunk: { @Sendable chunk in
+                        let snapshot = streamText.mutate { $0 += chunk }
                         DispatchQueue.main.async {
                             TextInterception.shared.processStreamChunk(snapshot)
                         }

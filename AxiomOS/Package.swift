@@ -18,7 +18,10 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Carbon"),
                 .linkedFramework("Cocoa"),
-                .linkedFramework("ApplicationServices")
+                .linkedFramework("ApplicationServices"),
+                .linkedFramework("NaturalLanguage"),
+                .linkedFramework("Accelerate"),
+                .linkedFramework("CryptoKit")
             ]
         ),
         .testTarget(

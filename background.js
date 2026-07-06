@@ -381,4 +381,63 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
+// 5. Chrome Native Messaging Host Bridge
+let nativePort = null;
+const NATIVE_HOST_NAME = 'com.axiom.axiomos.bridge';
+
+function getNativePort() {
+  if (!nativePort) {
+    try {
+      console.log(`[Axiom Background] Connecting to native messaging host: ${NATIVE_HOST_NAME}`);
+      nativePort = chrome.runtime.connectNative(NATIVE_HOST_NAME);
+      
+      nativePort.onMessage.addListener((message) => {
+        console.log("[Axiom Background] Received message from native host:", message);
+        
+        // Broadcast the message to all active views and content scripts
+        chrome.runtime.sendMessage({
+          type: 'AXIOM_NATIVE_RESPONSE',
+          payload: message
+        }).catch(() => {
+          // Suppress errors when there are no active listeners
+        });
+      });
+      
+      nativePort.onDisconnect.addListener(() => {
+        const err = chrome.runtime.lastError;
+        console.warn("[Axiom Background] Native messaging host disconnected:", err ? err.message : "No error message");
+        nativePort = null;
+      });
+    } catch (e) {
+      console.error("[Axiom Background] Exception connecting to native messaging host:", e);
+      nativePort = null;
+    }
+  }
+  return nativePort;
+}
+
+function sendToNativeHost(message) {
+  const port = getNativePort();
+  if (port) {
+    try {
+      port.postMessage(message);
+      return true;
+    } catch (e) {
+      console.error("[Axiom Background] Failed to post message to native host, resetting connection:", e);
+      nativePort = null;
+    }
+  }
+  return false;
+}
+
+// Register Native Messaging message listener additions
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SEND_TO_NATIVE') {
+    const success = sendToNativeHost(message.payload);
+    sendResponse({ success });
+    return false; // Sync response
+  }
+});
+
+
 

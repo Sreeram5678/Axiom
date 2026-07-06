@@ -334,17 +334,16 @@ struct HUDView: View {
             }
 
             do {
-                var accumulated = ""
+                let accumulated = ThreadSafeBox("")
                 let modeName = actions.first(where: { $0.id == actionId })?.name ?? "Optimize"
                 TextInterception.shared.streamingModeName = modeName
 
-                _ = try await GeminiClient.shared.optimizePrompt(
+                _ = try await FoundationModelRouter.shared.optimizePrompt(
                     rawPrompt: selection,
                     modeId: actionId,
                     length: ConfigManager.shared.defaultLength,
-                    onChunk: { chunk in
-                        accumulated += chunk
-                        let snapshot = accumulated
+                    onChunk: { @Sendable chunk in
+                        let snapshot = accumulated.mutate { $0 += chunk }
                         // Must run on main thread — AX API calls are not thread-safe
                         DispatchQueue.main.async {
                             TextInterception.shared.processStreamChunk(snapshot)

@@ -772,11 +772,13 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
   // Determine context synthetics
   const pageContext = capturePageContext(textVal);
   
-  // Route to local AI if conditions match
+  // Route to local AI if conditions match (subject to 8,000-char context safety limit)
   let runLocal = false;
+  const isWithinLocalLimit = textVal.length <= 8000;
+  
   if (aiRoutingMode === 'local-only') {
     runLocal = true;
-  } else if (aiRoutingMode === 'hybrid') {
+  } else if (aiRoutingMode === 'hybrid' && isWithinLocalLimit) {
     if (typeof window.ai !== 'undefined' && typeof window.ai.languageModel !== 'undefined') {
       try {
         const capabilities = await window.ai.languageModel.capabilities();
@@ -785,6 +787,8 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
         }
       } catch (e) {}
     }
+  } else if (aiRoutingMode === 'hybrid' && !isWithinLocalLimit) {
+    console.log(`[Axiom Router] Prompt size (${textVal.length} chars) exceeds on-device Gemini Nano limit. Routing to Cloud.`);
   }
 
   if (runLocal) {
