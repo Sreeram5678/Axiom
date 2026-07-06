@@ -145,6 +145,8 @@ class ConfigManager {
             return "Optimize the prompt to demand first-principles thinking. It must deconstruct the query into its most fundamental truths."
         case "exec-summary":
             return "Optimize the prompt to demand a high-level strategic executive summary consisting of a 2-sentence overarching synthesis and 3-5 bulleted takeaways."
+        case "agent":
+            return "You are an autonomous ReAct agent operating on a macOS system. Run the ReAct loop until you achieve the user's goal."
         case "proofread":
             return "You are an expert editor. Proofread the user's provided text. Fix all spelling mistakes, grammar errors, punctuation, and syntax issues. Improve sentence flow and readability without changing the core factual information or style of writing. Output ONLY the final polished text. Do NOT add markdown code blocks, introductory text, conversational preambles, or formatting unless requested."
         case "rewrite":

@@ -53,6 +53,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupHUD()
         setupHotKeys()
         
+        // Start Milestone 4 ambient inspectors (AXUIElement + FSEvents).
+        AmbientContextStitcher.shared.startAll()
+        
         print("[AxiomOS] Application initialized successfully as a background utility.")
         
         // Request authorization for local notifications to remind user of global hotkey
@@ -68,6 +71,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 center.add(request)
             }
         }
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        // Stop ambient inspectors and flush any buffered context graph writes.
+        AmbientContextStitcher.shared.stopAll()
+        ContextGraphManager.shared.flushImmediately()
+        print("[AxiomOS] Graceful shutdown complete.")
     }
     
     // MARK: - Menu Bar Status Item Setup

@@ -1137,3 +1137,69 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// --- Feature 3: Cross-Tab Semantic Sync ---
+let lastSyncedUrl = '';
+let syncDebounceTimer = null;
+
+function syncTabTelemetry(extra = {}) {
+  if (!isContextValid()) return;
+  if (document.hidden) return; // Only sync visible tabs
+  
+  const currentUrl = window.location.href;
+  
+  // Enforce zero-trust/privacy domain blacklist filters
+  const blacklistedProtocols = ['chrome:', 'chrome-extension:', 'file:', 'about:'];
+  if (blacklistedProtocols.some(p => currentUrl.startsWith(p))) {
+    return;
+  }
+  
+  const sensitiveDomains = ['bank', 'paypal', 'credit', 'login', 'signin', 'checkout', 'stripe'];
+  if (sensitiveDomains.some(d => currentUrl.toLowerCase().includes(d))) {
+    return;
+  }
+
+  // Retrieve current selection text if any
+  const selectionText = window.getSelection ? window.getSelection().toString().trim() : '';
+  const snippet = extra.snippet || selectionText;
+
+  // Avoid redundant syncing of identical pages without selections
+  if (currentUrl === lastSyncedUrl && !snippet) {
+    return;
+  }
+  lastSyncedUrl = currentUrl;
+
+  const payload = {
+    type: 'TAB_SYNC',
+    url: currentUrl,
+    title: document.title,
+    snippet: snippet,
+    timestamp: Date.now()
+  };
+
+  chrome.runtime.sendMessage({
+    type: 'SEND_TO_NATIVE',
+    payload: payload
+  }).catch(() => {});
+}
+
+// Debounced selection sync listener
+document.addEventListener('selectionchange', () => {
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(() => {
+    syncTabTelemetry();
+  }, 1200);
+});
+
+// Trigger initial sync on page visibility or focus events
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    syncTabTelemetry();
+  }
+});
+
+// Initial sync on script load
+setTimeout(() => {
+  syncTabTelemetry();
+}, 2000);
+
+

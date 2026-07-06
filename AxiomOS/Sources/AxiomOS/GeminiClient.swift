@@ -30,6 +30,7 @@ final class GeminiClient: InferenceProvider, @unchecked Sendable {
         rawPrompt: String,
         modeId: String,
         length: String,
+        base64Image: String? = nil,
         onChunk: @escaping @Sendable (String) -> Void
     ) async throws -> String {
         let apiKey = ConfigManager.shared.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -87,19 +88,32 @@ final class GeminiClient: InferenceProvider, @unchecked Sendable {
             systemPromptText = "\(systemInstruction)\n\nCRITICAL: Do NOT perform prompt engineering, do NOT convert this text into an optimized prompt, and do NOT add conversational preambles. Output ONLY the beautifully condensed text. No markdown code blocks (i.e. do not wrap the output in ```)."
             userPromptText = "Please summarize the following text to capture its core facts concisely. Provide only the polished result and nothing else.\n\nText:\n\"\(trimmedPrompt)\""
             
+        case "agent":
+            systemPromptText = systemInstruction
+            userPromptText = trimmedPrompt
+            
         default:
             systemPromptText = "You are a master Prompt Engineer. Your task is to rewrite, refine, and optimize the user's prompt to achieve the highest quality response. Incorporate the following persona guidelines:\n\n\(systemInstruction)\n\n\(lengthDirective)\n\nCRITICAL: Provide ONLY the optimized prompt. No preamble, no conversational filler, no markdown code blocks. Return it directly as clean plain text."
             userPromptText = "Please optimize the following raw prompt. Provide only the clean, optimized prompt and nothing else.\n\nRaw prompt:\n\"\(trimmedPrompt)\""
         }
         
-        // Payload dictionary to serialize
+        var parts: [[String: Any]] = [
+            ["text": userPromptText]
+        ]
+        if let base64 = base64Image {
+            parts.append([
+                "inlineData": [
+                    "mimeType": "image/jpeg",
+                    "data": base64
+                ]
+            ])
+        }
+        
         let payload: [String: Any] = [
             "contents": [
                 [
                     "role": "user",
-                    "parts": [
-                        ["text": userPromptText]
-                    ]
+                    "parts": parts
                 ]
             ],
             "systemInstruction": [

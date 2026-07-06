@@ -29,6 +29,7 @@ struct HUDView: View {
     private let actions = [
         HUDAction(id: "analyst", name: "Optimize Prompt", description: "Inject context structure & edge cases", keyChar: "O", color: Color(red: 0.1, green: 0.5, blue: 0.9)),
         HUDAction(id: "engineer", name: "Engineer Mode", description: "Optimize for robust code & edge cases", keyChar: "E", color: Color(red: 0.15, green: 0.35, blue: 0.85)),
+        HUDAction(id: "agent", name: "Agentic Loop", description: "Run autonomous ReAct workflow pipeline", keyChar: "A", color: Color(red: 0.5, green: 0.25, blue: 0.85)),
         HUDAction(id: "proofread", name: "Proofread Text", description: "Fix typing grammar & sentence flow", keyChar: "P", color: Color(red: 0.1, green: 0.7, blue: 0.4)),
         HUDAction(id: "rewrite", name: "Rewrite & Elevate", description: "Enhance vocabulary & style elegantly", keyChar: "R", color: Color(red: 0.6, green: 0.3, blue: 0.9)),
         HUDAction(id: "exec-summary", name: "Executive Summary", description: "Deconstruct into bulleted takeaways", keyChar: "X", color: Color(red: 0.9, green: 0.6, blue: 0.1)),
@@ -58,7 +59,7 @@ struct HUDView: View {
             
             footerView
         }
-        .frame(width: 450, height: 280)
+        .frame(width: 450, height: 310)
         .foregroundColor(.white)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("HUDKeyDown"))) { notification in
             if let event = notification.object as? NSEvent {
@@ -334,22 +335,39 @@ struct HUDView: View {
             }
 
             do {
-                let accumulated = ThreadSafeBox("")
                 let modeName = actions.first(where: { $0.id == actionId })?.name ?? "Optimize"
                 TextInterception.shared.streamingModeName = modeName
 
-                _ = try await FoundationModelRouter.shared.optimizePrompt(
-                    rawPrompt: selection,
-                    modeId: actionId,
-                    length: ConfigManager.shared.defaultLength,
-                    onChunk: { @Sendable chunk in
-                        let snapshot = accumulated.mutate { $0 += chunk }
-                        // Must run on main thread — AX API calls are not thread-safe
-                        DispatchQueue.main.async {
-                            TextInterception.shared.processStreamChunk(snapshot)
+                if actionId == "agent" {
+                    let accumulatedSteps = ThreadSafeBox("")
+                    let finalAnswer = try await AgentEngine.shared.run(
+                        goal: selection,
+                        onStepUpdate: { @Sendable stepMsg in
+                            let snapshot = accumulatedSteps.mutate { $0 += "• \(stepMsg)\n" }
+                            DispatchQueue.main.async {
+                                TextInterception.shared.processStreamChunk(snapshot)
+                            }
                         }
+                    )
+                    let finalSnapshot = accumulatedSteps.mutate { $0 += "\n[Final Answer]:\n\(finalAnswer)" }
+                    DispatchQueue.main.async {
+                        TextInterception.shared.processStreamChunk(finalSnapshot)
                     }
-                )
+                } else {
+                    let accumulated = ThreadSafeBox("")
+                    _ = try await FoundationModelRouter.shared.optimizePrompt(
+                        rawPrompt: selection,
+                        modeId: actionId,
+                        length: ConfigManager.shared.defaultLength,
+                        onChunk: { @Sendable chunk in
+                            let snapshot = accumulated.mutate { $0 += chunk }
+                            // Must run on main thread — AX API calls are not thread-safe
+                            DispatchQueue.main.async {
+                                TextInterception.shared.processStreamChunk(snapshot)
+                            }
+                        }
+                    )
+                }
 
                 // Stream complete — finalize (plays Glass sound, handles clipboard fallback if needed)
                 await TextInterception.shared.finishStreaming()

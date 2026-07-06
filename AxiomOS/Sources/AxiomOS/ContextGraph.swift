@@ -204,7 +204,7 @@ final class ContextGraph: @unchecked Sendable {
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             sqlite3_bind_int64(stmt, 1, nodeId)
             sqlite3_bind_int(stmt, 2, Int32(dimension))
-            blobData.withUnsafeBytes { rawPtr in
+            _ = blobData.withUnsafeBytes { rawPtr in
                 sqlite3_bind_blob(stmt, 3, rawPtr.baseAddress, Int32(blobData.count), SQLITE_TRANSIENT_BINDING)
             }
             sqlite3_bind_text(stmt, 4, modelVersion, -1, SQLITE_TRANSIENT_BINDING)
