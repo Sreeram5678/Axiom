@@ -7,6 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var statusItem: NSStatusItem?
     var hudPanel: HUDPanel?
+    var developerSandboxWindow: NSWindow?
     
     static var shared: AppDelegate?
     
@@ -123,6 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         openHUDItem.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Update Gemini API Key...", action: #selector(menuUpdateAPIKey), keyEquivalent: "")
         menu.addItem(withTitle: "Clear API Key", action: #selector(menuClearAPIKey), keyEquivalent: "")
+        menu.addItem(withTitle: "Developer Settings & Sandbox...", action: #selector(menuOpenDeveloperSandbox), keyEquivalent: "")
         
         menu.addItem(NSMenuItem.separator())
         
@@ -359,6 +361,45 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             successAlert.alertStyle = .informational
             successAlert.addButton(withTitle: "OK")
             successAlert.runModal()
+        }
+    }
+    
+    @objc private func menuOpenDeveloperSandbox() {
+        if let window = developerSandboxWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        
+        let sandboxView = EvaluationSandboxView()
+        let hostingController = NSHostingController(rootView: sandboxView)
+        
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 850, height: 650),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "AxiomOS Evaluation Sandbox"
+        window.contentViewController = hostingController
+        window.center()
+        
+        self.developerSandboxWindow = window
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowWillClose(_:)),
+            name: NSWindow.willCloseNotification,
+            object: window
+        )
+        
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    @objc private func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window == developerSandboxWindow {
+            developerSandboxWindow = nil
         }
     }
     
