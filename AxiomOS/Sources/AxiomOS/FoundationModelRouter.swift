@@ -80,6 +80,12 @@ final class FoundationModelRouter: InferenceProvider, @unchecked Sendable {
         // ── Step 4: Retrieve prior learned context from the Persistent Graph ───
         let contextHits = await ContextGraphManager.shared.retrieveRelevantContext(for: redactedPrompt, k: 5)
 
+        // ── Step 4.5: Query custom SDK adapters ──────────────────────────────────
+        let customAdapterHits = ContextAdapterRegistry.shared.retrieveEnrichedContext(for: redactedPrompt)
+        
+        // Trigger intercept lifecycle event for enabled adapters
+        ContextAdapterRegistry.shared.triggerIntercept()
+
         // ── Step 5: Build the enriched prompt string ───────────────────────────
         var enrichedPrompt = redactedPrompt
         var enrichmentParts: [String] = []
@@ -98,11 +104,19 @@ final class FoundationModelRouter: InferenceProvider, @unchecked Sendable {
             enrichmentParts.append("[Prior User Context — learned from past sessions]:\n\(graphBlock)")
         }
 
-        // 5c. Compose final payload.
+        // 5c. Custom SDK adapter context.
+        if !customAdapterHits.isEmpty {
+            let customBlock = customAdapterHits
+                .map { "- \($0)" }
+                .joined(separator: "\n")
+            enrichmentParts.append("[Custom Adapter Context (Developer Extensions)]:\n\(customBlock)")
+        }
+
+        // 5d. Compose final payload.
         if !enrichmentParts.isEmpty {
             enrichedPrompt = enrichmentParts.joined(separator: "\n\n")
                 + "\n\n[Current Prompt]:\n\(redactedPrompt)"
-            print("[Axiom Router] Prompt enriched: ambient=\(!ambientBlock.isEmpty), graph_nodes=\(contextHits.count)")
+            print("[Axiom Router] Prompt enriched: ambient=\(!ambientBlock.isEmpty), graph_nodes=\(contextHits.count), custom_adapters=\(customAdapterHits.count)")
         }
 
         // ── Step 6: Dispatch to Gemini Cloud ──────────────────────────────────
