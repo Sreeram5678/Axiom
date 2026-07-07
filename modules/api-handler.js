@@ -121,8 +121,10 @@ export async function optimizePrompt({
     let inString = false;
     let escapeNext = false;
     let startIndex = -1;
+    let shouldBreak = false;
 
     while (true) {
+      if (shouldBreak) break;
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -165,6 +167,12 @@ export async function optimizePrompt({
                     onChunk(text);
                   }
                 }
+                
+                // Check if this is the final chunk (has finishReason or usageMetadata)
+                const finishReason = obj?.candidates?.[0]?.finishReason;
+                if (finishReason || obj?.usageMetadata) {
+                  shouldBreak = true;
+                }
               } catch (e) {
                 console.error("Error parsing streaming JSON chunk:", e);
               }
@@ -172,12 +180,16 @@ export async function optimizePrompt({
               buffer = buffer.substring(i + 1);
               i = 0;
               startIndex = -1;
+              if (shouldBreak) {
+                break;
+              }
               continue;
             }
           }
         }
         i++;
       }
+      if (shouldBreak) break;
     }
 
     // Decode final remaining bytes if any
