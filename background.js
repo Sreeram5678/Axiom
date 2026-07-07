@@ -370,23 +370,53 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 });
 
 // 4. Keyboard Shortcut Chrome Command Listener
-chrome.commands.onCommand.addListener((command, tab) => {
+chrome.commands.onCommand.addListener(async (command, tab) => {
   console.log(`[Axiom Background] Received shortcut command: ${command}`);
-  if (command === 'optimize-prompt') {
-    if (tab && tab.id) {
-      console.log(`[Axiom Background] Sending optimize command to active tab ID: ${tab.id}`);
-      chrome.tabs.sendMessage(tab.id, { action: 'optimize-prompt-shortcut' })
-        .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab:", err.message));
-    } else {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0] && tabs[0].id) {
-          console.log(`[Axiom Background] Fallback: sending command to active tab ID: ${tabs[0].id}`);
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'optimize-prompt-shortcut' })
-            .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab fallback:", err.message));
-        } else {
-          console.warn("[Axiom Background] No active tab found to send shortcut command.");
-        }
+  if (command !== 'optimize-prompt') return;
+
+  // Resolve the active tab
+  let activeTab = tab;
+  if (!activeTab || !activeTab.id) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    activeTab = tabs[0];
+  }
+
+  if (!activeTab || !activeTab.id) {
+    console.warn("[Axiom Background] No active tab found for shortcut.");
+    return;
+  }
+
+  const tabId = activeTab.id;
+  const tabUrl = activeTab.url || '';
+
+  // Skip chrome:// and extension:// URLs where injection is not allowed
+  if (tabUrl.startsWith('chrome://') || tabUrl.startsWith('chrome-extension://') || tabUrl.startsWith('about:')) {
+    console.warn("[Axiom Background] Cannot inject into restricted tab URL:", tabUrl);
+    return;
+  }
+
+  console.log(`[Axiom Background] Sending optimize command to tab ID: ${tabId}`);
+
+  // Try sending the message first (content script may already be injected)
+  try {
+    await chrome.tabs.sendMessage(tabId, { action: 'optimize-prompt-shortcut' });
+  } catch (err) {
+    // Content script not injected yet — inject it programmatically and retry
+    console.log("[Axiom Background] Content script not found, injecting now...", err.message);
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['content.js']
       });
+      await chrome.scripting.insertCSS({
+        target: { tabId },
+        files: ['content.css']
+      });
+      // Small delay to let the content script initialize
+      await new Promise(resolve => setTimeout(resolve, 300));
+      await chrome.tabs.sendMessage(tabId, { action: 'optimize-prompt-shortcut' });
+    } catch (injectErr) {
+      console.error("[Axiom Background] Failed to inject content script:", injectErr.message);
     }
   }
 });
