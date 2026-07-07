@@ -63,20 +63,48 @@ export async function optimizePrompt({
     }
   };
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const maxRetries = 2;
+  let attempt = 0;
+  let response = null;
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
-    });
+  while (attempt <= maxRetries) {
+    if (attempt > 0) {
+      console.log(`[Axiom API] Retrying API request (Attempt ${attempt + 1}/${maxRetries + 1}) after transient error...`);
+      await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+    }
 
-    clearTimeout(timeoutId);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    let fetchError = null;
+
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+    } catch (err) {
+      fetchError = err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    if (fetchError) {
+      if (fetchError.name === "AbortError") {
+        throw new Error("API request timed out (60s limit reached). Please check your internet connection and try again.");
+      }
+
+      // If it's a network error and we have retries left, retry
+      if (attempt < maxRetries) {
+        attempt++;
+        continue;
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
@@ -86,8 +114,13 @@ export async function optimizePrompt({
           errorMessage = errorData.error.message;
         }
       } catch (e) {
-        // Fallback to standard status message
         errorMessage = response.statusText || errorMessage;
+      }
+
+      // Check if error is transient and we have retries left
+      if ((response.status === 429 || response.status === 500 || response.status === 503) && attempt < maxRetries) {
+        attempt++;
+        continue;
       }
 
       // Handle specific API error statuses with friendly messaging
@@ -104,10 +137,13 @@ export async function optimizePrompt({
       }
     }
 
-    // Verify response body is readable
-    if (!response.body) {
-      throw new Error("Unable to read streaming response body from Gemini API.");
-    }
+    break;
+  }
+
+  // Verify response body is readable
+  if (!response || !response.body) {
+    throw new Error("Unable to read streaming response body from Gemini API.");
+  }
 
     // Set up standard stream decoder pipeline
     const decoderStream = new TextDecoderStream();
@@ -225,11 +261,4 @@ export async function optimizePrompt({
     }
 
     return optimizedText;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    if (err.name === "AbortError") {
-      throw new Error("API request timed out (60s limit reached). Please check your internet connection and try again.");
-    }
-    throw err;
-  }
 }
