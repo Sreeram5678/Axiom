@@ -370,14 +370,24 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 });
 
 // 4. Keyboard Shortcut Chrome Command Listener
-chrome.commands.onCommand.addListener((command) => {
+chrome.commands.onCommand.addListener((command, tab) => {
+  console.log(`[Axiom Background] Received shortcut command: ${command}`);
   if (command === 'optimize-prompt') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'optimize-prompt-shortcut' })
-          .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab:", err.message));
-      }
-    });
+    if (tab && tab.id) {
+      console.log(`[Axiom Background] Sending optimize command to active tab ID: ${tab.id}`);
+      chrome.tabs.sendMessage(tab.id, { action: 'optimize-prompt-shortcut' })
+        .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab:", err.message));
+    } else {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0] && tabs[0].id) {
+          console.log(`[Axiom Background] Fallback: sending command to active tab ID: ${tabs[0].id}`);
+          chrome.tabs.sendMessage(tabs[0].id, { action: 'optimize-prompt-shortcut' })
+            .catch(err => console.warn("[Axiom Background] Could not send shortcut message to active tab fallback:", err.message));
+        } else {
+          console.warn("[Axiom Background] No active tab found to send shortcut command.");
+        }
+      });
+    }
   }
 });
 

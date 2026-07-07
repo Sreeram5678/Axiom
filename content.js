@@ -128,6 +128,11 @@ function isValidPromptInput(el) {
     return true;
   }
   
+  // Accept any general contenteditable element
+  if (el.hasAttribute('contenteditable') && (el.getAttribute('contenteditable') === 'true' || el.getAttribute('contenteditable') === 'plaintext-only' || el.getAttribute('contenteditable') === '')) {
+    return true;
+  }
+  
   const placeholder = el.getAttribute('placeholder') || '';
   const ariaLabel = el.getAttribute('aria-label') || '';
   const dataPlaceholder = el.getAttribute('data-placeholder') || '';
@@ -277,13 +282,23 @@ function setCursorToEnd(el) {
   }
 }
 
+// Helper to traverse shadow root boundaries recursively to find deep active elements
+function getDeepActiveElement(root = document) {
+  let activeEl = root.activeElement;
+  if (!activeEl) return null;
+  while (activeEl.shadowRoot && activeEl.shadowRoot.activeElement) {
+    activeEl = activeEl.shadowRoot.activeElement;
+  }
+  return activeEl;
+}
+
 // Track the last focused input field safely
 function handleFocusIn(e) {
   if (!isContextValid()) {
     destroyAxiom();
     return;
   }
-  const target = e.target;
+  const target = getDeepActiveElement() || e.target;
   if (target && isValidPromptInput(target)) {
     lastActiveInputEl = target;
   }
@@ -293,8 +308,9 @@ document.addEventListener('focusin', handleFocusIn);
 // Helper to find the target input for optimization
 function getTargetInput() {
   // 1. Check if the currently focused element is valid
-  if (document.activeElement && isValidPromptInput(document.activeElement)) {
-    return document.activeElement;
+  const deepActive = getDeepActiveElement();
+  if (deepActive && isValidPromptInput(deepActive)) {
+    return deepActive;
   }
   // 2. Check if we have a last active input recorded
   if (lastActiveInputEl && document.body.contains(lastActiveInputEl)) {
@@ -1129,6 +1145,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (inputEl) {
       const buttonEl = floatingWidget ? floatingWidget.querySelector('.axiom-optimize-btn') : null;
       handlePromptOptimization(inputEl, buttonEl, floatingWidget);
+    } else {
+      alert("Axiom: Please click/focus inside a chat or prompt input box first!");
     }
   }
 });
