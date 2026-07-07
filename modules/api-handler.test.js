@@ -141,7 +141,7 @@ describe('api-handler', () => {
 
       await expect(
         optimizePrompt({ rawPrompt, systemInstruction, apiKey, timeoutMs: 10 })
-      ).rejects.toThrow('API request timed out (15s limit reached). Please check your internet connection and try again.');
+      ).rejects.toThrow('API request timed out (60s limit reached). Please check your internet connection and try again.');
     });
   });
 

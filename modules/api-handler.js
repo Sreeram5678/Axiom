@@ -15,7 +15,7 @@ export async function optimizePrompt({
   apiKey,
   model = "gemini-3.5-flash",
   length = "medium",
-  timeoutMs = 15000,
+  timeoutMs = 60000,
   onChunk = null
 }) {
   if (!apiKey || apiKey.trim() === "") {
@@ -216,7 +216,7 @@ export async function optimizePrompt({
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === "AbortError") {
-      throw new Error("API request timed out (15s limit reached). Please check your internet connection and try again.");
+      throw new Error("API request timed out (60s limit reached). Please check your internet connection and try again.");
     }
     throw err;
   }
