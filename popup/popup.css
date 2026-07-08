@@ -1049,6 +1049,11 @@ video {
   background-color: rgb(49 48 46 / var(--tw-bg-opacity, 1));
 }
 
+.bg-outline-variant {
+  --tw-bg-opacity: 1;
+  background-color: rgb(195 200 193 / var(--tw-bg-opacity, 1));
+}
+
 .bg-primary {
   --tw-bg-opacity: 1;
   background-color: rgb(69 85 71 / var(--tw-bg-opacity, 1));
@@ -2063,6 +2068,11 @@ body {
 .group:hover .group-hover\:text-error {
   --tw-text-opacity: 1;
   color: rgb(186 26 26 / var(--tw-text-opacity, 1));
+}
+
+.peer:checked ~ .peer-checked\:bg-primary {
+  --tw-bg-opacity: 1;
+  background-color: rgb(69 85 71 / var(--tw-bg-opacity, 1));
 }
 
 .peer:checked ~ .peer-checked\:bg-white\/80 {
