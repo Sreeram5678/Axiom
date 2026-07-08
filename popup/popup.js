@@ -245,15 +245,15 @@ function renderModesGrid() {
   };
 
   const iconMap = {
-    'analyst': 'analytics',
-    'engineer': 'precision_manufacturing',
-    'first-principles': 'architecture',
-    'exec-summary': 'summarize',
+    'analyst': 'insights',
+    'engineer': 'code',
+    'first-principles': 'lightbulb',
+    'exec-summary': 'article',
     
-    'blue': 'analytics',
-    'green': 'precision_manufacturing',
-    'purple': 'architecture',
-    'yellow': 'summarize',
+    'blue': 'insights',
+    'green': 'code',
+    'purple': 'lightbulb',
+    'yellow': 'article',
     'red': 'photo_camera',
     'pink': 'movie',
     'grey': 'science'
@@ -266,7 +266,21 @@ function renderModesGrid() {
     card.setAttribute('data-mode-id', mode.id);
     
     const color = safeGet(colorMap, mode.icon) || safeGet(colorMap, mode.id) || '#a1a1aa';
-    const iconName = safeGet(iconMap, mode.icon) || safeGet(iconMap, mode.id) || 'magic_button';
+    
+    let iconName = safeGet(iconMap, mode.icon) || safeGet(iconMap, mode.id);
+    if (!iconName) {
+      const nameLower = (mode.name || '').toLowerCase();
+      const descLower = (mode.description || '').toLowerCase();
+      if (nameLower.includes('photo') || nameLower.includes('image') || nameLower.includes('camera') || descLower.includes('photo') || descLower.includes('image')) {
+        iconName = 'photo_camera';
+      } else if (nameLower.includes('video') || nameLower.includes('movie') || nameLower.includes('motion') || descLower.includes('video') || descLower.includes('movie')) {
+        iconName = 'movie';
+      } else if (nameLower.includes('code') || nameLower.includes('dev') || nameLower.includes('engineer') || descLower.includes('code') || descLower.includes('dev')) {
+        iconName = 'code';
+      } else {
+        iconName = 'magic_button';
+      }
+    }
     
     card.innerHTML = `
       <span class="material-symbols-outlined mb-1 transition-colors" style="color: ${color}; font-variation-settings: 'FILL' ${isActive ? 1 : 0};">${iconName}</span>
