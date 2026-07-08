@@ -102,9 +102,26 @@ function isInsideElement(el, tagName) {
   return false;
 }
 
+// Check if an element is edit-ready (CWE-116 standard editable elements)
+function isEditableElement(el) {
+  if (!el) return false;
+  
+  const tag = el.tagName;
+  if (tag === 'TEXTAREA' || tag === 'INPUT' || el.isContentEditable) {
+    try {
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || el.offsetWidth === 0) {
+        return false;
+      }
+    } catch (e) {}
+    return true;
+  }
+  return false;
+}
+
 // Validate if a generic input element is a real prompt field
 function isValidPromptInput(el) {
-  if (!el) return false;
+  if (!isEditableElement(el)) return false;
   
   // Return true immediately for highly confident target selectors
   if (
@@ -118,18 +135,11 @@ function isValidPromptInput(el) {
   }
   
   if (el.tagName === 'TEXTAREA') {
-    // Exclude hidden or zero-width textareas
-    try {
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || el.offsetWidth === 0) {
-        return false;
-      }
-    } catch (e) {}
     return true;
   }
   
   // Accept any general contenteditable element
-  if (el.hasAttribute('contenteditable') && (el.getAttribute('contenteditable') === 'true' || el.getAttribute('contenteditable') === 'plaintext-only' || el.getAttribute('contenteditable') === '')) {
+  if (el.isContentEditable) {
     return true;
   }
   
@@ -299,7 +309,7 @@ function handleFocusIn(e) {
     return;
   }
   const target = getDeepActiveElement() || e.target;
-  if (target && isValidPromptInput(target)) {
+  if (target && isEditableElement(target)) {
     lastActiveInputEl = target;
   }
 }
@@ -307,9 +317,9 @@ document.addEventListener('focusin', handleFocusIn);
 
 // Helper to find the target input for optimization
 function getTargetInput() {
-  // 1. Check if the currently focused element is valid
+  // 1. Check if the currently focused element is valid and editable
   const deepActive = getDeepActiveElement();
-  if (deepActive && isValidPromptInput(deepActive)) {
+  if (deepActive && isEditableElement(deepActive)) {
     return deepActive;
   }
   // 2. Check if we have a last active input recorded
