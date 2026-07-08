@@ -1225,6 +1225,10 @@ video {
   line-height: 1rem;
 }
 
+.font-bold {
+  font-weight: 700;
+}
+
 .font-medium {
   font-weight: 500;
 }
@@ -1332,10 +1336,6 @@ video {
 
 .opacity-80 {
   opacity: 0.8;
-}
-
-.opacity-85 {
-  opacity: 0.85;
 }
 
 .shadow {
