@@ -69,17 +69,17 @@
           <textarea id="raw-prompt-input" class="w-full h-24 bg-transparent focus:outline-none p-0.5 font-body-lg text-body-lg placeholder:text-outline/80 resize-none text-on-surface" placeholder="Paste or type a raw prompt here..."></textarea>
           
           <!-- Editor Footer Controls -->
-          <div class="flex justify-between items-center border-t border-outline-variant/30 pt-2 mt-2">
+          <div class="flex flex-row justify-between items-center border-t border-outline-variant/30 pt-2 mt-2 gap-1.5">
             <!-- Length Segment Selector -->
-            <div class="flex gap-1 bg-surface border border-outline-variant/60 rounded p-0.5" id="length-selector">
-              <button class="length-btn px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="short" type="button">Short</button>
-              <button class="length-btn active px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="medium" type="button">Medium</button>
-              <button class="length-btn px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="detailed" type="button">Detailed</button>
+            <div class="flex gap-0.5 bg-surface border border-outline-variant/60 rounded p-0.5 shrink-0" id="length-selector">
+              <button class="length-btn px-1.5 py-0.5 rounded text-[9px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="short" type="button">Short</button>
+              <button class="length-btn active px-1.5 py-0.5 rounded text-[9px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="medium" type="button">Med</button>
+              <button class="length-btn px-1.5 py-0.5 rounded text-[9px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="detailed" type="button">Long</button>
             </div>
             <!-- Statistics -->
-            <div class="flex items-center gap-2 text-on-surface-variant text-[10px] font-semibold font-label-md">
-              <span id="char-count">0 chars</span>
-              <span id="token-cost-guardrail" class="opacity-90">Est. Cost: —</span>
+            <div class="flex flex-col items-end text-on-surface-variant text-[9px] font-semibold font-label-md leading-tight shrink">
+              <span id="char-count" class="whitespace-nowrap">0 chars</span>
+              <span id="token-cost-guardrail" class="opacity-90 whitespace-nowrap">Est. Cost: —</span>
             </div>
           </div>
         </div>
