@@ -103,17 +103,19 @@ function isInsideElement(el, tagName) {
 }
 
 // Check if an element is edit-ready (CWE-116 standard editable elements)
-function isEditableElement(el) {
+function isEditableElement(el, skipVisibilityCheck = false) {
   if (!el) return false;
   
   const tag = el.tagName;
   if (tag === 'TEXTAREA' || tag === 'INPUT' || el.isContentEditable) {
-    try {
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || el.offsetWidth === 0) {
-        return false;
-      }
-    } catch (e) {}
+    if (!skipVisibilityCheck) {
+      try {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden' || el.offsetWidth === 0) {
+          return false;
+        }
+      } catch (e) {}
+    }
     return true;
   }
   return false;
@@ -296,8 +298,22 @@ function setCursorToEnd(el) {
 function getDeepActiveElement(root = document) {
   let activeEl = root.activeElement;
   if (!activeEl) return null;
-  while (activeEl.shadowRoot && activeEl.shadowRoot.activeElement) {
-    activeEl = activeEl.shadowRoot.activeElement;
+  
+  let prevActive = null;
+  while (activeEl && activeEl !== prevActive) {
+    prevActive = activeEl;
+    if (activeEl.shadowRoot && activeEl.shadowRoot.activeElement) {
+      activeEl = activeEl.shadowRoot.activeElement;
+    } else if (activeEl.tagName === 'IFRAME') {
+      try {
+        if (activeEl.contentDocument && activeEl.contentDocument.activeElement) {
+          activeEl = activeEl.contentDocument.activeElement;
+        }
+      } catch (e) {
+        // Cross-origin iframe, cannot access contentDocument
+        break;
+      }
+    }
   }
   return activeEl;
 }
@@ -309,7 +325,7 @@ function handleFocusIn(e) {
     return;
   }
   const target = getDeepActiveElement() || e.target;
-  if (target && isEditableElement(target)) {
+  if (target && isEditableElement(target, true)) {
     lastActiveInputEl = target;
   }
 }
@@ -319,7 +335,7 @@ document.addEventListener('focusin', handleFocusIn);
 function getTargetInput() {
   // 1. Check if the currently focused element is valid and editable
   const deepActive = getDeepActiveElement();
-  if (deepActive && isEditableElement(deepActive)) {
+  if (deepActive && isEditableElement(deepActive, true)) {
     return deepActive;
   }
   // 2. Check if we have a last active input recorded
