@@ -82,6 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 3. Check for any in-progress background optimization
   await checkSessionState();
+
+  // 4. Initialize dynamic site compatibility selector
+  await initializeSiteCompatibility();
 });
 
 // UI Initialization
@@ -1379,4 +1382,117 @@ function showError(errorMessage) {
 function revertSaveButtonState() {
   saveSettingsBtn.disabled = false;
   saveSettingsBtn.innerHTML = 'Save Settings';
+}
+
+// Dynamic Site Compatibility helpers (CWE-94 Scripting APIs)
+async function initializeSiteCompatibility() {
+  const currentSiteText = document.getElementById('current-site-text');
+  const compatibilityToggleWrapper = document.getElementById('site-compatibility-toggle-wrapper');
+  const compatibilityCheckbox = document.getElementById('site-compatibility-checkbox');
+
+  if (!currentSiteText || !compatibilityToggleWrapper || !compatibilityCheckbox) return;
+
+  let activeTabUrl = '';
+  let activeTabDomain = '';
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url) {
+      activeTabUrl = tab.url;
+      const urlObj = new URL(tab.url);
+      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+        activeTabDomain = urlObj.hostname;
+      }
+    }
+  } catch (err) {
+    console.warn("[Axiom Compatibility] Could not query active tab url:", err.message);
+  }
+
+  if (!activeTabDomain) {
+    currentSiteText.textContent = "Unavailable for this page type";
+    compatibilityToggleWrapper.style.display = 'none';
+    return;
+  }
+
+  // Check if this domain is statically whitelisted in the manifest matches
+  const manifest = chrome.runtime.getManifest();
+  const staticMatches = [];
+  if (manifest.content_scripts) {
+    manifest.content_scripts.forEach(script => {
+      if (script.matches) {
+        staticMatches.push(...script.matches);
+      }
+    });
+  }
+
+  const isStaticallySupported = staticMatches.some(pattern => {
+    const globRegex = new RegExp('^' + pattern.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+    return globRegex.test(activeTabUrl);
+  });
+
+  if (isStaticallySupported) {
+    currentSiteText.textContent = `${activeTabDomain} (Statically Active)`;
+    compatibilityToggleWrapper.style.display = 'none';
+    return;
+  }
+
+  currentSiteText.textContent = activeTabDomain;
+  compatibilityToggleWrapper.style.display = 'inline-flex';
+
+  // Check if already dynamically whitelisted
+  const { enabledDomains = [] } = await chrome.storage.local.get(['enabledDomains']);
+  compatibilityCheckbox.checked = enabledDomains.includes(activeTabDomain);
+
+  // Bind change handler
+  compatibilityCheckbox.addEventListener('change', async (e) => {
+    const checked = e.target.checked;
+    let { enabledDomains = [] } = await chrome.storage.local.get(['enabledDomains']);
+
+    if (checked) {
+      if (!enabledDomains.includes(activeTabDomain)) {
+        enabledDomains.push(activeTabDomain);
+      }
+      await registerDynamicScript(activeTabDomain);
+    } else {
+      enabledDomains = enabledDomains.filter(d => d !== activeTabDomain);
+      await unregisterDynamicScript(activeTabDomain);
+    }
+
+    await chrome.storage.local.set({ enabledDomains });
+  });
+}
+
+async function registerDynamicScript(domain) {
+  try {
+    const scriptId = `axiom-custom-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    
+    // Check if already registered
+    const registered = await chrome.scripting.getRegisteredContentScripts();
+    if (registered.some(s => s.id === scriptId)) {
+      return;
+    }
+
+    await chrome.scripting.registerContentScripts([
+      {
+        id: scriptId,
+        matches: [`*://*.${domain}/*`],
+        js: ['content.js'],
+        css: ['content.css'],
+        runAt: 'documentIdle'
+      }
+    ]);
+    console.log(`[Axiom Scripting] Registered dynamic content script for: ${domain}`);
+  } catch (err) {
+    console.error(`[Axiom Scripting] Failed to register script for ${domain}:`, err.message);
+  }
+}
+
+async function unregisterDynamicScript(domain) {
+  try {
+    const scriptId = `axiom-custom-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    await chrome.scripting.unregisterContentScripts({ ids: [scriptId] });
+    console.log(`[Axiom Scripting] Unregistered dynamic content script for: ${domain}`);
+  } catch (err) {
+    console.error(`[Axiom Scripting] Failed to unregister script for ${domain}:`, err.message);
+  }
 }
