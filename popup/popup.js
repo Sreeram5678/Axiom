@@ -1109,6 +1109,9 @@ async function renderHistoryList() {
         <button class="history-action-btn star-hist-btn" title="">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </button>
+        <button class="history-action-btn delete-hist-btn" title="Delete History Entry">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
       </div>
     `;
 
@@ -1196,6 +1199,22 @@ async function renderHistoryList() {
         await renderHistoryList();
       } catch (err) {
         console.warn("[Axiom Popup] Star template toggle failed:", err.message);
+      }
+    });
+
+    // Delete single history item action
+    const deleteHistBtn = histItemEl.querySelector('.delete-hist-btn');
+    deleteHistBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm('Are you sure you want to delete this history item?')) {
+        try {
+          const { promptHistory = [] } = await chrome.storage.local.get(['promptHistory']);
+          const updated = promptHistory.filter(h => h.id !== item.id);
+          await chrome.storage.local.set({ promptHistory: updated });
+          await renderHistoryList();
+        } catch (err) {
+          console.warn("[Axiom Popup] Delete history item failed:", err.message);
+        }
       }
     });
 
