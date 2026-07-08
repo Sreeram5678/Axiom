@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:css": "tailwindcss -i ./popup/popup.src.css -o ./popup/popup.css"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.1",
     "vitest": "3.2.4"
   }
 }

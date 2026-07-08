@@ -225,7 +225,6 @@ async function renderModes() {
 }
 
 // Dynamically render modes cards grid in main panel
-// Dynamically render modes cards grid in main panel
 function renderModesGrid() {
   if (!modesGridContainer) return;
   modesGridContainer.innerHTML = '';
@@ -245,37 +244,52 @@ function renderModesGrid() {
     'grey': '#a1a1aa'
   };
 
+  const iconMap = {
+    'analyst': 'analytics',
+    'engineer': 'precision_manufacturing',
+    'first-principles': 'architecture',
+    'exec-summary': 'summarize',
+    
+    'blue': 'analytics',
+    'green': 'precision_manufacturing',
+    'purple': 'architecture',
+    'yellow': 'summarize',
+    'red': 'photo_camera',
+    'pink': 'movie',
+    'grey': 'science'
+  };
+
   currentModes.forEach(mode => {
     const card = document.createElement('div');
-    card.className = `mode-card ${mode.id === activeModeId ? 'active' : ''}`;
+    const isActive = mode.id === activeModeId;
+    card.className = `mode-card ${isActive ? 'active' : ''}`;
     card.setAttribute('data-mode-id', mode.id);
     
     const color = safeGet(colorMap, mode.icon) || safeGet(colorMap, mode.id) || '#a1a1aa';
+    const iconName = safeGet(iconMap, mode.icon) || safeGet(iconMap, mode.id) || 'magic_button';
     
     card.innerHTML = `
-      <div class="mode-card-header">
-        <span class="mode-card-dot"></span>
-        <span class="mode-card-name"></span>
-      </div>
-      <div class="mode-card-desc"></div>
+      <span class="material-symbols-outlined mb-1 transition-colors" style="color: ${color}; font-variation-settings: 'FILL' ${isActive ? 1 : 0};">${iconName}</span>
+      <span class="font-label-md text-label-md text-on-surface font-semibold"></span>
+      <span class="font-body-sm text-[10px] text-on-surface-variant leading-tight mt-0.5"></span>
     `;
     
-    card.style.setProperty('--dot-color', color);
-    const dot = card.querySelector('.mode-card-dot');
-    if (dot) {
-      dot.style.backgroundColor = color;
-    }
-    
-    const nameEl = card.querySelector('.mode-card-name');
+    const nameEl = card.querySelector('.font-label-md');
     if (nameEl) nameEl.textContent = mode.name;
     
-    const descEl = card.querySelector('.mode-card-desc');
+    const descEl = card.querySelector('.font-body-sm');
     if (descEl) descEl.textContent = mode.description;
     
     card.addEventListener('click', async () => {
       activeModeId = mode.id;
-      document.querySelectorAll('.mode-card').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.mode-card').forEach(el => {
+        el.classList.remove('active');
+        const icon = el.querySelector('.material-symbols-outlined');
+        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+      });
       card.classList.add('active');
+      const icon = card.querySelector('.material-symbols-outlined');
+      if (icon) icon.style.fontVariationSettings = "'FILL' 1";
       await chrome.storage.local.set({ lastActiveModeId: activeModeId });
     });
     
@@ -467,10 +481,13 @@ function handleBackgroundState(state) {
     
     activeModeId = state.selectedModeId || 'analyst';
     document.querySelectorAll('.mode-card').forEach(el => {
+      const icon = el.querySelector('.material-symbols-outlined');
       if (el.getAttribute('data-mode-id') === activeModeId) {
         el.classList.add('active');
+        if (icon) icon.style.fontVariationSettings = "'FILL' 1";
       } else {
         el.classList.remove('active');
+        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
       }
     });
 
@@ -540,13 +557,24 @@ function setupTabSwitching() {
       const targetPanelId = tab.getAttribute('data-target');
       
       // Update Tab Button styles
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+      tabs.forEach(t => {
+        const indicator = t.querySelector('.active-indicator');
+        if (t === tab) {
+          t.classList.add('active');
+          t.classList.remove('text-on-surface-variant', 'opacity-60');
+          if (indicator) indicator.classList.remove('hidden');
+        } else {
+          t.classList.remove('active');
+          t.classList.add('text-on-surface-variant', 'opacity-60');
+          if (indicator) indicator.classList.add('hidden');
+        }
+      });
       
       // Toggle Panels
       panels.forEach(panel => {
         if (panel.id === targetPanelId) {
           panel.classList.add('active');
+          panel.classList.remove('hidden');
           
           // Trigger history render when history panel opens
           if (targetPanelId === 'history-panel') {
@@ -554,6 +582,7 @@ function setupTabSwitching() {
           }
         } else {
           panel.classList.remove('active');
+          panel.classList.add('hidden');
         }
       });
       
@@ -905,8 +934,8 @@ function setupEventListeners() {
     navigator.clipboard.writeText(textToCopy).then(() => {
       // Toggle button visual state
       copyBtn.classList.add('copied');
-      copyBtn.querySelector('.copy-svg').style.display = 'none';
-      copyBtn.querySelector('.check-svg').style.display = 'block';
+      copyBtn.querySelector('.copy-svg').classList.add('hidden');
+      copyBtn.querySelector('.check-svg').classList.remove('hidden');
 
       // Slide in toast notification
       copyToast.classList.add('show');
@@ -914,8 +943,8 @@ function setupEventListeners() {
       // Revert states
       setTimeout(() => {
         copyBtn.classList.remove('copied');
-        copyBtn.querySelector('.copy-svg').style.display = 'block';
-        copyBtn.querySelector('.check-svg').style.display = 'none';
+        copyBtn.querySelector('.copy-svg').classList.remove('hidden');
+        copyBtn.querySelector('.check-svg').classList.add('hidden');
         copyToast.classList.remove('show');
       }, 2000);
     }).catch(err => {
@@ -1017,10 +1046,13 @@ async function renderHistoryList() {
           
           // Re-toggle grid cards active styling
           document.querySelectorAll('.mode-card').forEach(el => {
+            const icon = el.querySelector('.material-symbols-outlined');
             if (el.getAttribute('data-mode-id') === activeModeId) {
               el.classList.add('active');
+              if (icon) icon.style.fontVariationSettings = "'FILL' 1";
             } else {
               el.classList.remove('active');
+              if (icon) icon.style.fontVariationSettings = "'FILL' 0";
             }
           });
         }

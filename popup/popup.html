@@ -1,259 +1,316 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Axiom — Personal Prompt Optimizer</title>
   <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
 </head>
-<body>
-  <!-- Ambient Glow background blobs -->
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
-  <div class="ambient-glow glow-3"></div>
-  <div class="ambient-glow glow-4"></div>
+<body class="bg-background text-on-background font-body-lg antialiased select-none">
 
-  <div class="app-container">
-    <!-- Header with Branding and Nav Tabs -->
-    <header>
-      <div class="logo-section">
-        <img src="../icons/icon-48.png" class="logo-img" alt="Axiom Logo">
-        <div class="logo-text">axiom</div>
+  <!-- App Wrapper Box -->
+  <div class="w-[360px] h-[560px] bg-surface relative flex flex-col overflow-hidden shadow-xl border border-outline-variant/60 rounded-xl">
+    
+    <!-- Top Bar & Tabs Header -->
+    <header class="w-full sticky top-0 z-50 bg-surface shrink-0">
+      <!-- Branding Title Bar -->
+      <div class="flex items-center justify-between px-3 h-8 bg-surface">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary" style="font-size: 16px;">temp_preferences_custom</span>
+          <h1 class="font-headline-lg text-[12px] text-on-surface tracking-tight font-semibold uppercase">Axiom</h1>
+        </div>
+        <button id="help-btn" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors" style="font-size: 16px;">help_outline</button>
       </div>
       
-      <!-- Premium Segmented Tab Control -->
-      <div class="tabs-nav segmented-control">
-        <button id="tab-optimize-btn" class="tab-btn segment-btn active" data-target="optimize-panel">Optimize</button>
-        <button id="tab-history-btn" class="tab-btn segment-btn" data-target="history-panel">History</button>
-        <button id="tab-settings-btn" class="tab-btn segment-btn" data-target="settings-panel">Settings</button>
+      <!-- Chrome-style Tab Bar -->
+      <div class="flex items-end px-2 h-9 border-b border-outline-variant bg-surface-container-low">
+        <!-- Tab: Optimize -->
+        <button id="tab-optimize-btn" class="tab-btn active relative flex items-center h-8 px-4 bg-surface-container-low border-x border-t border-outline-variant -mb-[1px] z-10 rounded-t-xl hover:bg-surface-container-high transition-colors cursor-pointer active:scale-95 transition-all outline-none" data-target="optimize-panel">
+          <span class="material-symbols-outlined mr-1.5 text-primary" style="font-size: 14px; font-variation-settings: 'FILL' 1;">magic_button</span>
+          <span class="text-[11px] font-semibold text-on-surface whitespace-nowrap">Optimize</span>
+          <div class="active-indicator absolute bottom-0 left-0 right-0 h-[2px] bg-primary"></div>
+        </button>
+        
+        <!-- Tab: History -->
+        <button id="tab-history-btn" class="tab-btn relative flex items-center h-8 px-4 hover:bg-surface-container-high transition-colors cursor-pointer rounded-t-xl active:scale-95 transition-all text-on-surface-variant opacity-60 outline-none" data-target="history-panel">
+          <span class="material-symbols-outlined mr-1.5" style="font-size: 14px;">history</span>
+          <span class="text-[11px] whitespace-nowrap">History</span>
+          <div class="active-indicator absolute bottom-0 left-0 right-0 h-[2px] bg-primary hidden"></div>
+        </button>
+
+        <!-- Tab: Settings -->
+        <button id="tab-settings-btn" class="tab-btn relative flex items-center h-8 px-4 hover:bg-surface-container-high transition-colors cursor-pointer rounded-t-xl active:scale-95 transition-all text-on-surface-variant opacity-60 outline-none" data-target="settings-panel">
+          <span class="material-symbols-outlined mr-1.5" style="font-size: 14px;">settings</span>
+          <span class="text-[11px] whitespace-nowrap">Settings</span>
+          <div class="active-indicator absolute bottom-0 left-0 right-0 h-[2px] bg-primary hidden"></div>
+        </button>
       </div>
     </header>
 
-    <!-- Main Section Panels -->
-    <main>
-      <!-- API Key Missing Alert Banner -->
-      <div id="api-alert-banner" class="banner-alert" style="display: none;">
-        <div class="banner-alert-content">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <span>Gemini API Key Required</span>
+    <!-- Main Dynamic Content Canvas -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar p-3">
+      
+      <!-- API Key Alert Banner -->
+      <div id="api-alert-banner" class="flex items-center justify-between p-2.5 bg-error-container text-on-error-container border border-error/20 rounded-lg text-xs mb-3 cursor-pointer shadow-sm active:scale-[0.98] transition-all" style="display: none;">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-error" style="font-size: 16px;">error</span>
+          <span class="font-medium">Gemini API Key Required</span>
         </div>
-        <span class="banner-alert-action">Configure</span>
+        <span class="text-xs font-semibold text-error hover:underline">Configure</span>
       </div>
 
-      <!-- Tab Panel 1: Optimize -->
-      <div id="optimize-panel" class="tab-panel active">
+      <!-- PANEL 1: OPTIMIZE -->
+      <div id="optimize-panel" class="tab-panel active space-y-4">
+        
         <!-- Raw Prompt Input Console Card -->
-        <div class="editor-workspace-card">
-          <textarea id="raw-prompt-input" class="input-prompt" placeholder="Paste or type a raw prompt here..."></textarea>
-          <div class="editor-footer">
-            <div class="length-selector" id="length-selector">
-              <button class="length-btn" data-length="short" type="button">Short</button>
-              <button class="length-btn active" data-length="medium" type="button">Medium</button>
-              <button class="length-btn" data-length="detailed" type="button">Detailed</button>
+        <div class="relative bg-surface-container-low border border-outline-variant rounded-lg p-2.5 shadow-sm">
+          <textarea id="raw-prompt-input" class="w-full h-24 bg-transparent focus:outline-none p-0.5 font-body-lg text-body-lg placeholder:text-outline/80 resize-none text-on-surface" placeholder="Paste or type a raw prompt here..."></textarea>
+          
+          <!-- Editor Footer Controls -->
+          <div class="flex justify-between items-center border-t border-outline-variant/30 pt-2 mt-2">
+            <!-- Length Segment Selector -->
+            <div class="flex gap-1 bg-surface border border-outline-variant/60 rounded p-0.5" id="length-selector">
+              <button class="length-btn px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="short" type="button">Short</button>
+              <button class="length-btn active px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="medium" type="button">Medium</button>
+              <button class="length-btn px-2 py-0.5 rounded text-[10px] font-semibold text-outline-variant hover:bg-surface-container-high transition-colors [&.active]:bg-primary [&.active]:text-on-primary" data-length="detailed" type="button">Detailed</button>
             </div>
-            <span id="char-count" class="label-hint">0 chars</span>
-            <span id="token-cost-guardrail" class="label-hint-muted" style="margin-left: 12px; font-weight: 500;">Est. Cost: —</span>
-          </div>
-        </div>
-
-        <!-- Premium Modes Grid Selector -->
-        <div class="modes-selector-section">
-          <label class="section-label-small">Optimize Mode</label>
-          <div id="modes-grid-container" class="modes-grid">
-            <!-- Loaded dynamically -->
-          </div>
-        </div>
-
-        <!-- CTA Action Button -->
-        <div class="cta-row">
-          <button id="optimize-cta-btn" class="btn-primary full-width">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-            <span>Optimize Prompt</span>
-          </button>
-          <div class="shortcut-tip">
-            Press <kbd>⌘⇧U</kbd> (Mac) or <kbd>Alt+Shift+O</kbd> (Win) in AI inputs to optimize
-          </div>
-        </div>
-
-        <!-- Dynamic Output Workspace Area -->
-        <div id="output-section" class="output-card" style="display: none;">
-          <div class="output-header">
-            <div class="window-controls">
-              <span class="dot-control close"></span>
-              <span class="dot-control minimize"></span>
-              <span class="dot-control expand"></span>
+            <!-- Statistics -->
+            <div class="flex items-center gap-2 text-outline-variant text-[10px] font-medium font-label-md">
+              <span id="char-count">0 chars</span>
+              <span id="token-cost-guardrail" class="opacity-80">Est. Cost: —</span>
             </div>
-            <span class="output-title">Optimized Prompt</span>
-            <button id="copy-btn" class="action-icon-btn" title="Copy to clipboard">
-              <!-- Copy SVG Icon -->
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              <!-- Checkmark SVG Icon -->
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-svg" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </button>
-          </div>
-          <div class="output-text-wrapper">
-            <div id="optimized-prompt-output" class="output-text"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab Panel 2: History -->
-      <div id="history-panel" class="tab-panel">
-        <div class="panel-header-small">
-          <span class="panel-title-small">Optimization History</span>
-          <button id="clear-history-btn" class="btn-text-action" type="button">Clear All</button>
-        </div>
-        <div id="history-list" class="history-list">
-          <!-- Loaded dynamically -->
-        </div>
-      </div>
-
-      <!-- Tab Panel 3: Settings -->
-      <div id="settings-panel" class="tab-panel">
-        <!-- API Key Configuration Card -->
-        <div class="form-group">
-          <label class="form-label">API Configuration</label>
-          <button id="open-options-btn" class="btn-secondary" style="margin-top: 5px;">Manage API Key</button>
-        </div>
-
-        <!-- Model Selection Card -->
-        <div class="form-group">
-          <label for="model-select" class="form-label">Gemini Model</label>
-          <div class="select-wrapper">
-            <select id="model-select">
-              <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended)</option>
-              <option value="gemini-3.1-pro">Gemini 3.1 Pro (Complex Tasks)</option>
-              <option value="gemini-3.1-flash">Gemini 3.1 Flash (High-Speed)</option>
-              <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Lightweight)</option>
-            </select>
           </div>
         </div>
 
-        <!-- Default Prompt Length Card -->
-        <div class="form-group">
-          <label for="default-length-select" class="form-label">Default Prompt Length</label>
-          <div class="select-wrapper">
-            <select id="default-length-select">
-              <option value="short">Short</option>
-              <option value="medium">Medium</option>
-              <option value="detailed">Detailed</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- AI Routing Mode Selector -->
-        <div class="form-group">
-          <label for="ai-routing-select" class="form-label">AI Routing Mode</label>
-          <div class="select-wrapper">
-            <select id="ai-routing-select">
-              <option value="hybrid">Hybrid (Auto)</option>
-              <option value="cloud-only">Cloud Only</option>
-              <option value="local-only">On-Device Only (Gemini Nano)</option>
-            </select>
-          </div>
-          <span id="ram-tip" class="label-hint" style="display: none; margin-top: 4px; color: var(--text-secondary);"></span>
-        </div>
-
-        <!-- Currency Display Selector -->
-        <div class="form-group" style="margin-top: 4px;">
-          <label for="currency-select" class="form-label">Cost Display Currency</label>
-          <div class="select-wrapper">
-            <select id="currency-select">
-              <option value="USD">USD ($) — US Dollar</option>
-              <option value="INR">INR (₹) — Indian Rupee</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Floating Widget Visibility Toggle -->
-        <div class="form-group" style="margin-top: 4px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
-          <div class="switch-wrapper">
-            <label class="form-label" style="margin-bottom: 0;">Show In-Page Floating Button</label>
-            <label class="switch">
-              <input type="checkbox" id="widget-toggle-checkbox" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Zero-Knowledge Sync Card -->
-        <div class="form-group" style="margin-top: 5px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
-          <label class="form-label">Zero-Knowledge Sync</label>
-          <div id="sync-status-badge" class="sync-badge" style="display: none; margin-bottom: 8px;"></div>
-          <div id="sync-passphrase-wrapper" class="form-sub-group" style="margin-bottom: 8px;">
-            <input type="password" id="sync-passphrase-input" class="form-input" placeholder="Enter Sync Passphrase" style="width: 100%;">
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button id="enable-sync-btn" class="btn-secondary" style="font-size: 11px; padding: 6px 12px; flex: 1;" type="button">Enable Sync</button>
-            <button id="disable-sync-btn" class="btn-secondary" style="font-size: 11px; padding: 6px 12px; flex: 1; display: none; border-color: rgba(239, 68, 68, 0.2); color: #f87171;" type="button">Disable Sync</button>
-          </div>
-        </div>
-
-
-        <!-- System Modes Customization (Visual Mode Manager) -->
-        <div class="form-group mode-manager-group">
-          <div class="mode-manager-header">
-            <label class="form-label">Visual Modes Manager</label>
-            <button id="add-mode-toggle-btn" class="btn-text-action" type="button">+ Add Mode</button>
+        <!-- Mode Grid Selection -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-0.5">
+            <span class="font-label-md text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider">Optimization Mode</span>
+            <span class="material-symbols-outlined text-outline-variant text-xs cursor-help" style="font-size: 14px;" title="Select instruction mapping template">info</span>
           </div>
           
-          <!-- Mode Creator Form -->
-          <div id="mode-creator-form" class="mode-creator-form-panel" style="display: none;">
-            <div class="form-sub-group">
-              <input type="text" id="new-mode-name" class="form-input" placeholder="Mode Name (e.g. Creative Writer)">
-            </div>
-            <div class="form-sub-group">
-              <input type="text" id="new-mode-desc" class="form-input" placeholder="Short description (e.g. Craft engaging copy)">
-            </div>
-            <div class="form-sub-group">
-              <textarea id="new-mode-instruction" class="form-textarea" placeholder="System instructions for Gemini..."></textarea>
-            </div>
-            <div class="form-sub-group inline-row">
-              <div class="icon-selector-wrapper">
-                <label class="field-label-small">Accent Color</label>
-                <select id="new-mode-icon" class="icon-select">
-                  <option value="blue">Analytical Blue</option>
-                  <option value="green">Technical Green</option>
-                  <option value="purple">First-Principles Purple</option>
-                  <option value="yellow">Exec-Summary Amber</option>
-                  <option value="red">Hot Coral</option>
-                  <option value="pink">Magenta Rose</option>
-                  <option value="grey">Cool Slate</option>
-                </select>
-              </div>
-              <button id="save-new-mode-btn" class="btn-primary-small" type="button">Add Mode</button>
-            </div>
-            <div id="mode-creator-error" class="form-error-msg"></div>
-          </div>
+          <!-- Loaded Dynamically via JS -->
+          <div id="modes-grid-container" class="grid grid-cols-2 gap-2"></div>
+        </div>
 
-          <!-- Visual Modes List -->
-          <div id="visual-modes-list" class="visual-modes-list">
-            <!-- Rendered dynamically -->
+        <!-- Smart suggestions in-page floating widget toggle card -->
+        <div class="relative w-full rounded-xl overflow-hidden shadow-sm">
+          <div class="absolute inset-0 bg-primary-container opacity-10"></div>
+          <div class="absolute inset-0 p-3 flex items-center justify-between z-10">
+            <div>
+              <h3 class="font-headline-md text-xs text-on-primary-container font-semibold">Floating Widget</h3>
+              <p class="font-body-sm text-[9px] text-on-primary-container opacity-85 mt-0.5">Show in-page helper overlay</p>
+            </div>
+            <!-- Dynamic switch toggle -->
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" id="widget-toggle-checkbox" class="sr-only peer" checked>
+              <div class="w-8 h-4 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:left-[4px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+          <div class="h-14 w-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzYjYZXJu-TpqoaU25HZE_-2c_-CQGdTwd2vhrZlEeKWOVVED_WnETkmEqFsLd3Jbsog3Kl_lQdS996FCq8FapzuFArDicbJGVrUFMHzaE3yZmDRLbFoQJdYi9nv6afPKPVxRxc8xp45ogMt42mNwX2gBPt3uiI7w6jfGJZgP9nKEvuBdp51VehhIdxA0sIR0CRrKf_dM2jUiIC20N0tYHalekw4-w9CUrfU3M6QlmykzR5WSSOI6B')"></div>
+        </div>
+
+        <!-- Optimize Prompt Action CTA -->
+        <div class="space-y-2 pt-1">
+          <button id="optimize-cta-btn" class="w-full h-11 bg-primary text-on-primary rounded-full font-headline-md text-xs font-semibold shadow hover:brightness-110 active:scale-[0.97] transition-all flex items-center justify-center gap-2 duration-200">
+            <span class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
+            <span>Optimize Prompt</span>
+          </button>
+          <div class="text-[9px] text-outline text-center">
+            Press <kbd class="bg-surface-container border border-outline-variant px-1 rounded font-semibold text-[8px] font-label-md">⌘⇧U</kbd> (Mac) or <kbd class="bg-surface-container border border-outline-variant px-1 rounded font-semibold text-[8px] font-label-md">Alt+Shift+O</kbd> in inputs to optimize
           </div>
         </div>
 
-        <!-- Advanced JSON Configuration -->
-        <details class="advanced-json-details">
-          <summary class="advanced-json-summary">Advanced JSON View</summary>
-          <div class="form-group json-editor-wrapper">
-            <textarea id="json-modes-editor" class="json-textarea"></textarea>
-            <div id="json-error-status" class="json-status"></div>
+        <!-- Optimized Output section card -->
+        <div id="output-section" class="p-3 bg-inverse-surface text-inverse-on-surface rounded-xl space-y-2.5 border border-outline/30 shadow-lg" style="display: none;">
+          <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-error/80"></span>
+              <span class="w-2 h-2 rounded-full bg-secondary-container/80"></span>
+              <span class="w-2 h-2 rounded-full bg-primary/80"></span>
+            </div>
+            <span class="text-[10px] font-semibold font-label-md text-outline-variant uppercase tracking-wider">Optimized Prompt</span>
+            <button id="copy-btn" class="text-outline-variant hover:text-white p-1 rounded transition-colors active:scale-95 duration-200" title="Copy to clipboard">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="copy-svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check-svg hidden"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
+          </div>
+          <div class="output-text-wrapper max-h-40 overflow-y-auto custom-scrollbar">
+            <div id="optimized-prompt-output" class="font-body-lg text-body-lg whitespace-pre-wrap selection:bg-primary-container selection:text-on-primary-container leading-relaxed"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANEL 2: HISTORY -->
+      <div id="history-panel" class="tab-panel hidden space-y-3">
+        <!-- Panel Header Activity options -->
+        <div class="flex items-center justify-between px-0.5">
+          <h2 class="font-label-sm text-[10px] text-outline uppercase tracking-wider font-semibold">Recent Activity</h2>
+          <button id="clear-history-btn" class="group flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-error-container/10 transition-colors active:scale-95 transition-all duration-200">
+            <span class="material-symbols-outlined text-[14px] text-secondary group-hover:text-error">delete_sweep</span>
+            <span class="font-label-sm text-[10px] text-secondary group-hover:text-error font-semibold">Clear All</span>
+          </button>
+        </div>
+        
+        <!-- History Items Dynamic list -->
+        <div id="history-list" class="space-y-2 custom-scrollbar"></div>
+      </div>
+
+      <!-- PANEL 3: SETTINGS -->
+      <div id="settings-panel" class="tab-panel hidden space-y-4">
+        
+        <!-- API Access Configuration -->
+        <div class="p-3 bg-surface-container-low border border-surface-variant rounded-lg flex items-center justify-between shadow-sm">
+          <div>
+            <p class="text-xs font-semibold text-on-surface">API Credentials</p>
+            <p class="text-[10px] text-on-surface-variant mt-0.5" id="api-status-text">Configure secure Gemini access</p>
+          </div>
+          <button id="open-options-btn" class="bg-primary text-on-primary px-3 py-1.5 rounded text-[10px] font-semibold hover:opacity-90 active:scale-95 transition-all">
+            MANAGE KEY
+          </button>
+        </div>
+
+        <!-- Model Preferences Form -->
+        <div class="space-y-3 border-t border-outline-variant/30 pt-3">
+          <!-- Select Model -->
+          <div class="flex flex-col gap-1">
+            <label for="model-select" class="font-label-sm text-[10px] text-on-surface-variant font-semibold">Gemini Model</label>
+            <div class="relative">
+              <select id="model-select" class="w-full appearance-none bg-surface border border-outline-variant/60 hover:border-outline px-2.5 py-1.5 rounded text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8 text-on-surface">
+                <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended)</option>
+                <option value="gemini-3.1-pro">Gemini 3.1 Pro (Complex Tasks)</option>
+                <option value="gemini-3.1-flash">Gemini 3.1 Flash (High-Speed)</option>
+                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Lightweight)</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Select Default Length -->
+          <div class="flex flex-col gap-1">
+            <label for="default-length-select" class="font-label-sm text-[10px] text-on-surface-variant font-semibold">Default Output Length</label>
+            <div class="relative">
+              <select id="default-length-select" class="w-full appearance-none bg-surface border border-outline-variant/60 hover:border-outline px-2.5 py-1.5 rounded text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8 text-on-surface">
+                <option value="short">Short</option>
+                <option value="medium">Medium</option>
+                <option value="detailed">Detailed</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Select AI Routing Mode -->
+          <div class="flex flex-col gap-1">
+            <label for="ai-routing-select" class="font-label-sm text-[10px] text-on-surface-variant font-semibold">AI Routing Mode</label>
+            <div class="relative">
+              <select id="ai-routing-select" class="w-full appearance-none bg-surface border border-outline-variant/60 hover:border-outline px-2.5 py-1.5 rounded text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8 text-on-surface">
+                <option value="hybrid">Hybrid (Auto-Adaptive)</option>
+                <option value="cloud-only">Cloud Only</option>
+                <option value="local-only">On-Device Only (Gemini Nano)</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+            </div>
+          </div>
+
+          <!-- RAM Alert box -->
+          <p id="ram-tip" class="font-body-sm text-[10px] text-secondary leading-normal" style="display: none;"></p>
+
+          <!-- Select Currency Display -->
+          <div class="flex flex-col gap-1">
+            <label for="currency-select" class="font-label-sm text-[10px] text-on-surface-variant font-semibold">Cost Display Currency</label>
+            <div class="relative">
+              <select id="currency-select" class="w-full appearance-none bg-surface border border-outline-variant/60 hover:border-outline px-2.5 py-1.5 rounded text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8 text-on-surface">
+                <option value="USD">USD ($) — US Dollar</option>
+                <option value="INR">INR (₹) — Indian Rupee</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sync Configuration Panel -->
+        <div class="form-group border-t border-outline-variant/30 pt-3 space-y-2">
+          <label class="font-label-sm text-[10px] text-on-surface-variant font-semibold">Zero-Knowledge Sync</label>
+          <div id="sync-status-badge" class="sync-badge hidden"></div>
+          
+          <div id="sync-passphrase-wrapper" class="space-y-1">
+            <input type="password" id="sync-passphrase-input" class="w-full bg-surface border border-outline-variant rounded p-1.5 text-xs focus:outline-none focus:border-primary text-on-surface" placeholder="Enter Sync Passphrase">
+          </div>
+          
+          <div class="flex gap-2">
+            <button id="enable-sync-btn" class="flex-1 bg-primary-container text-on-primary-container hover:opacity-90 px-3 py-1.5 rounded text-[10px] font-semibold active:scale-95 transition-all outline-none" type="button">Enable Sync</button>
+            <button id="disable-sync-btn" class="flex-1 border border-error/30 text-error hover:bg-error-container/10 px-3 py-1.5 rounded text-[10px] font-semibold active:scale-95 transition-all hidden outline-none" type="button">Disable Sync</button>
+          </div>
+        </div>
+
+        <!-- Visual Mode Customizations Manager -->
+        <div class="form-group border-t border-outline-variant/30 pt-3 space-y-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-label-sm text-[10px] text-on-surface-variant font-semibold">Visual Modes Manager</label>
+            <button id="add-mode-toggle-btn" class="text-xs text-primary font-semibold hover:underline outline-none" type="button">+ Add Mode</button>
+          </div>
+          
+          <!-- Creator Panel Form -->
+          <div id="mode-creator-form" class="bg-surface-container-low border border-outline-variant p-3 rounded-lg space-y-2.5 hidden">
+            <input type="text" id="new-mode-name" class="w-full bg-surface border border-outline-variant rounded p-1.5 text-xs focus:outline-none focus:border-primary text-on-surface" placeholder="Mode Name (e.g. Creative Writer)">
+            <input type="text" id="new-mode-desc" class="w-full bg-surface border border-outline-variant rounded p-1.5 text-xs focus:outline-none focus:border-primary text-on-surface" placeholder="Short description (e.g. Craft engaging copy)">
+            <textarea id="new-mode-instruction" class="w-full bg-surface border border-outline-variant rounded p-1.5 text-xs focus:outline-none focus:border-primary h-16 resize-none text-on-surface" placeholder="System instructions for Gemini..."></textarea>
+            
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <div class="flex flex-col gap-0.5">
+                <label class="text-[9px] text-on-surface-variant font-semibold">Accent Color</label>
+                <div class="relative">
+                  <select id="new-mode-icon" class="appearance-none bg-surface border border-outline-variant rounded px-2 py-1 text-[10px] focus:outline-none focus:border-primary pr-6 text-on-surface">
+                    <option value="blue">Analytical Blue</option>
+                    <option value="green">Technical Green</option>
+                    <option value="purple">First-Principles Purple</option>
+                    <option value="yellow">Exec-Summary Amber</option>
+                    <option value="red">Hot Coral</option>
+                    <option value="pink">Magenta Rose</option>
+                    <option value="grey">Cool Slate</option>
+                  </select>
+                  <span class="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 12px;">expand_more</span>
+                </div>
+              </div>
+              <button id="save-new-mode-btn" class="bg-primary text-on-primary hover:opacity-90 px-3 py-1.5 rounded text-[10px] font-semibold active:scale-95 transition-all self-end outline-none" type="button">Add Mode</button>
+            </div>
+            <div id="mode-creator-error" class="text-[10px] text-error font-medium"></div>
+          </div>
+
+          <!-- Dynamic Modes list content -->
+          <div id="visual-modes-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Advanced JSON view -->
+        <details class="group border-t border-outline-variant/30 pt-3">
+          <summary class="text-xs font-semibold text-on-surface-variant hover:text-on-surface cursor-pointer select-none outline-none list-none flex items-center justify-between">
+            <span>Advanced JSON View</span>
+            <span class="material-symbols-outlined text-outline-variant transition-transform group-open:rotate-180" style="font-size: 16px;">expand_more</span>
+          </summary>
+          <div class="mt-2 space-y-2">
+            <textarea id="json-modes-editor" class="w-full h-32 bg-surface-container-low border border-outline-variant rounded p-2 font-mono text-[10px] focus:outline-none focus:border-primary text-on-surface"></textarea>
+            <div id="json-error-status" class="text-[10px] font-medium leading-normal"></div>
           </div>
         </details>
 
-        <!-- Action Buttons for Settings -->
-        <div class="settings-actions">
-          <button id="reset-defaults-btn" class="btn-secondary">Reset Defaults</button>
-          <button id="save-settings-btn" class="btn-primary-small">Save Settings</button>
+        <!-- Form Control Actions -->
+        <div class="flex justify-between items-center gap-3 pt-3 border-t border-outline-variant/30">
+          <button id="reset-defaults-btn" class="flex-1 border border-outline hover:bg-surface-container-high px-3 py-1.5 rounded text-xs font-semibold active:scale-95 transition-all outline-none">Reset Defaults</button>
+          <button id="save-settings-btn" class="flex-1 bg-primary text-on-primary hover:opacity-90 px-3 py-1.5 rounded text-xs font-semibold active:scale-95 transition-all outline-none flex items-center justify-center gap-1.5">Save Settings</button>
         </div>
+
       </div>
     </main>
 
-    <!-- Floating Toast Notification -->
+    <!-- Floating Copy Toast Notification -->
     <div id="copy-toast" class="toast-notification">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-      <span>Copied to Clipboard</span>
+      <span class="material-symbols-outlined text-primary" style="font-size: 16px;">check_circle</span>
+      <span class="font-medium">Copied to Clipboard</span>
     </div>
+
   </div>
 
   <script src="popup.js" type="module"></script>

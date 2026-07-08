@@ -1,0 +1,268 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Geist:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #fcf9f5;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e2df;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-on-surface": "#f3f0ed",
+                      "surface-tint": "#536254",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#494640",
+                      "secondary": "#964735",
+                      "primary-fixed-dim": "#bacbb9",
+                      "inverse-primary": "#bacbb9",
+                      "secondary-container": "#fd9882",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#e8e2d9",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#cbc6bd",
+                      "on-primary-fixed-variant": "#3b4a3d",
+                      "secondary-fixed": "#ffdad3",
+                      "on-tertiary-container": "#efe9e0",
+                      "error": "#ba1a1a",
+                      "surface-container": "#f0edea",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#54514a",
+                      "surface": "#fcf9f5",
+                      "surface-bright": "#fcf9f5",
+                      "secondary-fixed-dim": "#ffb4a4",
+                      "surface-container-low": "#f6f3f0",
+                      "outline-variant": "#c3c8c1",
+                      "primary-fixed": "#d6e7d5",
+                      "primary-container": "#5d6d5e",
+                      "surface-container-high": "#eae8e4",
+                      "inverse-surface": "#31302e",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#783020",
+                      "outline": "#747872",
+                      "surface-variant": "#e5e2df",
+                      "tertiary-container": "#6c6962",
+                      "surface-container-highest": "#e5e2df",
+                      "on-primary-fixed": "#111f13",
+                      "on-tertiary-fixed": "#1d1b16",
+                      "on-error-container": "#93000a",
+                      "on-secondary-container": "#772f1f",
+                      "on-primary-container": "#ddeedb",
+                      "on-surface": "#1b1c1a",
+                      "on-surface-variant": "#434843",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#dcdad6",
+                      "on-secondary-fixed": "#3d0600",
+                      "on-background": "#1b1c1a",
+                      "primary": "#455547",
+                      "background": "#fcf9f5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "touch-target": "40px",
+                      "container-padding": "16px",
+                      "section-gap": "24px",
+                      "stack-gap": "12px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "label-md": ["JetBrains Mono"],
+                      "label-sm": ["JetBrains Mono"],
+                      "headline-lg": ["Geist"],
+                      "body-sm": ["Geist"],
+                      "body-lg": ["Geist"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "label-md": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                      "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "500" }],
+                      "headline-lg": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                      "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                      "body-lg": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                      "headline-md": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-transparent flex justify-center items-start pt-4">
+<!-- Chrome Extension Popup Container -->
+<div class="w-[360px] h-[480px] bg-surface relative flex flex-col overflow-hidden shadow-xl border border-outline-variant rounded-xl">
+<!-- Header with Integrated Navigation -->
+<header class="w-full z-10 border-b border-outline-variant px-3 pt-3 bg-surface-container-low">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="temp_preferences_custom">temp_preferences_custom</span>
+<h1 class="font-headline-md text-headline-md text-primary">Axiom</h1>
+</div>
+<button class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Condensed Desktop-style Nav Tabs -->
+<nav class="flex items-end">
+<a class="flex-1 flex items-center justify-center gap-1.5 py-2 hover:bg-surface-container-high/50 transition-colors relative after:content-[''] after:absolute after:right-0 after:h-4 after:w-[1px] after:bg-outline-variant/50 rounded-t-xl text-outline hover:text-primary active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="magic_button">magic_button</span>
+<span class="font-label-md text-label-md">Optimize</span>
+</a>
+<a class="flex-1 flex items-center justify-center gap-1.5 py-2 text-primary border-x border-t border-outline-variant -mb-[1px] relative z-20 rounded-t-xl bg-surface-container-high hover:bg-surface-container-high/80 active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<a class="flex-1 flex items-center justify-center gap-1.5 py-2 hover:bg-surface-container-high/50 transition-colors rounded-t-xl text-outline hover:text-primary active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto custom-scrollbar p-3 flex flex-col gap-3">
+<!-- Section Header & Action -->
+<div class="flex items-center justify-between">
+<h2 class="font-label-sm text-[10px] text-outline uppercase tracking-[0.1em]">Recent Activity</h2>
+<button class="group flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-error-container/10 transition-colors active:scale-95 transition-all duration-200" onclick="clearHistory()">
+<span class="material-symbols-outlined text-[14px] text-secondary group-hover:text-error" data-icon="delete_sweep">delete_sweep</span>
+<span class="font-label-sm text-[10px] text-secondary group-hover:text-error">Clear</span>
+</button>
+</div>
+<!-- History List Container -->
+<div class="flex flex-col gap-2" id="history-list">
+<!-- History Item: Analyst Mode -->
+<div class="group bg-surface-container-low border border-outline-variant/60 rounded-lg p-2.5 transition-all duration-200 hover:bg-white hover:border-primary-container/30 cursor-pointer active:scale-95">
+<div class="flex justify-between items-center mb-1.5">
+<div class="flex items-center gap-2">
+<span class="bg-primary/10 text-primary font-label-sm text-[9px] px-1.5 py-0.5 rounded leading-none">Analyst</span>
+<span class="font-label-sm text-[9px] text-outline">10:45 AM</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2 leading-snug">
+                        Compare Q3 performance metrics across the top four SaaS competitors...
+                    </p>
+</div>
+<!-- History Item: Creative Mode -->
+<div class="group bg-surface-container-low border border-outline-variant/60 rounded-lg p-2.5 transition-all duration-200 hover:bg-white hover:border-primary-container/30 cursor-pointer active:scale-95">
+<div class="flex justify-between items-center mb-1.5">
+<div class="flex items-center gap-2">
+<span class="bg-secondary/10 text-secondary font-label-sm text-[9px] px-1.5 py-0.5 rounded leading-none">Creative</span>
+<span class="font-label-sm text-[9px] text-outline">Yesterday</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2 leading-snug">
+                        Draft a series of metaphorical analogies explaining zero-knowledge proofs...
+                    </p>
+</div>
+<!-- History Item: Developer Mode -->
+<div class="group bg-surface-container-low border border-outline-variant/60 rounded-lg p-2.5 transition-all duration-200 hover:bg-white hover:border-primary-container/30 cursor-pointer active:scale-95">
+<div class="flex justify-between items-center mb-1.5">
+<div class="flex items-center gap-2">
+<span class="bg-tertiary-container/10 text-tertiary font-label-sm text-[9px] px-1.5 py-0.5 rounded leading-none">Dev</span>
+<span class="font-label-sm text-[9px] text-outline">Yesterday</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2 leading-snug">
+                        Refactor the current authentication middleware to support multi-tenant JWT...
+                    </p>
+</div>
+<!-- History Item: Analyst Mode -->
+<div class="group bg-surface-container-low border border-outline-variant/60 rounded-lg p-2.5 transition-all duration-200 hover:bg-white hover:border-primary-container/30 cursor-pointer active:scale-95">
+<div class="flex justify-between items-center mb-1.5">
+<div class="flex items-center gap-2">
+<span class="bg-primary/10 text-primary font-label-sm text-[9px] px-1.5 py-0.5 rounded leading-none">Analyst</span>
+<span class="font-label-sm text-[9px] text-outline">Oct 12</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2 leading-snug">
+                        Generate a comprehensive SWOT analysis for the expansion into Southeast Asian...
+                    </p>
+</div>
+<!-- Empty State (Hidden) -->
+<div class="hidden flex-col items-center justify-center py-12 text-center opacity-0 transition-opacity duration-500" id="empty-state">
+<span class="material-symbols-outlined text-outline-variant text-[40px] mb-2" data-icon="history_toggle_off">history_toggle_off</span>
+<h3 class="font-headline-md text-headline-md text-on-surface-variant">No history</h3>
+<p class="font-body-sm text-[11px] text-outline mt-1 px-4">Your requests will appear here.</p>
+</div>
+</div>
+</main>
+<!-- Small Footer Info -->
+<footer class="bg-surface-container-low/50 border-t border-outline-variant px-3 py-1.5 flex justify-between items-center">
+<span class="font-label-sm text-[9px] text-outline">v2.4.0</span>
+<span class="font-label-sm text-[9px] text-primary">Connected</span>
+</footer>
+</div>
+<script>
+        function clearHistory() {
+            const list = document.getElementById('history-list');
+            const items = list.querySelectorAll('.group');
+            const emptyState = document.getElementById('empty-state');
+
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.transform = 'translateX(10px)';
+                    item.style.opacity = '0';
+                    item.style.transition = 'all 0.2s ease';
+                    setTimeout(() => item.remove(), 200);
+                }, index * 40);
+            });
+
+            setTimeout(() => {
+                emptyState.classList.remove('hidden');
+                setTimeout(() => {
+                    emptyState.classList.add('opacity-100');
+                    emptyState.classList.remove('opacity-0');
+                }, 50);
+            }, items.length * 40 + 200);
+        }
+
+        document.querySelectorAll('.group').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.985)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'scale(1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+</body></html>

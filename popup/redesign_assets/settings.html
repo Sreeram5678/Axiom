@@ -1,0 +1,311 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-on-surface": "#f3f0ed",
+                      "surface-tint": "#536254",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#494640",
+                      "secondary": "#964735",
+                      "primary-fixed-dim": "#bacbb9",
+                      "inverse-primary": "#bacbb9",
+                      "secondary-container": "#fd9882",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#e8e2d9",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#cbc6bd",
+                      "on-primary-fixed-variant": "#3b4a3d",
+                      "secondary-fixed": "#ffdad3",
+                      "on-tertiary-container": "#efe9e0",
+                      "error": "#ba1a1a",
+                      "surface-container": "#f0edea",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#54514a",
+                      "surface": "#fcf9f5",
+                      "surface-bright": "#fcf9f5",
+                      "secondary-fixed-dim": "#ffb4a4",
+                      "surface-container-low": "#f6f3f0",
+                      "outline-variant": "#c3c8c1",
+                      "primary-fixed": "#d6e7d5",
+                      "primary-container": "#5d6d5e",
+                      "surface-container-high": "#eae8e4",
+                      "inverse-surface": "#31302e",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#783020",
+                      "outline": "#747872",
+                      "surface-variant": "#e5e2df",
+                      "tertiary-container": "#6c6962",
+                      "surface-container-highest": "#e5e2df",
+                      "on-primary-fixed": "#111f13",
+                      "on-tertiary-fixed": "#1d1b16",
+                      "on-error-container": "#93000a",
+                      "on-secondary-container": "#772f1f",
+                      "on-primary-container": "#ddeedb",
+                      "on-surface": "#1b1c1a",
+                      "on-surface-variant": "#434843",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#dcdad6",
+                      "on-secondary-fixed": "#3d0600",
+                      "on-background": "#1b1c1a",
+                      "primary": "#455547",
+                      "background": "#fcf9f5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "touch-target": "32px",
+                      "container-padding": "12px",
+                      "section-gap": "16px",
+                      "stack-gap": "8px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "label-md": ["JetBrains Mono"],
+                      "label-sm": ["JetBrains Mono"],
+                      "headline-lg": ["Geist"],
+                      "body-sm": ["Geist"],
+                      "body-lg": ["Geist"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "label-md": ["10px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "label-sm": ["9px", {"lineHeight": "12px", "fontWeight": "500"}],
+                      "headline-lg": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-sm": ["11px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "body-lg": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "headline-md": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fcf9f5;
+            color: #1b1c1a;
+            width: 360px; /* Standard extension popup width */
+            height: 520px; /* Standard extension popup height */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+            font-size: 20px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e2df;
+            border-radius: 2px;
+        }
+
+        /* Toggle Switch Styling - Scaled for mouse */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #455547;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            left: 18px;
+        }
+        .toggle-label:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-lg text-body-lg antialiased">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-surface shrink-0">
+  <!-- Title Bar -->
+  <div class="flex items-center justify-between px-3 h-8 bg-surface">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary" style="font-size: 16px;">temp_preferences_custom</span>
+      <h1 class="font-headline-lg text-[12px] text-on-surface tracking-tight">Axiom</h1>
+    </div>
+    <button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors" style="font-size: 16px;">help_outline</button>
+  </div>
+  
+  <!-- Chrome-style Tab Bar -->
+  <div class="flex items-end px-2 h-9 border-b border-outline-variant bg-surface-container-low"><!-- Active Tab: Settings -->
+    <div class="relative flex items-center h-8 px-4 bg-surface-container-low border-x border-t border-outline-variant -mb-[1px] z-10 rounded-t-xl hover:bg-surface-container-high transition-colors cursor-pointer active:scale-95 transition-all">
+      <span class="material-symbols-outlined mr-1.5 text-primary" style="font-size: 14px; font-variation-settings: 'FILL' 1;">settings</span>
+      <span class="text-[11px] font-medium text-on-surface whitespace-nowrap">Settings</span>
+      <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"></div>
+    </div>
+    
+    <!-- Inactive Tab: Optimize -->
+    <div class="group relative flex items-center h-8 px-4 hover:bg-surface-container-high transition-colors cursor-pointer rounded-t-xl active:scale-95 transition-all">
+      <span class="material-symbols-outlined mr-1.5 text-on-surface-variant opacity-60 group-hover:text-primary" style="font-size: 14px;">magic_button</span>
+      <span class="text-[11px] text-on-surface-variant opacity-60 whitespace-nowrap group-hover:text-on-surface">Optimize</span>
+      <!-- Separator -->
+      <div class="absolute right-0 top-2 bottom-2 w-[1px] bg-outline-variant group-hover:opacity-0"></div>
+    </div>
+
+    <!-- Inactive Tab: History -->
+    <div class="group relative flex items-center h-8 px-4 hover:bg-surface-container-high transition-colors cursor-pointer rounded-t-xl active:scale-95 transition-all">
+      <span class="material-symbols-outlined mr-1.5 text-on-surface-variant opacity-60 group-hover:text-primary" style="font-size: 14px;">history</span>
+      <span class="text-[11px] text-on-surface-variant opacity-60 whitespace-nowrap group-hover:text-on-surface">History</span>
+    </div></div>
+</header>
+<!-- Content Canvas -->
+<main class="flex-1 overflow-y-auto custom-scrollbar px-container-padding py-4 space-y-5">
+<!-- API Configuration -->
+<section class="space-y-2">
+
+<div class="p-3 bg-surface-container-low border border-surface-variant rounded flex items-center justify-between">
+<div>
+<p class="font-headline-md text-headline-md leading-tight">API Access</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Key active • 2m ago</p>
+</div>
+<button class="bg-primary text-on-primary px-3 py-1.5 rounded font-label-md text-label-sm hover:opacity-90 transition-all active:scale-95 whitespace-nowrap">
+                    MANAGE
+                </button>
+</div>
+</section>
+<!-- Model Preferences -->
+<section class="space-y-3">
+
+<div class="grid grid-cols-1 gap-3">
+<!-- Select: Model -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant px-0.5">MODEL</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface border border-outline-variant hover:border-outline px-2 py-1.5 rounded font-body-sm text-body-lg focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8">
+<option>Gemini 1.5 Pro</option>
+<option>Gemini 1.5 Flash</option>
+<option>Gemini 1.0 Pro</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+</div>
+</div>
+<!-- Select: Prompt Length -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant px-0.5">PROMPT LENGTH</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface border border-outline-variant hover:border-outline px-2 py-1.5 rounded font-body-sm text-body-lg focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8">
+<option>Concise</option>
+<option selected="">Standard</option>
+<option>Detailed</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+</div>
+</div>
+<!-- Select: Routing -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant px-0.5">ROUTING MODE</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface border border-outline-variant hover:border-outline px-2 py-1.5 rounded font-body-sm text-body-lg focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8">
+<option>Cloud Only</option>
+<option selected="">Hybrid (Adaptive)</option>
+<option>Local (Privacy)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">expand_more</span>
+</div>
+</div>
+</div>
+<!-- RAM Detection Alert -->
+<div class="flex items-start gap-2 p-2 bg-tertiary-fixed border border-outline-variant rounded">
+<span class="material-symbols-outlined text-tertiary mt-0.5" style="font-size: 14px;">memory</span>
+<p class="font-body-sm text-[10px] text-tertiary-container leading-normal">
+<span class="font-bold">RAM:</span> 16GB detected. Local routing enabled for small tasks.
+                </p>
+</div>
+</section>
+<!-- Global & UI -->
+<section class="space-y-3">
+
+<div class="space-y-4">
+<!-- Currency Select -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant px-0.5 text-[9px]">CURRENCY</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface border border-outline-variant hover:border-outline px-2 py-1.5 rounded font-body-sm text-body-lg focus:outline-none focus:border-primary transition-colors cursor-pointer pr-8">
+<option selected="">USD ($)</option>
+<option>EUR (€)</option>
+<option>GBP (£)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 16px;">payments</span>
+</div>
+</div>
+<!-- Toggles -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex flex-col pr-4">
+<span class="font-body-lg text-on-surface font-medium">Floating Button</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant leading-tight">Quick access overlay on tabs</span>
+</div>
+<div class="relative inline-block w-8 h-4.5 shrink-0">
+<input checked="" class="toggle-checkbox absolute opacity-0 w-0 h-0" id="floating-toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-4.5 rounded-full bg-surface-variant cursor-pointer transition-colors relative border border-outline-variant" for="floating-toggle"></label>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col pr-4">
+<span class="font-body-lg text-on-surface font-medium">Zero-Knowledge Sync</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant leading-tight">Encrypted across devices</span>
+</div>
+<div class="relative inline-block w-8 h-4.5 shrink-0">
+<input class="toggle-checkbox absolute opacity-0 w-0 h-0" id="sync-toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-4.5 rounded-full bg-surface-variant cursor-pointer transition-colors relative border border-outline-variant" for="sync-toggle"></label>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Decorative Card - Streamlined -->
+<div class="relative w-full py-3 px-4 rounded-lg overflow-hidden bg-primary-container flex items-center">
+<div class="relative z-10">
+<p class="font-headline-md text-on-primary-container text-[12px]">Cloud Sanctuary</p>
+<p class="font-body-sm text-on-primary-container opacity-90 text-[10px]">Your data remains yours by default.</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar - Scaled for Extension -->
+
+<script>
+        // Adjust focus behavior for better extension UX
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('focus', () => {
+                select.parentElement.querySelector('.material-symbols-outlined').style.color = '#455547';
+            });
+            select.addEventListener('blur', () => {
+                select.parentElement.querySelector('.material-symbols-outlined').style.color = '#434843';
+            });
+        });
+    </script>
+
+
+
+
+
+
+</body></html>
