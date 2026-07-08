@@ -731,6 +731,13 @@ function setupEventListeners() {
         helpModal.classList.add('hidden');
       }
     });
+
+    const modeInfoBtn = document.getElementById('mode-info-btn');
+    if (modeInfoBtn) {
+      modeInfoBtn.addEventListener('click', () => {
+        helpModal.classList.remove('hidden');
+      });
+    }
   }
 
   // Instant Auto-save for In-Page Floating Widget Toggle (snappy reactivity)
