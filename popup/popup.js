@@ -712,6 +712,27 @@ function setupTabSwitching() {
 
 // Core Event Listeners
 function setupEventListeners() {
+  // Help Modal Dialog Bindings
+  const helpBtn = document.getElementById('help-btn');
+  const helpModal = document.getElementById('help-modal');
+  const closeHelpBtn = document.getElementById('close-help-btn');
+
+  if (helpBtn && helpModal && closeHelpBtn) {
+    helpBtn.addEventListener('click', () => {
+      helpModal.classList.remove('hidden');
+    });
+
+    closeHelpBtn.addEventListener('click', () => {
+      helpModal.classList.add('hidden');
+    });
+
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) {
+        helpModal.classList.add('hidden');
+      }
+    });
+  }
+
   // Instant Auto-save for In-Page Floating Widget Toggle (snappy reactivity)
   if (widgetToggleCheckbox) {
     widgetToggleCheckbox.addEventListener('change', async (e) => {
