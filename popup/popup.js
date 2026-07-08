@@ -1478,7 +1478,7 @@ async function registerDynamicScript(domain) {
         matches: [`*://*.${domain}/*`],
         js: ['content.js'],
         css: ['content.css'],
-        runAt: 'documentIdle'
+        runAt: 'document_idle'
       }
     ]);
     console.log(`[Axiom Scripting] Registered dynamic content script for: ${domain}`);

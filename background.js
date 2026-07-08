@@ -19,7 +19,7 @@ async function restoreDynamicScripts() {
             matches: [`*://*.${domain}/*`],
             js: ['content.js'],
             css: ['content.css'],
-            runAt: 'documentIdle'
+            runAt: 'document_idle'
           }
         ]);
         console.log(`[Axiom Background] Restored dynamic content script for: ${domain}`);
