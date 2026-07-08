@@ -97,16 +97,17 @@
 
         <!-- Smart suggestions in-page floating widget toggle card -->
         <div class="relative w-full rounded-xl overflow-hidden shadow-sm">
-          <div class="absolute inset-0 bg-primary-container opacity-10"></div>
-          <div class="absolute inset-0 p-3 flex items-center justify-between z-10">
-            <div class="bg-surface/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-outline-variant/30 max-w-[200px]">
-              <h3 class="font-headline-md text-xs text-primary font-bold">Floating Widget</h3>
-              <p class="font-body-sm text-[9px] text-on-surface-variant font-medium mt-0.5">Show in-page helper overlay</p>
+          <!-- Dark overlay -->
+          <div class="absolute inset-0 bg-primary/70 mix-blend-multiply z-10"></div>
+          <div class="absolute inset-0 p-3 flex items-center justify-between z-20">
+            <div>
+              <h3 class="font-headline-md text-xs text-white font-bold">Floating Widget</h3>
+              <p class="font-body-sm text-[9px] text-white/80 font-medium mt-0.5">Show in-page helper overlay</p>
             </div>
             <!-- Dynamic switch toggle -->
             <label class="relative inline-flex items-center cursor-pointer select-none">
               <input type="checkbox" id="widget-toggle-checkbox" class="sr-only peer" checked>
-              <div class="w-8 h-4 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:left-[4px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary"></div>
+              <div class="w-8 h-4 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:left-[4px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white/80"></div>
             </label>
           </div>
           <div class="h-14 w-full bg-cover bg-center" style="background-image: url('floating_widget_bg.jpg')"></div>

@@ -224,66 +224,177 @@ async function renderModes() {
   }
 }
 
+// Helper to render premium detailed SVGs for optimization modes
+function getModeIconSvg(modeId, iconColor, isActive) {
+  const id = (modeId || '').toLowerCase();
+  const color = (iconColor || '').toLowerCase();
+  
+  let iconType = id;
+  if (!['analyst', 'engineer', 'first-principles', 'exec-summary'].includes(iconType)) {
+    const colorToIconMap = {
+      'blue': 'analyst',
+      'green': 'engineer',
+      'purple': 'first-principles',
+      'yellow': 'exec-summary',
+      'red': 'photo',
+      'pink': 'video',
+      'grey': 'magic'
+    };
+    iconType = colorToIconMap[color] || '';
+    
+    if (!iconType) {
+      if (id.includes('photo') || id.includes('image') || id.includes('camera')) {
+        iconType = 'photo';
+      } else if (id.includes('video') || id.includes('movie') || id.includes('motion')) {
+        iconType = 'video';
+      } else if (id.includes('code') || id.includes('dev') || id.includes('engineer')) {
+        iconType = 'engineer';
+      } else {
+        iconType = 'magic';
+      }
+    }
+  }
+
+  const colors = {
+    analyst: isActive ? '#3b82f6' : '#60a5fa',
+    engineer: isActive ? '#059669' : '#34d399',
+    'first-principles': isActive ? '#8b5cf6' : '#c084fc',
+    'exec-summary': isActive ? '#d97706' : '#fbbf24',
+    photo: isActive ? '#059669' : '#10b981',
+    video: isActive ? '#db2777' : '#f472b6',
+    magic: isActive ? '#6366f1' : '#818cf8'
+  };
+
+  const primaryColor = colors[iconType] || '#a1a1aa';
+
+  switch (iconType) {
+    case 'analyst':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="analyst-grad-${modeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#8b5cf6" />
+            </linearGradient>
+          </defs>
+          <line x1="3" y1="18" x2="21" y2="18" stroke="#e5e7eb" stroke-dasharray="2 2" />
+          <line x1="3" y1="12" x2="21" y2="12" stroke="#e5e7eb" stroke-dasharray="2 2" />
+          <path d="M3 3v18h18" stroke="#9ca3af" />
+          <path d="M3 16.5l4.5-4.5 4.5 3 6-7.5 3 3" stroke="url(#analyst-grad-${modeId})" stroke-width="2.2" />
+          <circle cx="18" cy="10.5" r="2.5" fill="#8b5cf6" stroke="#fff" stroke-width="1" />
+        </svg>
+      `;
+    case 'engineer':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="18" rx="3" fill="#1f2937" />
+          <circle cx="6" cy="7" r="1.5" fill="#f87171" />
+          <circle cx="10" cy="7" r="1.5" fill="#fbbf24" />
+          <circle cx="14" cy="7" r="1.5" fill="#34d399" />
+          <path d="M6 12h5" stroke="${primaryColor}" stroke-width="2" />
+          <path d="M13 12h5" stroke="#a78bfa" stroke-width="2" />
+          <path d="M6 16h9" stroke="#9ca3af" stroke-width="1.8" />
+        </svg>
+      `;
+    case 'first-principles':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="fp-grad-${modeId}" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#818cf8" />
+            </linearGradient>
+          </defs>
+          <path d="M9 18h6" stroke="#9ca3af" />
+          <path d="M10 21h4" stroke="#9ca3af" />
+          <path d="M12 2a6.5 6.5 0 0 0-6.5 6.5c0 2.2 1 4.2 2.5 5.5v3h8v-3c1.5-1.3 2.5-3.3 2.5-5.5A6.5 6.5 0 0 0 12 2z" stroke="url(#fp-grad-${modeId})" fill="url(#fp-grad-${modeId})" fill-opacity="0.1" />
+          <circle cx="12" cy="7.5" r="1.5" fill="${primaryColor}" />
+          <circle cx="9.5" cy="11" r="1.5" fill="${primaryColor}" />
+          <circle cx="14.5" cy="11" r="1.5" fill="${primaryColor}" />
+          <line x1="12" y1="7.5" x2="9.5" y2="11" stroke="${primaryColor}" stroke-width="1" />
+          <line x1="12" y1="7.5" x2="14.5" y2="11" stroke="${primaryColor}" stroke-width="1" />
+          <line x1="9.5" y1="11" x2="14.5" y2="11" stroke="${primaryColor}" stroke-width="1" />
+        </svg>
+      `;
+    case 'exec-summary':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="exec-grad-${modeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#ef4444" />
+            </linearGradient>
+          </defs>
+          <rect x="4" y="3" width="16" height="18" rx="2" stroke="url(#exec-grad-${modeId})" fill="url(#exec-grad-${modeId})" fill-opacity="0.05" />
+          <path d="M7 7h10" stroke="url(#exec-grad-${modeId})" stroke-width="2.5" />
+          <path d="M7 11h8" stroke="#9ca3af" />
+          <path d="M7 14h10" stroke="#9ca3af" />
+          <path d="M7 17h5" stroke="#9ca3af" />
+        </svg>
+      `;
+    case 'photo':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="photo-grad-${modeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#059669" />
+            </linearGradient>
+          </defs>
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="url(#photo-grad-${modeId})" fill="url(#photo-grad-${modeId})" fill-opacity="0.05" />
+          <circle cx="12" cy="13" r="4.5" stroke="url(#photo-grad-${modeId})" />
+          <circle cx="12" cy="13" r="2" fill="url(#photo-grad-${modeId})" />
+          <circle cx="11.5" cy="12.5" r="0.8" fill="#fff" />
+        </svg>
+      `;
+    case 'video':
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="video-grad-${modeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#ec4899" />
+            </linearGradient>
+          </defs>
+          <rect x="3" y="8" width="18" height="13" rx="2" stroke="url(#video-grad-${modeId})" fill="url(#video-grad-${modeId})" fill-opacity="0.05" />
+          <path d="M3 5h18v3H3z" stroke="url(#video-grad-${modeId})" />
+          <path d="M6 5l3 3M11 5l3 3M16 5l3 3" stroke="url(#video-grad-${modeId})" />
+          <circle cx="12" cy="14" r="2" fill="url(#video-grad-${modeId})" />
+        </svg>
+      `;
+    default:
+      return `
+        <svg class="w-7 h-7 mb-1.5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="magic-grad-${modeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${primaryColor}" />
+              <stop offset="100%" stop-color="#a78bfa" />
+            </linearGradient>
+          </defs>
+          <line x1="5" y1="19" x2="15" y2="9" stroke="url(#magic-grad-${modeId})" stroke-width="2.5" />
+          <circle cx="15" cy="9" r="1" fill="#fff" />
+          <path d="M19 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#a78bfa" stroke="none" />
+          <path d="M13 14l0.5 1 1 0.5-1 0.5-0.5 1-0.5-1-1-0.5 1-0.5z" fill="${primaryColor}" stroke="none" />
+        </svg>
+      `;
+  }
+}
+
 // Dynamically render modes cards grid in main panel
 function renderModesGrid() {
   if (!modesGridContainer) return;
   modesGridContainer.innerHTML = '';
-  
-  const colorMap = {
-    'analyst': '#60a5fa',         // Analytical Blue
-    'engineer': '#34d399',        // Technical Green
-    'first-principles': '#c084fc',// Philosophical Purple
-    'exec-summary': '#fbbf24',    // Strategic Gold
-    
-    'blue': '#60a5fa',
-    'green': '#34d399',
-    'purple': '#c084fc',
-    'yellow': '#fbbf24',
-    'red': '#f87171',
-    'pink': '#f472b6',
-    'grey': '#a1a1aa'
-  };
-
-  const iconMap = {
-    'analyst': 'insights',
-    'engineer': 'code',
-    'first-principles': 'lightbulb',
-    'exec-summary': 'article',
-    
-    'blue': 'insights',
-    'green': 'code',
-    'purple': 'lightbulb',
-    'yellow': 'article',
-    'red': 'photo_camera',
-    'pink': 'movie',
-    'grey': 'science'
-  };
 
   currentModes.forEach(mode => {
     const card = document.createElement('div');
     const isActive = mode.id === activeModeId;
-    card.className = `mode-card ${isActive ? 'active' : ''}`;
+    card.className = `mode-card group ${isActive ? 'active' : ''}`;
     card.setAttribute('data-mode-id', mode.id);
     
-    const color = safeGet(colorMap, mode.icon) || safeGet(colorMap, mode.id) || '#a1a1aa';
-    
-    let iconName = safeGet(iconMap, mode.icon) || safeGet(iconMap, mode.id);
-    if (!iconName) {
-      const nameLower = (mode.name || '').toLowerCase();
-      const descLower = (mode.description || '').toLowerCase();
-      if (nameLower.includes('photo') || nameLower.includes('image') || nameLower.includes('camera') || descLower.includes('photo') || descLower.includes('image')) {
-        iconName = 'photo_camera';
-      } else if (nameLower.includes('video') || nameLower.includes('movie') || nameLower.includes('motion') || descLower.includes('video') || descLower.includes('movie')) {
-        iconName = 'movie';
-      } else if (nameLower.includes('code') || nameLower.includes('dev') || nameLower.includes('engineer') || descLower.includes('code') || descLower.includes('dev')) {
-        iconName = 'code';
-      } else {
-        iconName = 'magic_button';
-      }
-    }
+    const svgMarkup = getModeIconSvg(mode.id, mode.icon, isActive);
     
     card.innerHTML = `
-      <span class="material-symbols-outlined mb-1 transition-colors" style="color: ${color}; font-variation-settings: 'FILL' ${isActive ? 1 : 0};">${iconName}</span>
+      ${svgMarkup}
       <span class="font-label-md text-label-md text-on-surface font-semibold"></span>
       <span class="font-body-sm text-[10px] text-on-surface-variant leading-tight mt-0.5"></span>
     `;
@@ -296,15 +407,8 @@ function renderModesGrid() {
     
     card.addEventListener('click', async () => {
       activeModeId = mode.id;
-      document.querySelectorAll('.mode-card').forEach(el => {
-        el.classList.remove('active');
-        const icon = el.querySelector('.material-symbols-outlined');
-        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
-      });
-      card.classList.add('active');
-      const icon = card.querySelector('.material-symbols-outlined');
-      if (icon) icon.style.fontVariationSettings = "'FILL' 1";
       await chrome.storage.local.set({ lastActiveModeId: activeModeId });
+      renderModesGrid();
     });
     
     modesGridContainer.appendChild(card);
@@ -494,16 +598,7 @@ function handleBackgroundState(state) {
     rawPromptInput.value = state.rawPrompt || '';
     
     activeModeId = state.selectedModeId || 'analyst';
-    document.querySelectorAll('.mode-card').forEach(el => {
-      const icon = el.querySelector('.material-symbols-outlined');
-      if (el.getAttribute('data-mode-id') === activeModeId) {
-        el.classList.add('active');
-        if (icon) icon.style.fontVariationSettings = "'FILL' 1";
-      } else {
-        el.classList.remove('active');
-        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
-      }
-    });
+    renderModesGrid();
 
     if (state.selectedLength) {
       updateSelectedLengthUI(state.selectedLength);
@@ -1059,16 +1154,7 @@ async function renderHistoryList() {
           await chrome.storage.local.set({ lastActiveModeId: activeModeId });
           
           // Re-toggle grid cards active styling
-          document.querySelectorAll('.mode-card').forEach(el => {
-            const icon = el.querySelector('.material-symbols-outlined');
-            if (el.getAttribute('data-mode-id') === activeModeId) {
-              el.classList.add('active');
-              if (icon) icon.style.fontVariationSettings = "'FILL' 1";
-            } else {
-              el.classList.remove('active');
-              if (icon) icon.style.fontVariationSettings = "'FILL' 0";
-            }
-          });
+          renderModesGrid();
         }
 
         // Hide output card (waiting for new optimization)
