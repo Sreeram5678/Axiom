@@ -2,6 +2,34 @@ import { optimizePrompt } from './modules/api-handler.js';
 import { getModes } from './modules/modes.js';
 import { decrypt } from './modules/crypto-helper.js';
 
+// Restore dynamic scripting rules on startup or install
+async function restoreDynamicScripts() {
+  try {
+    const { enabledDomains = [] } = await chrome.storage.local.get(['enabledDomains']);
+    if (enabledDomains.length === 0) return;
+
+    const registered = await chrome.scripting.getRegisteredContentScripts();
+    
+    for (const domain of enabledDomains) {
+      const scriptId = `axiom-custom-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`;
+      if (!registered.some(s => s.id === scriptId)) {
+        await chrome.scripting.registerContentScripts([
+          {
+            id: scriptId,
+            matches: [`*://*.${domain}/*`],
+            js: ['content.js'],
+            css: ['content.css'],
+            runAt: 'documentIdle'
+          }
+        ]);
+        console.log(`[Axiom Background] Restored dynamic content script for: ${domain}`);
+      }
+    }
+  } catch (err) {
+    console.error("[Axiom Background] Failed to restore dynamic scripts:", err.message);
+  }
+}
+
 // Initialize extension defaults on install
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Axiom Extension Installed successfully.");
@@ -14,6 +42,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 
   // Pre-populate modes if not configured
   await getModes();
+
+  // Restore dynamic scripts
+  await restoreDynamicScripts();
+});
+
+// Also register startup listener to ensure scripts are restored
+chrome.runtime.onStartup.addListener(async () => {
+  await restoreDynamicScripts();
 });
 
 // Helper to safely retrieve object properties without bracket notation to satisfy CWE-94 static analysis
