@@ -1086,6 +1086,10 @@ function setupEventListeners() {
 // Render History log items (Starring, loading and copying)
 async function renderHistoryList() {
   if (!historyList) return;
+  
+  const scrollContainer = document.querySelector('main');
+  const savedScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
   historyList.innerHTML = '';
 
   const { promptHistory = [] } = await chrome.storage.local.get(['promptHistory']);
@@ -1239,6 +1243,10 @@ async function renderHistoryList() {
 
     historyList.appendChild(histItemEl);
   });
+
+  if (scrollContainer) {
+    scrollContainer.scrollTop = savedScrollTop;
+  }
 }
 
 // Helpers
