@@ -1227,15 +1227,13 @@ async function renderHistoryList() {
     const deleteHistBtn = histItemEl.querySelector('.delete-hist-btn');
     deleteHistBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (confirm('Are you sure you want to delete this history item?')) {
-        try {
-          const { promptHistory = [] } = await chrome.storage.local.get(['promptHistory']);
-          const updated = promptHistory.filter(h => h.id !== item.id);
-          await chrome.storage.local.set({ promptHistory: updated });
-          await renderHistoryList();
-        } catch (err) {
-          console.warn("[Axiom Popup] Delete history item failed:", err.message);
-        }
+      try {
+        const { promptHistory = [] } = await chrome.storage.local.get(['promptHistory']);
+        const updated = promptHistory.filter(h => h.id !== item.id);
+        await chrome.storage.local.set({ promptHistory: updated });
+        await renderHistoryList();
+      } catch (err) {
+        console.warn("[Axiom Popup] Delete history item failed:", err.message);
       }
     });
 
