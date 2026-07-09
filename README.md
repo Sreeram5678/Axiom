@@ -160,6 +160,11 @@ The workspace is organized into separate directories, separating the client exte
 │   ├── popup.css            # Dark mode glassmorphic styling
 │   └── popup.js             # Controller managing inputs, streaming, and history
 │
+├── mobile-bridge/           # Cloudflare Worker Bridge for iOS Shortcuts
+│   ├── index.js             # Core serverless API router
+│   ├── wrangler.toml        # Deployment configuration
+│   └── package.json         # Package configuration
+│
 └── AxiomOS/                 # macOS Native Accessory Application
     ├── Package.swift        # Swift Package Manager manifest
     └── Sources/AxiomOS/     # Swift application source files
@@ -217,6 +222,21 @@ Because AxiomOS registers system-wide key shortcuts and captures highlighted tex
 3.  Locate and toggle the switch next to **AxiomOS** (or your Terminal app if executing from the command line) to **ON**.
 4.  Click **Request Accessibility Access** in the AxiomOS status menu bar dropdown to verify the status.
 
+### 3. Axiom Mobile (iOS Shortcut + Cloudflare Worker Bridge) Setup
+Axiom Mobile provides zero-footprint prompt optimization and chat helper suggestions on your iPhone using native iOS Shortcuts and a private Cloudflare Worker running Gemini 3.1 Flash-Lite.
+
+#### Cloudflare Worker Deployment
+1. Run the helper deployment script from the repository root:
+   ```bash
+   ./deploy_mobile_bridge.sh
+   ```
+2. Follow the terminal prompts to log in, configure your Gemini API key, and deploy the worker.
+3. Copy your live worker URL (e.g. `https://axiom-mobile-bridge.[username].workers.dev`).
+
+#### iOS Shortcuts Configuration
+1. Build the simple 3-block shortcuts on your iPhone using the detailed instructions in [axiom_mobile_shortcuts_gemini.md](Plans/axiom_mobile_shortcuts_gemini.md).
+2. Map the double-tap and triple-tap gestures to **Axiom Mobile** under **Settings > Accessibility > Touch > Back Tap**.
+
 ---
 
 ## Configuration & Custom Personas
@@ -259,6 +279,8 @@ AxiomOS persists non-sensitive settings locally at `~/.axiom_config.json`.
 | **macOS Native** | Control+Shift+R | Direct Rewrite | Polishes vocabulary, elevates professional tone, and enhances flow. |
 | **macOS Native** | Control+Shift+S | Direct Summarize | Condenses highlighted text into its absolute core facts. |
 | **macOS Native** | Control+Shift+E | Direct Executive Summary | Reformats captured selection into a 2-sentence overarching synthesis and 3-5 key takeaways. |
+| **Axiom Mobile (iOS)** | Double-Tap Back | Clipboard Optimize | Optimizes the user prompt copied to the clipboard. |
+| **Axiom Mobile (iOS)** | Triple-Tap Back | Screen-Aware Reply | Uses local OCR to capture the screen history and copies a drafted response. |
 
 ---
 
