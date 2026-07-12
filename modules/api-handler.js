@@ -146,6 +146,9 @@ export async function optimizePrompt({
   }
 
     // Set up standard stream decoder pipeline using direct TextDecoder and getReader
+    const startTime = Date.now();
+    console.log(`[Axiom API Debug] Starting stream reader at: ${startTime}`);
+    
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -156,9 +159,15 @@ export async function optimizePrompt({
     let inString = false;
     let escapeNext = false;
     let startIndex = -1;
+    let chunkCount = 0;
 
     while (true) {
+      const readStart = Date.now();
       const { done, value } = await reader.read();
+      const readEnd = Date.now();
+      chunkCount++;
+      
+      console.log(`[Axiom API Debug] Read chunk #${chunkCount} in ${readEnd - readStart}ms. done=${done}, valueLength=${value ? value.length : 0}, timeSinceStart=${readEnd - startTime}ms`);
       
       let chunkStr = "";
       if (value) {
