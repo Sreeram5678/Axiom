@@ -37,8 +37,16 @@ export async function optimizePrompt({
     lengthDirective = "The optimized prompt MUST be of medium length, balancing clear context, structural clarity, and efficient detail without being overly brief or excessively wordy.";
   }
 
-  // Google Gemini API streamGenerateContent endpoint
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}`;
+  // Map length parameter to a maxOutputTokens configuration
+  let maxOutputTokens = 800;
+  if (length === "short") {
+    maxOutputTokens = 400;
+  } else if (length === "detailed") {
+    maxOutputTokens = 1500;
+  }
+
+  // Google Gemini API streamGenerateContent endpoint with alt=sse parameter for real-time streaming
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
   const requestBody = {
     contents: [
@@ -59,7 +67,8 @@ export async function optimizePrompt({
       ]
     },
     generationConfig: {
-      temperature: 0.4
+      temperature: 0.4,
+      maxOutputTokens: maxOutputTokens
     }
   };
 

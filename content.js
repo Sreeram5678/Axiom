@@ -614,19 +614,35 @@ function capturePageContext(rawPrompt) {
 
   if (bubbles.length === 0) return "";
 
+  // Slice bubbles to the last 15 elements to prevent performance degradation on long chats
+  const recentBubbles = bubbles.slice(-15);
+
+  // Helper to resolve the speaker of a bubble element using fast native DOM and class checks
+  function resolveSpeaker(el) {
+    const classes = el.className.toLowerCase();
+    const id = el.id.toLowerCase();
+    const testId = (el.getAttribute('data-testid') || '').toLowerCase();
+    
+    if (classes.includes("user") || classes.includes("right-bubble") || classes.includes("human") || classes.includes("query") ||
+        id.includes("user") || id.includes("query") ||
+        testId.includes("user") || testId.includes("query")) {
+      return "User";
+    }
+    if (classes.includes("assistant") || classes.includes("left-bubble") || classes.includes("model") || classes.includes("bot") ||
+        id.includes("assistant") || id.includes("model") ||
+        testId.includes("assistant") || testId.includes("model")) {
+      return "Assistant";
+    }
+    return "Participant";
+  }
+
   // If no raw prompt is provided, fall back to simple last-4 bubbles to avoid breaking
   if (!rawPrompt || rawPrompt.trim() === "") {
     const contextItems = [];
-    bubbles.slice(-4).forEach(el => {
+    recentBubbles.slice(-4).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -645,16 +661,10 @@ function capturePageContext(rawPrompt) {
   if (keywordSet.size === 0) {
     // If no unique keywords are found, fall back to last-4 bubbles
     const contextItems = [];
-    bubbles.slice(-4).forEach(el => {
+    recentBubbles.slice(-4).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -662,7 +672,7 @@ function capturePageContext(rawPrompt) {
   }
 
   // Score each bubble
-  const scoredBubbles = bubbles.map(el => {
+  const scoredBubbles = recentBubbles.map(el => {
     const rawText = el.innerText || el.textContent || "";
     const text = rawText.trim().replace(/\s+/g, ' ');
     const textLower = text.toLowerCase();
@@ -670,7 +680,6 @@ function capturePageContext(rawPrompt) {
     let score = 0;
     
     // 1. Keyword density check
-    // Safe linear count via indexOf — avoids new RegExp(variable) which risks ReDoS (CWE-185)
     keywordSet.forEach(word => {
       let count = 0;
       let pos = 0;
@@ -689,7 +698,6 @@ function capturePageContext(rawPrompt) {
     const matchedIndices = [];
     words.forEach((word, idx) => {
       const cleanWord = word.replace(/[^\w]/g, '');
-      // Use Set.has() instead of bracket notation to prevent prototype pollution (CWE-94)
       if (cleanWord.length > 0 && keywordSet.has(cleanWord)) {
         matchedIndices.push(idx);
       }
@@ -702,8 +710,7 @@ function capturePageContext(rawPrompt) {
     }
 
     // 3. Code Block priority boost (strongly prefer developer code segments)
-    const html = el.outerHTML.toLowerCase();
-    if (html.includes("pre") || html.includes("code") || text.includes("```")) {
+    if (el.querySelector('pre, code') !== null || text.includes("```")) {
       score += 35; // 35 point substantial boost
     }
 
@@ -719,16 +726,10 @@ function capturePageContext(rawPrompt) {
   // If no bubbles scored high enough, fall back to last-2 bubbles as safe context
   if (relevantBubbles.length === 0) {
     const contextItems = [];
-    bubbles.slice(-2).forEach(el => {
+    recentBubbles.slice(-2).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -737,17 +738,11 @@ function capturePageContext(rawPrompt) {
 
   // Sort back to their original vertical DOM order to preserve conversation flow
   relevantBubbles.sort((a, b) => {
-    return bubbles.indexOf(a.el) - bubbles.indexOf(b.el);
+    return recentBubbles.indexOf(a.el) - recentBubbles.indexOf(b.el);
   });
 
   const contextItems = relevantBubbles.map(b => {
-    let speaker = "Participant";
-    const html = b.el.outerHTML.toLowerCase();
-    if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-      speaker = "User";
-    } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-      speaker = "Assistant";
-    }
+    const speaker = resolveSpeaker(b.el);
     return `${speaker}: ${b.text}`;
   });
 
