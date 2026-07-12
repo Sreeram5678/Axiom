@@ -37,8 +37,8 @@ export async function optimizePrompt({
     lengthDirective = "The optimized prompt MUST be of medium length, balancing clear context, structural clarity, and efficient detail without being overly brief or excessively wordy.";
   }
 
-  // Google Gemini API streamGenerateContent endpoint
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}`;
+  // Google Gemini API streamGenerateContent endpoint with alt=sse parameter for real-time streaming
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
   const requestBody = {
     contents: [
@@ -145,10 +145,12 @@ export async function optimizePrompt({
     throw new Error("Unable to read streaming response body from Gemini API.");
   }
 
-    // Set up standard stream decoder pipeline
-    const decoderStream = new TextDecoderStream();
-    const decodedStream = response.body.pipeThrough(decoderStream);
-    const reader = decodedStream.getReader();
+    // Set up standard stream decoder pipeline using direct TextDecoder and getReader
+    const startTime = Date.now();
+    console.log(`[Axiom API Debug] Starting stream reader at: ${startTime}`);
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
     let buffer = "";
     let accumulatedText = "";
     
@@ -157,12 +159,24 @@ export async function optimizePrompt({
     let inString = false;
     let escapeNext = false;
     let startIndex = -1;
+    let chunkCount = 0;
 
     while (true) {
+      const readStart = Date.now();
       const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += value;
+      const readEnd = Date.now();
+      chunkCount++;
+      
+      console.log(`[Axiom API Debug] Read chunk #${chunkCount} in ${readEnd - readStart}ms. done=${done}, valueLength=${value ? value.length : 0}, timeSinceStart=${readEnd - startTime}ms`);
+      
+      let chunkStr = "";
+      if (value) {
+        chunkStr = decoder.decode(value, { stream: true });
+      } else if (done) {
+        chunkStr = decoder.decode(); // Flush any remaining decoder bytes
+      }
+      
+      buffer += chunkStr;
 
       // Extract complete JSON objects from the streaming JSON array response
       while (i < buffer.length) {
@@ -214,6 +228,8 @@ export async function optimizePrompt({
         }
         i++;
       }
+
+      if (done) break;
     }
 
     // Decode final remaining bytes if any

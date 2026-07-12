@@ -159,6 +159,28 @@ function findInputs() {
     }
   }
 
+  // 1. First, search standard light DOM (usually where all inputs are on supported sites)
+  GENERIC_SELECTORS.forEach(selector => {
+    try {
+      const els = document.querySelectorAll(selector);
+      if (els.length > 0) {
+        // Log only once in a while or when input is first detected to avoid spamming
+        if (!window._axiomLoggedSelectors) window._axiomLoggedSelectors = new Set();
+        if (!window._axiomLoggedSelectors.has(selector)) {
+          console.log(`[Axiom] Selector '${selector}' matched element in light DOM:`, els[0]);
+          window._axiomLoggedSelectors.add(selector);
+        }
+      }
+      els.forEach(checkAndAdd);
+    } catch (e) {}
+  });
+
+  // If we already found inputs in the light DOM, return immediately to bypass heavy recursive Shadow DOM scanning
+  if (inputs.length > 0) {
+    return inputs;
+  }
+
+  // 2. Fallback scan for Shadow DOMs
   function scan(root) {
     if (!root) return;
     
@@ -166,22 +188,13 @@ function findInputs() {
     GENERIC_SELECTORS.forEach(selector => {
       try {
         const els = root.querySelectorAll(selector);
-        if (els.length > 0) {
-          // Log only once in a while or when input is first detected to avoid spamming
-          if (!window._axiomLoggedSelectors) window._axiomLoggedSelectors = new Set();
-          if (!window._axiomLoggedSelectors.has(selector)) {
-            console.log(`[Axiom] Selector '${selector}' matched element:`, els[0]);
-            window._axiomLoggedSelectors.add(selector);
-          }
-        }
         els.forEach(checkAndAdd);
       } catch (e) {}
     });
     
-    // Find all elements that might have shadow roots in this root
+    // Find custom elements (tag name containing a hyphen) or likely container hosts of shadow roots
     try {
-      // Optimize: Target likely containers rather than every single element to improve speed
-      const elements = root.querySelectorAll('div, main, section, article, custom-element, [class*="chat"], [class*="message"], [id*="chat"]');
+      const elements = root.querySelectorAll('*:not(div):not(span):not(p):not(a):not(li):not(ul):not(ol):not(pre):not(code)');
       elements.forEach(el => {
         if (el.shadowRoot) {
           scan(el.shadowRoot);
@@ -280,6 +293,49 @@ function setCursorToEnd(el) {
     sel.removeAllRanges();
     sel.addRange(range);
   }
+}
+
+/**
+ * Throttled input updater to prevent layout thrashing and input lag.
+ */
+function createThrottledUpdater(inputEl) {
+  let pendingValue = "";
+  let updatePending = null;
+  let lastUpdateTime = 0;
+  const THROTTLE_MS = 100; // Update DOM at most once every 100ms
+
+  function updateDOM() {
+    if (!inputEl) return;
+    replaceInputValue(inputEl, pendingValue);
+    setCursorToEnd(inputEl);
+    lastUpdateTime = Date.now();
+    updatePending = null;
+  }
+
+  return {
+    update(newValue) {
+      pendingValue = newValue;
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateTime;
+
+      if (timeSinceLastUpdate >= THROTTLE_MS) {
+        if (updatePending) {
+          clearTimeout(updatePending);
+          updatePending = null;
+        }
+        updateDOM();
+      } else if (!updatePending) {
+        updatePending = setTimeout(updateDOM, THROTTLE_MS - timeSinceLastUpdate);
+      }
+    },
+    flush() {
+      if (updatePending) {
+        clearTimeout(updatePending);
+        updatePending = null;
+      }
+      updateDOM();
+    }
+  };
 }
 
 // Helper to traverse shadow root boundaries recursively to find deep active elements
@@ -505,34 +561,49 @@ const CHAT_BUBBLE_SELECTORS = [
   '.im-message'
 ];
 
-// Compile context synthesis by searching all adjacent chat bubbles across Shadow DOMs recursively
+// Compile context synthesis by searching all adjacent chat bubbles (blazing fast)
 function capturePageContext(rawPrompt) {
   const bubbles = [];
   
-  function scan(root) {
-    if (!root) return;
-    CHAT_BUBBLE_SELECTORS.forEach(selector => {
-      try {
-        const elements = root.querySelectorAll(selector);
-        elements.forEach(el => {
-          if (!bubbles.includes(el)) {
-            bubbles.push(el);
-          }
-        });
-      } catch (e) {}
-    });
-    
+  // 1. Query standard light DOM first (almost always where all chat bubbles are on supported sites)
+  CHAT_BUBBLE_SELECTORS.forEach(selector => {
     try {
-      const children = root.querySelectorAll('*');
-      children.forEach(child => {
-        if (child.shadowRoot) {
-          scan(child.shadowRoot);
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        if (!bubbles.includes(el)) {
+          bubbles.push(el);
         }
       });
     } catch (e) {}
+  });
+
+  // 2. Only fallback to scan shadow roots recursively if no bubbles were found in the light DOM
+  if (bubbles.length === 0) {
+    function scan(root) {
+      if (!root) return;
+      CHAT_BUBBLE_SELECTORS.forEach(selector => {
+        try {
+          const elements = root.querySelectorAll(selector);
+          elements.forEach(el => {
+            if (!bubbles.includes(el)) {
+              bubbles.push(el);
+            }
+          });
+        } catch (e) {}
+      });
+      
+      try {
+        // Query elements likely to host shadow roots (e.g. custom elements), avoiding '*'
+        const children = root.querySelectorAll('*:not(div):not(span):not(p):not(a):not(li):not(ul):not(ol):not(pre):not(code)');
+        children.forEach(child => {
+          if (child.shadowRoot) {
+            scan(child.shadowRoot);
+          }
+        });
+      } catch (e) {}
+    }
+    scan(document);
   }
-  
-  scan(document);
   
   // Sort elements by vertical placement to preserve logical chronological order
   bubbles.sort((a, b) => {
@@ -543,19 +614,35 @@ function capturePageContext(rawPrompt) {
 
   if (bubbles.length === 0) return "";
 
+  // Slice bubbles to the last 15 elements to prevent performance degradation on long chats
+  const recentBubbles = bubbles.slice(-15);
+
+  // Helper to resolve the speaker of a bubble element using fast native DOM and class checks
+  function resolveSpeaker(el) {
+    const classes = el.className.toLowerCase();
+    const id = el.id.toLowerCase();
+    const testId = (el.getAttribute('data-testid') || '').toLowerCase();
+    
+    if (classes.includes("user") || classes.includes("right-bubble") || classes.includes("human") || classes.includes("query") ||
+        id.includes("user") || id.includes("query") ||
+        testId.includes("user") || testId.includes("query")) {
+      return "User";
+    }
+    if (classes.includes("assistant") || classes.includes("left-bubble") || classes.includes("model") || classes.includes("bot") ||
+        id.includes("assistant") || id.includes("model") ||
+        testId.includes("assistant") || testId.includes("model")) {
+      return "Assistant";
+    }
+    return "Participant";
+  }
+
   // If no raw prompt is provided, fall back to simple last-4 bubbles to avoid breaking
   if (!rawPrompt || rawPrompt.trim() === "") {
     const contextItems = [];
-    bubbles.slice(-4).forEach(el => {
+    recentBubbles.slice(-4).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -574,16 +661,10 @@ function capturePageContext(rawPrompt) {
   if (keywordSet.size === 0) {
     // If no unique keywords are found, fall back to last-4 bubbles
     const contextItems = [];
-    bubbles.slice(-4).forEach(el => {
+    recentBubbles.slice(-4).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -591,7 +672,7 @@ function capturePageContext(rawPrompt) {
   }
 
   // Score each bubble
-  const scoredBubbles = bubbles.map(el => {
+  const scoredBubbles = recentBubbles.map(el => {
     const rawText = el.innerText || el.textContent || "";
     const text = rawText.trim().replace(/\s+/g, ' ');
     const textLower = text.toLowerCase();
@@ -599,7 +680,6 @@ function capturePageContext(rawPrompt) {
     let score = 0;
     
     // 1. Keyword density check
-    // Safe linear count via indexOf — avoids new RegExp(variable) which risks ReDoS (CWE-185)
     keywordSet.forEach(word => {
       let count = 0;
       let pos = 0;
@@ -618,7 +698,6 @@ function capturePageContext(rawPrompt) {
     const matchedIndices = [];
     words.forEach((word, idx) => {
       const cleanWord = word.replace(/[^\w]/g, '');
-      // Use Set.has() instead of bracket notation to prevent prototype pollution (CWE-94)
       if (cleanWord.length > 0 && keywordSet.has(cleanWord)) {
         matchedIndices.push(idx);
       }
@@ -631,8 +710,7 @@ function capturePageContext(rawPrompt) {
     }
 
     // 3. Code Block priority boost (strongly prefer developer code segments)
-    const html = el.outerHTML.toLowerCase();
-    if (html.includes("pre") || html.includes("code") || text.includes("```")) {
+    if (el.querySelector('pre, code') !== null || text.includes("```")) {
       score += 35; // 35 point substantial boost
     }
 
@@ -648,16 +726,10 @@ function capturePageContext(rawPrompt) {
   // If no bubbles scored high enough, fall back to last-2 bubbles as safe context
   if (relevantBubbles.length === 0) {
     const contextItems = [];
-    bubbles.slice(-2).forEach(el => {
+    recentBubbles.slice(-2).forEach(el => {
       const text = (el.innerText || el.textContent || "").trim().replace(/\s+/g, ' ');
       if (text.length > 5 && text.length < 1500) {
-        let speaker = "Participant";
-        const html = el.outerHTML.toLowerCase();
-        if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-          speaker = "User";
-        } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-          speaker = "Assistant";
-        }
+        const speaker = resolveSpeaker(el);
         contextItems.push(`${speaker}: ${text}`);
       }
     });
@@ -666,17 +738,11 @@ function capturePageContext(rawPrompt) {
 
   // Sort back to their original vertical DOM order to preserve conversation flow
   relevantBubbles.sort((a, b) => {
-    return bubbles.indexOf(a.el) - bubbles.indexOf(b.el);
+    return recentBubbles.indexOf(a.el) - recentBubbles.indexOf(b.el);
   });
 
   const contextItems = relevantBubbles.map(b => {
-    let speaker = "Participant";
-    const html = b.el.outerHTML.toLowerCase();
-    if (html.includes("user") || html.includes("right-bubble") || html.includes("human") || html.includes("query")) {
-      speaker = "User";
-    } else if (html.includes("assistant") || html.includes("left-bubble") || html.includes("model") || html.includes("bot")) {
-      speaker = "Assistant";
-    }
+    const speaker = resolveSpeaker(b.el);
     return `${speaker}: ${b.text}`;
   });
 
@@ -839,16 +905,19 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
       const activeMode = allModes.find(m => m.id === lastActiveModeId) || allModes[0];
       const systemInstruction = activeMode ? activeMode.systemInstruction : '';
 
+      const updater = createThrottledUpdater(inputEl);
+
       await runOnDeviceOptimizationStream(
         promptToOptimize,
         systemInstruction,
         activeLength,
         (chunk) => {
           accumulatedText += chunk;
-          replaceInputValue(inputEl, accumulatedText);
-          setCursorToEnd(inputEl);
+          updater.update(accumulatedText);
         }
       );
+
+      updater.flush();
 
       // Final cleanups and format check
       let optimizedText = accumulatedText.trim();
@@ -912,6 +981,7 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
   }
 
   let accumulatedText = '';
+  const updater = createThrottledUpdater(inputEl);
   
   // Establish port connection to background streaming worker safely
   let port;
@@ -956,13 +1026,14 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
       }
       if (response.type === 'CHUNK') {
         accumulatedText += response.text;
-        replaceInputValue(inputEl, accumulatedText);
-        setCursorToEnd(inputEl);
+        updater.update(accumulatedText);
       } else if (response.type === 'SUCCESS') {
+        updater.flush();
         replaceInputValue(inputEl, response.state.optimizedPrompt);
         setCursorToEnd(inputEl);
         cleanup();
       } else if (response.type === 'ERROR') {
+        updater.flush();
         const errorMsg = response.state?.error || 'Unknown error occurred during optimization.';
         alert(`Axiom Optimization Error: ${errorMsg}`);
         cleanup();
@@ -971,9 +1042,11 @@ async function handlePromptOptimization(inputEl, buttonEl, containerEl) {
     
     port.onDisconnect.addListener(() => {
       console.log("[Axiom Inline Widget] Port stream disconnected.");
+      updater.flush();
       cleanup();
     });
   } catch (e) {
+    updater.flush();
     cleanup();
   }
 }
@@ -1059,6 +1132,12 @@ function scanAndInject() {
       }
       
       const showAlways = data && data.showWidgetAlways === true;
+      
+      // Optimization: Skip scan if widget is already visible and we have a valid, connected active input (or showAlways is true)
+      if (floatingWidget && floatingWidget.style.display === 'flex' && (showAlways || (lastActiveInputEl && lastActiveInputEl.isConnected))) {
+        return;
+      }
+      
       const inputs = findInputs();
       
       if (showAlways || inputs.length > 0) {
