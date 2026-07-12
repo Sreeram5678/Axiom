@@ -145,10 +145,9 @@ export async function optimizePrompt({
     throw new Error("Unable to read streaming response body from Gemini API.");
   }
 
-    // Set up standard stream decoder pipeline
-    const decoderStream = new TextDecoderStream();
-    const decodedStream = response.body.pipeThrough(decoderStream);
-    const reader = decodedStream.getReader();
+    // Set up standard stream decoder pipeline using direct TextDecoder and getReader
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
     let buffer = "";
     let accumulatedText = "";
     
@@ -160,9 +159,15 @@ export async function optimizePrompt({
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += value;
+      
+      let chunkStr = "";
+      if (value) {
+        chunkStr = decoder.decode(value, { stream: true });
+      } else if (done) {
+        chunkStr = decoder.decode(); // Flush any remaining decoder bytes
+      }
+      
+      buffer += chunkStr;
 
       // Extract complete JSON objects from the streaming JSON array response
       while (i < buffer.length) {
@@ -214,6 +219,8 @@ export async function optimizePrompt({
         }
         i++;
       }
+
+      if (done) break;
     }
 
     // Decode final remaining bytes if any
