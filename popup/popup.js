@@ -48,6 +48,9 @@ const jsonModesEditor = document.getElementById('json-modes-editor');
 const jsonErrorStatus = document.getElementById('json-error-status');
 const resetDefaultsBtn = document.getElementById('reset-defaults-btn');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
+const autosaveStatus = document.getElementById('autosave-status');
+const autosaveStatusIcon = document.getElementById('autosave-status-icon');
+const autosaveStatusText = document.getElementById('autosave-status-text');
 
 // Mode Manager Elements
 const addModeToggleBtn = document.getElementById('add-mode-toggle-btn');
@@ -69,6 +72,7 @@ let currentModes = [];
 let activeModeId = 'analyst';
 let selectedLength = 'medium';
 let saveTimeout;
+let autosaveTimeout;
 
 // DOMContentLoaded Entry point
 document.addEventListener('DOMContentLoaded', async () => {
@@ -358,11 +362,14 @@ function renderVisualModesList() {
         if (confirm(`Are you sure you want to delete the custom mode "${mode.name}"?`)) {
           currentModes = currentModes.filter(m => m.id !== mode.id);
           
+          showSavingStatus();
           const validation = await saveModes(JSON.stringify(currentModes));
           if (validation.success) {
             await renderModes();
+            showAutosavedStatus(true);
           } else {
             alert(`Error deleting mode: ${validation.error}`);
+            showAutosavedStatus(false);
           }
         }
       });
@@ -419,13 +426,16 @@ function setupModeCreator() {
 
     currentModes.push(newMode);
     
+    showSavingStatus();
     // Save custom mode array through modes helper
     const validation = await saveModes(JSON.stringify(currentModes));
     if (!validation.success) {
       modeCreatorError.textContent = `Error saving mode: ${validation.error}`;
       currentModes.pop(); // Remove invalid item
+      showAutosavedStatus(false);
       return;
     }
+    showAutosavedStatus(true);
 
     // Reset creator inputs
     newModeName.value = '';
@@ -576,19 +586,15 @@ function setupTabSwitching() {
 function setupEventListeners() {
   // Instant Auto-save for In-Page Floating Widget Toggle (snappy reactivity)
   if (widgetToggleCheckbox) {
-    widgetToggleCheckbox.addEventListener('change', async (e) => {
-      try {
-        const isChecked = e.target.checked;
-        await chrome.storage.local.set({ hideWidgetEntirely: !isChecked });
-      } catch (err) {
-        console.warn("[Axiom Popup] Instant toggle save failed:", err.message);
-      }
+    widgetToggleCheckbox.addEventListener('change', () => {
+      triggerAutosave();
     });
   }
 
   if (modelSelect) {
     modelSelect.addEventListener('change', () => {
       updateCostEstimate(rawPromptInput.value || '');
+      triggerAutosave();
     });
   }
 
@@ -596,6 +602,30 @@ function setupEventListeners() {
   if (currencySelect) {
     currencySelect.addEventListener('change', () => {
       updateCostEstimate(rawPromptInput.value || '');
+      triggerAutosave();
+    });
+  }
+
+  if (defaultLengthSelect) {
+    defaultLengthSelect.addEventListener('change', () => {
+      triggerAutosave();
+    });
+  }
+
+  if (aiRoutingSelect) {
+    aiRoutingSelect.addEventListener('change', () => {
+      triggerAutosave();
+    });
+  }
+
+  // Debounced Auto-save for the raw JSON editor
+  if (jsonModesEditor) {
+    jsonModesEditor.addEventListener('input', () => {
+      showSavingStatus();
+      clearTimeout(autosaveTimeout);
+      autosaveTimeout = setTimeout(() => {
+        triggerAutosave();
+      }, 1000);
     });
   }
 
@@ -665,6 +695,7 @@ function setupEventListeners() {
   resetDefaultsBtn.addEventListener('click', async () => {
     try {
       if (confirm("Are you sure you want to reset all prompt engineering modes to defaults? This will erase custom additions.")) {
+        showSavingStatus();
         const defaultModes = await resetModes();
         jsonModesEditor.value = JSON.stringify(defaultModes, null, 2);
         
@@ -673,66 +704,11 @@ function setupEventListeners() {
         
         // Repopulate select cards & visual list
         await renderModes();
+        showAutosavedStatus(true);
       }
     } catch (err) {
       console.warn("[Axiom Popup] resetDefaultsBtn failed:", err.message);
-    }
-  });
-
-  // 5. Save settings configurations
-  saveSettingsBtn.addEventListener('click', async () => {
-    try {
-      const rawModel = modelSelect.value;
-      const rawDefaultLength = defaultLengthSelect.value;
-      const jsonString = jsonModesEditor.value;
-      const aiRoutingMode = aiRoutingSelect ? aiRoutingSelect.value : 'hybrid';
-      const hideWidgetEntirely = widgetToggleCheckbox ? !widgetToggleCheckbox.checked : false;
-
-      // Save configurations
-      saveSettingsBtn.disabled = true;
-      saveSettingsBtn.innerHTML = `<div class="spinner"></div><span>Saving...</span>`;
-
-      // Validate and save Modes JSON
-      const modeValidation = await saveModes(jsonString);
-      
-      if (!modeValidation.success) {
-        jsonErrorStatus.textContent = `JSON Error: ${modeValidation.error}`;
-        jsonErrorStatus.className = "json-status error";
-        revertSaveButtonState();
-        return;
-      }
-
-      // Save API key, model, default length, routing mode & currency to storage
-      await chrome.storage.local.set({
-        selectedModel: rawModel,
-        defaultLength: rawDefaultLength,
-        aiRoutingMode: aiRoutingMode,
-        hideWidgetEntirely: hideWidgetEntirely,
-        currencyPreference: currencySelect ? currencySelect.value : 'USD'
-      });
-
-      // Automatically synchronize the active prompt length selector state
-      updateSelectedLengthUI(rawDefaultLength);
-      await chrome.storage.local.set({ selectedLength: rawDefaultLength });
-
-      // If sync is active, immediately encrypt and update the sync backup
-      const localData = await chrome.storage.local.get(['syncPassphrase']);
-      if (localData.syncPassphrase) {
-        await encryptAndSyncProfile(localData.syncPassphrase);
-      }
-
-      // Success response
-      jsonErrorStatus.textContent = "Settings saved successfully!";
-      jsonErrorStatus.className = "json-status success";
-      
-      await renderModes();
-      
-      setTimeout(() => {
-        revertSaveButtonState();
-      }, 1000);
-    } catch (err) {
-      console.warn("[Axiom Popup] saveSettingsBtn failed:", err.message);
-      revertSaveButtonState();
+      showAutosavedStatus(false);
     }
   });
 
@@ -1194,4 +1170,82 @@ function showError(errorMessage) {
 function revertSaveButtonState() {
   saveSettingsBtn.disabled = false;
   saveSettingsBtn.innerHTML = 'Save Settings';
+}
+
+function showSavingStatus() {
+  if (autosaveStatusText && autosaveStatusIcon && autosaveStatus) {
+    autosaveStatus.classList.remove('saved', 'error');
+    autosaveStatus.classList.add('saving');
+    autosaveStatusIcon.innerHTML = `<div class="spinner-small"></div>`;
+    autosaveStatusText.textContent = "Saving...";
+  }
+}
+
+function showAutosavedStatus(success = true) {
+  if (autosaveStatusText && autosaveStatusIcon && autosaveStatus) {
+    autosaveStatus.classList.remove('saving', 'error', 'saved');
+    if (success) {
+      autosaveStatus.classList.add('saved');
+      autosaveStatusIcon.innerHTML = `✓`;
+      autosaveStatusText.textContent = "Saved";
+    } else {
+      autosaveStatus.classList.add('error');
+      autosaveStatusIcon.innerHTML = `✗`;
+      autosaveStatusText.textContent = "Error saving";
+    }
+  }
+}
+
+async function triggerAutosave() {
+  showSavingStatus();
+  
+  try {
+    const rawModel = modelSelect.value;
+    const rawDefaultLength = defaultLengthSelect.value;
+    const jsonString = jsonModesEditor.value;
+    const aiRoutingMode = aiRoutingSelect ? aiRoutingSelect.value : 'hybrid';
+    const hideWidgetEntirely = widgetToggleCheckbox ? !widgetToggleCheckbox.checked : false;
+
+    // Validate and save Modes JSON
+    const modeValidation = await saveModes(jsonString);
+    
+    if (!modeValidation.success) {
+      if (jsonErrorStatus) {
+        jsonErrorStatus.textContent = `JSON Error: ${modeValidation.error}`;
+        jsonErrorStatus.className = "json-status error";
+      }
+      showAutosavedStatus(false);
+      return;
+    } else {
+      if (jsonErrorStatus) {
+        jsonErrorStatus.textContent = '';
+        jsonErrorStatus.className = "json-status";
+      }
+    }
+
+    // Save API key, model, default length, routing mode & currency to storage
+    await chrome.storage.local.set({
+      selectedModel: rawModel,
+      defaultLength: rawDefaultLength,
+      aiRoutingMode: aiRoutingMode,
+      hideWidgetEntirely: hideWidgetEntirely,
+      currencyPreference: currencySelect ? currencySelect.value : 'USD'
+    });
+
+    // Automatically synchronize the active prompt length selector state
+    updateSelectedLengthUI(rawDefaultLength);
+    await chrome.storage.local.set({ selectedLength: rawDefaultLength });
+
+    // If sync is active, immediately encrypt and update the sync backup
+    const localData = await chrome.storage.local.get(['syncPassphrase']);
+    if (localData.syncPassphrase) {
+      await encryptAndSyncProfile(localData.syncPassphrase);
+    }
+
+    await renderModes();
+    showAutosavedStatus(true);
+  } catch (err) {
+    console.warn("[Axiom Popup] Autosave failed:", err.message);
+    showAutosavedStatus(false);
+  }
 }
